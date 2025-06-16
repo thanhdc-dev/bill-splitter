@@ -1,0 +1,31 @@
+<div class="list-container">
+  <h2 class="list-title">Danh sách</h2>
+
+  <div class="list-wrapper">
+    <div
+      *ngFor="let item of bills"
+      class="list-item"
+      (click)="onItemClick(item.code)"
+    >
+      <div class="item-content">
+        <div class="item-info">
+          <div class="item-header">
+            <span class="item-code">{{ item.code }}</span>
+            <span class="item-date">{{ formatDate(item.createdAt) }}</span>
+          </div>
+          <h3 class="item-name">{{ item.name }}</h3>
+        </div>
+
+        <div class="item-actions">
+          <button
+            class="copy-btn"
+            (click)="onCopyUrl($event, item.code)"
+            title="Copy URL"
+          >
+            <mat-icon>content_copy</mat-icon>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

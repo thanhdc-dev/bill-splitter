@@ -1,0 +1,77 @@
+.expense-form {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+
+  mat-form-field {
+    flex: 1;
+    min-width: 200px;
+  }
+
+  button {
+    min-width: 160px;
+    height: 56px; // Match form field height
+  }
+}
+
+.table-scroll {
+  width: 100%;
+  overflow-y: auto;
+  margin-top: 16px;
+
+  table {
+    width: 100%;
+
+    .mat-column-name {
+      padding-left: 8px;
+      min-width: 120px;
+    }
+
+    .mat-column-amount {
+      width: 120px;
+      text-align: right;
+    }
+
+    .mat-column-actions {
+      width: 48px;
+      padding-right: 8px;
+    }
+
+    td.mat-cell {
+      padding: 8px;
+    }
+  }
+}
+
+@media screen and (max-width: 600px) {
+  .expense-form {
+    flex-direction: column;
+    gap: 8px;
+
+    mat-form-field {
+      width: 100%;
+      min-width: unset;
+    }
+
+    button {
+      width: 100%;
+      height: 48px;
+    }
+  }
+
+  table {
+    .mat-column-name {
+      min-width: 100px;
+    }
+
+    td.mat-cell {
+      padding: 4px 8px;
+      font-size: 14px;
+    }
+
+    .mat-checkbox {
+      transform: scale(0.9);
+    }
+  }
+}

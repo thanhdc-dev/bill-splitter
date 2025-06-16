@@ -1,0 +1,29 @@
+.login-popup {
+  min-width: 300px;
+  padding: 20px;
+}
+
+.login-content {
+  text-align: center;
+  padding: 20px 0;
+}
+
+.google-btn {
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.google-btn mat-icon {
+  margin: 0;
+}
+
+@media screen and (max-width: 600px) {
+  .login-popup {
+    padding: 0;
+  }
+}

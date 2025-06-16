@@ -1,0 +1,36 @@
+<div class="bill-splitter-container">
+  <mat-card>
+    <mat-card-content>
+      <mat-tab-group mat-stretch-tabs="false" mat-align-tabs="start">
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <h2 class="mat-tab-label">Khoản mục</h2>
+          </ng-template>
+          <div class="expense-form">
+            <app-expense-form [isAuthor]="isAuthor"></app-expense-form>
+          </div>
+        </mat-tab>
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <h2 class="mat-tab-label">Thành viên</h2>
+          </ng-template>
+          <div class="member-table">
+            <app-member-table [isAuthor]="isAuthor"></app-member-table>
+          </div>
+        </mat-tab>
+      </mat-tab-group>
+    </mat-card-content>
+  </mat-card>
+  <app-result-display></app-result-display>
+  <!-- Sticky Share Button -->
+  <button
+    mat-fab
+    color="primary"
+    class="share-button"
+    [ngClass]="{'share-button__syncing': (isSaving$ | async)}"
+    [disabled]="(isSaving$ | async) || !hasData"
+    (click)="saveBill()"
+  >
+    <mat-icon>{{(isSaving$ | async) ? 'sync' : 'share'}}</mat-icon>
+  </button>
+</div>

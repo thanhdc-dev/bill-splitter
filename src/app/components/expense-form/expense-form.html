@@ -1,0 +1,76 @@
+<form [formGroup]="expenseForm" (ngSubmit)="onSubmit()" class="expense-form">
+  <mat-form-field appearance="outline">
+    <mat-label>Tên khoản mục</mat-label>
+    <input
+      matInput
+      formControlName="name"
+      placeholder="Nhập tên khoản mục"
+      (keydown.enter)="onSubmit()"
+    />
+    <mat-error *ngIf="expenseForm.get('name')?.hasError('required')">
+      Vui lòng nhập tên khoản mục
+    </mat-error>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Số tiền</mat-label>
+    <input
+      matInput
+      type="text"
+      formControlName="amount"
+      placeholder="Nhập số tiền"
+      appThousandSeparator
+      (keydown.enter)="onSubmit()"
+    />
+    <mat-error *ngIf="expenseForm.get('amount')?.hasError('required')">
+      Vui lòng nhập số tiền
+    </mat-error>
+    <mat-error *ngIf="expenseForm.get('amount')?.hasError('min')">
+      Số tiền phải lớn hơn 0
+    </mat-error>
+  </mat-form-field>
+
+  <button
+    mat-raised-button
+    color="primary"
+    type="submit"
+    [disabled]="!expenseForm.valid"
+  >
+    Thêm khoản mục
+  </button>
+</form>
+
+<div class="table-scroll" *ngIf="expenses$ | async as expenses">
+  <table mat-table [dataSource]="expenses$" class="mat-elevation-z8">
+    <!-- Name Column -->
+    <ng-container matColumnDef="name">
+      <th mat-header-cell *matHeaderCellDef>Tên khoản mục</th>
+      <td mat-cell *matCellDef="let expense">{{expense.name}}</td>
+    </ng-container>
+
+    <!-- Total Amount Column -->
+    <ng-container matColumnDef="amount">
+      <th mat-header-cell *matHeaderCellDef>Tiền</th>
+      <td mat-cell *matCellDef="let expense">
+        {{formatAmount(expense.amount)}}
+      </td>
+    </ng-container>
+
+    <!-- Actions Column -->
+    <ng-container matColumnDef="actions">
+      <th mat-header-cell *matHeaderCellDef></th>
+      <td mat-cell *matCellDef="let expense">
+        <button
+          mat-icon-button
+          color="warn"
+          (click)="removeExpense(expense.id)"
+        >
+          <mat-icon>delete</mat-icon>
+        </button>
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="getDisplayedColumns()"></tr>
+    <tr mat-row *matRowDef="let row; columns: getDisplayedColumns();"></tr>
+  </table>
+</div>

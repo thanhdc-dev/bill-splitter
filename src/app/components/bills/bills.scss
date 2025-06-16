@@ -1,0 +1,179 @@
+.list-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.list-title {
+  color: #2c3e50;
+  margin-bottom: 24px;
+  font-size: 28px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.list-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.list-item {
+  background: #ffffff;
+  border: 1px solid #e1e8ed;
+  border-radius: 12px;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    border-color: #3498db;
+    background: #f8fafc;
+
+    .copy-icon {
+      color: #3498db;
+    }
+
+    .copy-btn {
+      background: #e3f2fd;
+      transform: scale(1.05);
+    }
+
+    .item-name {
+      color: #2980b9;
+    }
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+.item-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.item-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.item-code {
+  background: #e3f2fd;
+  color: #1565c0;
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.item-date {
+  color: #666;
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.item-name {
+  color: #2c3e50;
+  font-size: 18px;
+  font-weight: 500;
+  margin: 0;
+  transition: color 0.3s ease;
+  line-height: 1.4;
+}
+
+.item-actions {
+  display: flex;
+  align-items: center;
+  margin-left: 16px;
+}
+
+.copy-btn {
+  background: transparent;
+  border: none;
+  padding: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    background: #e3f2fd;
+    transform: scale(1.05);
+  }
+
+  &:active {
+    transform: scale(0.95);
+    background: #bbdefb;
+  }
+}
+
+.copy-icon {
+  color: #7f8c8d;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .list-container {
+    padding: 16px;
+  }
+
+  .list-item {
+    padding: 16px;
+  }
+
+  .item-content {
+    gap: 12px;
+  }
+
+  .item-actions {
+    align-self: flex-end;
+    margin-left: 0;
+  }
+
+  .item-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .item-name {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .list-title {
+    font-size: 24px;
+  }
+
+  .list-item {
+    padding: 12px;
+  }
+
+  .item-name {
+    font-size: 15px;
+  }
+}

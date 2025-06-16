@@ -1,0 +1,16 @@
+.callback-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  flex-direction: column;
+}
+
+.loading-spinner {
+  text-align: center;
+}
+
+.loading-spinner p {
+  margin-top: 20px;
+  color: #666;
+}

@@ -1,0 +1,54 @@
+.bill-splitter-container {
+  padding: 16px;
+  max-width: 1200px;
+  margin: 0 auto;
+  position: relative;
+  min-height: 100vh;
+
+  .mat-tab-label {
+    margin-bottom: 0;
+  }
+
+  .mat-mdc-card {
+    margin-bottom: 16px;
+  }
+
+  .expense-form,
+  .member-table,
+  .result-display {
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+
+  .share-button {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    z-index: 1000;
+
+    .mat-icon {
+      animation: none;
+    }
+
+    &.share-button__syncing .mat-icon {
+      animation: rotate 1s linear infinite;
+    }
+  }
+
+  @keyframes rotate {
+    from {
+      transform: rotate(360deg);
+    }
+    to {
+      transform: rotate(0deg);
+    }
+  }
+
+  @media screen and (max-width: 600px) {
+    padding: 8px;
+
+    .mat-mdc-card {
+      margin-bottom: 12px;
+    }
+  }
+}

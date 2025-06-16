@@ -1,12 +1,60 @@
+import { AuthUser } from './models/auth.model';
+import { Observable } from 'rxjs';
 import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { Router, RouterLink, RouterOutlet } from '@angular/router';
+import { AuthService } from './services/auth.service';
+import { LoginDialogComponent } from './components/login-dialog/login-dialog';
+import { MatDialog } from '@angular/material/dialog';
+import { AsyncPipe, CommonModule } from '@angular/common';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
+  imports: [
+    RouterOutlet,
+    AsyncPipe,
+    CommonModule,
+    MatIconModule,
+    MatButtonModule,
+    RouterLink,
+  ],
   templateUrl: './app.html',
-  styleUrl: './app.scss'
+  styleUrl: './app.scss',
 })
 export class App {
-  protected title = 'bill-splitter';
+  protected title = 'Bill splitter';
+  sidebarOpen = false;
+  user$: Observable<AuthUser | null>;
+
+  constructor(
+    private router: Router,
+    private dialog: MatDialog,
+    private authService: AuthService
+  ) {
+    this.user$ = this.authService.user$;
+  }
+
+  toggleSidebar() {
+    this.sidebarOpen = !this.sidebarOpen;
+  }
+
+  closeSidebar() {
+    this.sidebarOpen = false;
+  }
+
+  openLoginPopup(): void {
+    this.dialog.open(LoginDialogComponent);
+  }
+
+  redirectToList() {
+    this.router.navigate(['/bills']);
+    this.closeSidebar();
+  }
+
+  logout(): void {
+    this.authService.logout();
+    this.router.navigate(['/']);
+    this.closeSidebar();
+  }
 }
