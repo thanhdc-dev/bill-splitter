@@ -8,6 +8,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { AsyncPipe, CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
+import { Meta, Title } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-root',
@@ -23,15 +24,18 @@ import { MatButtonModule } from '@angular/material/button';
   styleUrl: './app.scss',
 })
 export class App {
-  protected title = 'Bill splitter';
   sidebarOpen = false;
   user$: Observable<AuthUser | null>;
 
   constructor(
+    private title: Title,
+    private meta: Meta,
     private router: Router,
     private dialog: MatDialog,
     private authService: AuthService
   ) {
+    this.title.setTitle('Chia hóa đơn');
+    this.meta.updateTag({ name: 'description', content: 'Bạn cứ chill đi – bill để tôi chia'});
     this.user$ = this.authService.user$;
   }
 
