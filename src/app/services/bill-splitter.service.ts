@@ -3,8 +3,15 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject, firstValueFrom } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
 import { environment } from '../../environments/environment';
-import { BillData, BillFindAll, ExpenseItem, Member } from '../models/bill-splitter.model';
+import {
+  BillData,
+  BillFindAll,
+  ExpenseItem,
+  Member,
+} from '../models/bill-splitter.model';
 import { AuthService } from './auth.service';
+import { BankInfoItem } from '../models/bank.model';
+import { BANKS } from '../constants/bank.constants';
 
 @Injectable({
   providedIn: 'root',
@@ -14,13 +21,30 @@ export class BillSplitterService {
   private endPoint = 'bills';
   private expenses = new BehaviorSubject<ExpenseItem[]>([]);
   private members = new BehaviorSubject<Member[]>([]);
+  private totalAmount = new BehaviorSubject<number>(0);
+  private bankInfo = new BehaviorSubject<BankInfoItem>({
+    bank: BANKS[0].code,
+    name: BANKS[0].name,
+    accountNumber: 'Thanhdc',
+  });
   private isSaving = new BehaviorSubject<boolean>(false);
 
   expenses$ = this.expenses.asObservable();
   members$ = this.members.asObservable();
+  totalAmount$ = this.totalAmount.asObservable();
+  bankInfo$ = this.bankInfo.asObservable();
   isSaving$ = this.isSaving.asObservable();
 
-  constructor(private http: HttpClient, private authService: AuthService) {}
+  constructor(private http: HttpClient, private authService: AuthService) {
+    const bankDefault = BANKS.find(({ code }) => code == 'EIB');
+    if (bankDefault) {
+      this.bankInfo.next({
+        bank: bankDefault.code,
+        name: bankDefault.name,
+        accountNumber: 'Thanhdc',
+      });
+    }
+  }
 
   getUserId() {
     return this.userId;
@@ -88,6 +112,7 @@ export class BillSplitterService {
       return { ...member, participations: updatedParticipations };
     });
     this.members.next(updatedMembers);
+    this.saveBillToStorage();
   }
 
   private recalculateTotalAmounts(): void {
@@ -103,6 +128,9 @@ export class BillSplitterService {
       return { ...member, totalAmount };
     });
     this.members.next(updatedMembers);
+    this.totalAmount.next(
+      this.expenses.value.reduce((total, expense) => total + expense.amount, 0)
+    );
     this.saveBillToStorage();
   }
 
@@ -161,6 +189,8 @@ export class BillSplitterService {
             participations: Object.fromEntries(member.participations),
           };
         }),
+        totalAmount: this.totalAmount.value,
+        bankInfo: this.bankInfo.value,
       },
     };
     localStorage.setItem('bill', JSON.stringify(billData));
@@ -247,11 +277,14 @@ export class BillSplitterService {
 
   async getBills() {
     const response = await firstValueFrom(
-      this.http.get<BillFindAll>(
-        `${environment.apiUrl}/${this.endPoint}/`
-      )
+      this.http.get<BillFindAll>(`${environment.apiUrl}/${this.endPoint}/`)
     );
 
     return response.data;
+  }
+
+  updateBankInfo(bankInfo: BankInfoItem) {
+    this.bankInfo.next(bankInfo);
+    this.saveBillToStorage();
   }
 }

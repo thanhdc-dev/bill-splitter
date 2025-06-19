@@ -70,7 +70,7 @@ export class MemberTableComponent {
       const names = name.split(',').map((memberName) => memberName.trim());
       const namesExist = this.filterNameExists(names);
       if (namesExist.length) {
-        this.snackBar.open(`Thành viên ${namesExist.join(', ')} đã được thêm`, 'Đóng', {
+        this.snackBar.open(`${namesExist.join(', ')} đã tồn tại`, 'Đóng', {
           duration: 3000,
         });
       } else {

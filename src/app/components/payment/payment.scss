@@ -1,0 +1,40 @@
+.payment-form {
+  width: 100%;
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+
+  .select-bank {
+    flex: 1;
+    .ng-dropdown-panel {
+      position: static;
+    }
+  }
+
+  .account-number {
+    width: 250px;
+  }
+}
+
+.bank-info {
+  display: flex;
+  align-items: center;
+  .bank-name {
+    flex: 1;
+    padding-left: 10px;
+  }
+}
+
+@media screen and (max-width: 600px) {
+  .payment-form {
+    flex-direction: column;
+    gap: 8px;
+
+    .select-bank,
+    .account-number {
+      width: 100%;
+      flex: 1;
+    }
+  }
+}

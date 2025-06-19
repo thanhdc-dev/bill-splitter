@@ -1,0 +1,21 @@
+<mat-card class="container">
+  <div class="content">
+    <div class="left">
+      <h2>Thông tin ngân hàng</h2>
+      <p><strong>Ngân hàng: </strong><span>{{ bankInfo.name }} - {{ bankInfo.bank }}</span></p>
+      <p>
+        <strong>Số tài khoản: </strong><span>{{ bankInfo.accountNumber }}</span>
+        <button
+          class="copy-btn"
+          (click)="onCopyAccountNumber($event)"
+          title="Copy account number"
+        >
+          <mat-icon>content_copy</mat-icon>
+        </button>
+      </p>
+    </div>
+    <div class="right">
+      <img [src]="qrCodeUrl" alt="QR Code chuyển khoản" />
+    </div>
+  </div>
+</mat-card>

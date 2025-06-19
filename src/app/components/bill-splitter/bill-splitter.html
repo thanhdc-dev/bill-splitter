@@ -18,10 +18,19 @@
             <app-member-table [isAuthor]="isAuthor"></app-member-table>
           </div>
         </mat-tab>
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <h2 class="mat-tab-label">Thanh toán</h2>
+          </ng-template>
+          <div class="payment">
+            <app-payment></app-payment>
+          </div>
+        </mat-tab>
       </mat-tab-group>
     </mat-card-content>
   </mat-card>
   <app-result-display></app-result-display>
+  <app-bank></app-bank>
   <!-- Sticky Share Button -->
   <button
     mat-fab

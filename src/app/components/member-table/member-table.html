@@ -1,86 +1,80 @@
-<div class="member-table-container">
-  <form [formGroup]="memberForm" (ngSubmit)="onSubmit()" class="add-member-form">
-    <mat-form-field appearance="outline">
-      <mat-label>Tên thành viên</mat-label>
-      <input
-        matInput
-        formControlName="name"
-        placeholder="Nhập tên thành viên"
-        (keydown.enter)="onSubmit()"
-      />
-    </mat-form-field>
-    <button
-      mat-raised-button
-      color="primary"
-      type="submit"
-      [disabled]="!memberForm.valid"
+<form [formGroup]="memberForm" (ngSubmit)="onSubmit()" class="add-member-form">
+  <mat-form-field appearance="outline">
+    <mat-label>Tên thành viên</mat-label>
+    <input
+      matInput
+      formControlName="name"
+      placeholder="Nhập tên thành viên"
+      (keydown.enter)="onSubmit()"
+    />
+  </mat-form-field>
+  <button
+    mat-raised-button
+    color="primary"
+    type="submit"
+    [disabled]="!memberForm.valid"
+  >
+    Thêm thành viên
+  </button>
+</form>
+
+<div class="table-scroll" *ngIf="members$ | async as members">
+  <table mat-table [dataSource]="members$" class="mat-elevation-z8">
+    <!-- Name Column -->
+    <ng-container matColumnDef="name">
+      <th mat-header-cell *matHeaderCellDef>Tên thành viên</th>
+      <td mat-cell *matCellDef="let member">{{member.name}}</td>
+    </ng-container>
+
+    <!-- Dynamic Expense Columns -->
+    <ng-container
+      *ngFor="let expense of expenses$ | async"
+      [matColumnDef]="expense.id"
     >
-      Thêm thành viên
-    </button>
-  </form>
-
-  <div class="table-scroll" *ngIf="members$ | async as members">
-    <table mat-table [dataSource]="members$" class="mat-elevation-z8">
-      <!-- Name Column -->
-      <ng-container matColumnDef="name">
-        <th mat-header-cell *matHeaderCellDef>Tên thành viên</th>
-        <td mat-cell *matCellDef="let member">{{member.name}}</td>
-      </ng-container>
-
-      <!-- Dynamic Expense Columns -->
-      <ng-container
-        *ngFor="let expense of expenses$ | async"
-        [matColumnDef]="expense.id"
-      >
-        <th mat-header-cell *matHeaderCellDef>
-          <span class="column-expense-name">{{expense.name}}</span>
-        </th>
-        <td mat-cell *matCellDef="let member">
-          <mat-checkbox
-            *ngIf="isAuthor"
-            [checked]="member.participations.get(expense.id)"
-            (change)="updateParticipation(member.id, expense.id, $event.checked)"
+      <th mat-header-cell *matHeaderCellDef>
+        <span class="column-expense-name">{{expense.name}}</span>
+      </th>
+      <td mat-cell *matCellDef="let member">
+        <mat-checkbox
+          *ngIf="isAuthor"
+          [checked]="member.participations.get(expense.id)"
+          (change)="updateParticipation(member.id, expense.id, $event.checked)"
+        >
+        </mat-checkbox>
+        <ng-container *ngIf="!isAuthor">
+          <mat-icon
+            *ngIf="member.participations.get(expense.id)"
+            class="icon__check"
+            >check</mat-icon
           >
-          </mat-checkbox>
-          <ng-container *ngIf="!isAuthor">
-            <mat-icon
-              *ngIf="member.participations.get(expense.id)"
-              class="icon__check"
-              >check</mat-icon
-            >
-            <mat-icon
-              *ngIf="!member.participations.get(expense.id)"
-              class="icon__close"
-              >close</mat-icon
-            >
-          </ng-container>
-        </td>
-      </ng-container>
-
-      <!-- Total Amount Column -->
-      <ng-container matColumnDef="totalAmount">
-        <th mat-header-cell *matHeaderCellDef>Tổng tiền</th>
-        <td mat-cell *matCellDef="let member">
-          {{formatAmount(member.totalAmount)}}
-        </td>
-      </ng-container>
-
-      <!-- Actions Column -->
-      <ng-container matColumnDef="actions">
-        <th mat-header-cell *matHeaderCellDef></th>
-        <td mat-cell *matCellDef="let member">
-          <button
-            mat-icon-button
-            color="warn"
-            (click)="removeMember(member.id)"
+          <mat-icon
+            *ngIf="!member.participations.get(expense.id)"
+            class="icon__close"
+            >close</mat-icon
           >
-            <mat-icon>delete</mat-icon>
-          </button>
-        </td>
-      </ng-container>
+        </ng-container>
+      </td>
+    </ng-container>
 
-      <tr mat-header-row *matHeaderRowDef="getDisplayedColumns()"></tr>
-      <tr mat-row *matRowDef="let row; columns: getDisplayedColumns();"></tr>
-    </table>
-  </div>
+    <!-- Total Amount Column -->
+    <ng-container matColumnDef="totalAmount">
+      <th mat-header-cell *matHeaderCellDef>Tổng tiền</th>
+      <td mat-cell *matCellDef="let member">
+        {{formatAmount(member.totalAmount)}}
+      </td>
+    </ng-container>
+
+    <!-- Actions Column -->
+    <ng-container matColumnDef="actions">
+      <th mat-header-cell *matHeaderCellDef></th>
+      <td mat-cell *matCellDef="let member">
+        <button mat-icon-button color="warn" (click)="removeMember(member.id)">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="getDisplayedColumns()"></tr>
+    <tr mat-row *matRowDef="let row; columns: getDisplayedColumns();"></tr>
+  </table>
 </div>

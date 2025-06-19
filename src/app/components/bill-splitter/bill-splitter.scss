@@ -15,6 +15,7 @@
 
   .expense-form,
   .member-table,
+  .payment,
   .result-display {
     padding-top: 10px;
     padding-bottom: 10px;
@@ -49,6 +50,10 @@
 
     .mat-mdc-card {
       margin-bottom: 12px;
+    }
+
+    .mat-tab-label {
+      font-size: 1rem;
     }
   }
 }

@@ -16,6 +16,8 @@ import { ExpenseFormComponent } from '../expense-form/expense-form';
 import { LoginDialogComponent } from '../login-dialog/login-dialog';
 import { MemberTableComponent } from '../member-table/member-table';
 import { ResultDisplayComponent } from '../result-display/result-display';
+import { BankComponent } from '../bank/bank';
+import { PaymentComponent } from '../payment/payment';
 
 @Component({
   selector: 'app-bill-splitter',
@@ -30,6 +32,8 @@ import { ResultDisplayComponent } from '../result-display/result-display';
     ExpenseFormComponent,
     MemberTableComponent,
     ResultDisplayComponent,
+    BankComponent,
+    PaymentComponent,
   ],
   templateUrl: './bill-splitter.html',
   styleUrls: ['./bill-splitter.scss'],
@@ -47,7 +51,7 @@ export class BillSplitterComponent implements OnInit {
     private dialog: MatDialog,
     private snackBar: MatSnackBar,
     private billSplitterService: BillSplitterService,
-    private authService: AuthService,
+    private authService: AuthService
   ) {
     this.expenses$ = this.billSplitterService.expenses$;
     this.members$ = this.billSplitterService.members$;
@@ -120,11 +124,15 @@ export class BillSplitterComponent implements OnInit {
       const queryCode = this.route.snapshot.paramMap.get('code');
       if (queryCode) {
         await this.billSplitterService.updateBill(queryCode);
-        await navigator.clipboard.writeText(`${window.location.origin}/${queryCode}`);
+        await navigator.clipboard.writeText(
+          `${window.location.origin}/${queryCode}`
+        );
       } else {
         const code = await this.billSplitterService.createBill();
         await this.router.navigate(['/', code]);
-        await navigator.clipboard.writeText(`${window.location.origin}/${queryCode}`);
+        await navigator.clipboard.writeText(
+          `${window.location.origin}/${queryCode}`
+        );
       }
       this.snackBar.open('Đã Lưu và sao chép URL vào khay nhớ tạm!', 'Đóng', {
         duration: 3000,
@@ -134,11 +142,5 @@ export class BillSplitterComponent implements OnInit {
         duration: 3000,
       });
     }
-  }
-
-  private getFullPathWithoutQuery(): string {
-    const origin = window.location.origin;
-    const path = this.router.url.split('?')[0].split('#')[0];
-    return origin + path;
   }
 }

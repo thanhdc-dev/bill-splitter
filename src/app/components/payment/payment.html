@@ -1,0 +1,28 @@
+<form [formGroup]="bankForm" class="payment-form">
+  <mat-form-field class="select-bank">
+    <mat-label>Chọn ngân hàng</mat-label>
+    <mat-select formControlName="bank" required>
+      <mat-option>
+        <ngx-mat-select-search
+          [formControl]="itemFilterCtrl" [placeholderLabel]="'Nhập mã hoặc tên để tìm kiếm'"
+        ></ngx-mat-select-search>
+      </mat-option>
+      <mat-option
+        *ngFor="let item of filteredItems | async"
+        [value]="item.code"
+      >
+        <div class="bank-info">
+          <div>
+            <img [src]="item.logo" width="70" />
+          </div>
+          <div class="bank-name">{{ item.label }}</div>
+        </div>
+      </mat-option>
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="account-number">
+    <mat-label>Số tài khoản</mat-label>
+    <input matInput type="text" formControlName="accountNumber" required />
+  </mat-form-field>
+</form>
