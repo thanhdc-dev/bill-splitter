@@ -36,6 +36,7 @@
     mat-fab
     color="primary"
     class="share-button"
+    aria-label="Button share"
     [ngClass]="{'share-button__syncing': (isSaving$ | async)}"
     [disabled]="(isSaving$ | async) || !hasData"
     (click)="saveBill()"
