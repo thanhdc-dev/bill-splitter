@@ -9,5 +9,6 @@ export interface BankItem {
 export interface BankInfoItem {
   name: string;
   bank: string;
+  short_name: string;
   accountNumber: string;
 }

@@ -2,7 +2,7 @@
   <div class="content">
     <div class="left">
       <h2>Thông tin ngân hàng</h2>
-      <p><strong>Ngân hàng: </strong><span>{{ bankInfo.name }} - {{ bankInfo.bank }}</span></p>
+      <p><strong>Ngân hàng: </strong><span>{{ bankInfo.short_name }} - {{ bankInfo.name }}</span></p>
       <p>
         <strong>Số tài khoản: </strong><span>{{ bankInfo.accountNumber }}</span>
         <button
@@ -15,7 +15,7 @@
       </p>
     </div>
     <div class="right">
-      <img [src]="qrCodeUrl" alt="QR Code chuyển khoản" />
+      <img [src]="qrCodeUrl" width="250px" height="250px" alt="QR Code chuyển khoản" />
     </div>
   </div>
 </mat-card>

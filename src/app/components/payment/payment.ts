@@ -91,6 +91,7 @@ export class PaymentComponent {
         const data: BankInfoItem = {
           name: bank?.name,
           bank: bank?.code,
+          short_name: bank?.short_name,
           accountNumber: formValue.accountNumber,
         };
         this.billSplitterService.updateBankInfo(data);

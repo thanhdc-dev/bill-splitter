@@ -25,6 +25,7 @@ export class BillSplitterService {
   private bankInfo = new BehaviorSubject<BankInfoItem>({
     bank: BANKS[0].code,
     name: BANKS[0].name,
+    short_name: BANKS[0].short_name,
     accountNumber: 'Thanhdc',
   });
   private isSaving = new BehaviorSubject<boolean>(false);
@@ -41,6 +42,7 @@ export class BillSplitterService {
       this.bankInfo.next({
         bank: bankDefault.code,
         name: bankDefault.name,
+        short_name: bankDefault.short_name,
         accountNumber: 'Thanhdc',
       });
     }
