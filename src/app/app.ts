@@ -9,6 +9,7 @@ import { AsyncPipe, CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { Meta, Title } from '@angular/platform-browser';
+import { environment } from '../environments/environment';
 
 @Component({
   selector: 'app-root',
@@ -77,10 +78,12 @@ export class App implements OnInit {
     });
 
     // Open Graph Meta Tags
-    const origin = window.location.origin;
+    const origin = environment.appUrl;
     const thumbnailUrl = `${origin}/thumbnail.webp`;
     this.meta.addTag({ property: 'og:title', content: `${_title} - Home` });
     this.meta.addTag({ property: 'og:description', content: _description });
     this.meta.addTag({ property: 'og:image', content: thumbnailUrl });
+    this.meta.addTag({ property: 'og:url', content: origin });
+    this.meta.addTag({ property: 'og:type', content: 'website' });
   }
 }
