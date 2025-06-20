@@ -77,8 +77,10 @@ export class App implements OnInit {
     });
 
     // Open Graph Meta Tags
+    const origin = window.location.origin;
+    const thumbnailUrl = `${origin}/thumbnail.webp`;
     this.meta.addTag({ property: 'og:title', content: `${_title} - Home` });
     this.meta.addTag({ property: 'og:description', content: _description });
-    this.meta.addTag({ property: 'og:image', content: 'thumbnail.webp' });
+    this.meta.addTag({ property: 'og:image', content: thumbnailUrl });
   }
 }
