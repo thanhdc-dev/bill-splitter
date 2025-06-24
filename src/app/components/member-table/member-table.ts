@@ -98,13 +98,6 @@ export class MemberTableComponent {
     );
   }
 
-  formatAmount(amount: number): string {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND',
-    }).format(amount);
-  }
-
   getDisplayedColumns(): string[] {
     this.displayedColumns = ['name', ...this.expensesColumns, 'totalAmount'];
     if (this.isAuthor) {

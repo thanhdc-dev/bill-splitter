@@ -60,7 +60,7 @@
     <ng-container matColumnDef="totalAmount">
       <th mat-header-cell *matHeaderCellDef>Tổng tiền</th>
       <td mat-cell *matCellDef="let member">
-        {{formatAmount(member.totalAmount)}}
+        {{member.totalAmount | currency: 'VND': 'symbol' : '1.0-0' : 'vi'}}
       </td>
     </ng-container>
 

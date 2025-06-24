@@ -43,13 +43,6 @@ export class ResultDisplayComponent {
     return amount / participantCount;
   }
 
-  formatAmount(amount: number): string {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND'
-    }).format(amount);
-  }
-
   getTotalAmount(expenses: ExpenseItem[]): number {
     return expenses.reduce((total, expense) => total + expense.amount, 0);
   }

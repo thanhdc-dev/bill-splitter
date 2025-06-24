@@ -20,10 +20,13 @@
             <ng-container matColumnDef="amount">
               <th mat-header-cell *matHeaderCellDef>Số tiền</th>
               <td mat-cell *matCellDef="let expense">
-                {{formatAmount(expense.amount)}}
+                {{expense.amount | currency: 'VND': 'symbol' : '1.0-0' : 'vi'}}
               </td>
               <td mat-footer-cell *matFooterCellDef>
-                <strong>{{formatAmount(getTotalAmount(expenses))}}</strong>
+                <strong
+                  >{{getTotalAmount(expenses) | currency: 'VND': 'symbol' :
+                  '1.0-0' : 'vi'}}</strong
+                >
               </td>
             </ng-container>
 
@@ -41,8 +44,9 @@
             <ng-container matColumnDef="perPerson">
               <th mat-header-cell *matHeaderCellDef>Mỗi người trả</th>
               <td mat-cell *matCellDef="let expense">
-                {{formatAmount(calculatePerPerson(expense.amount,
-                getParticipantCount(expense, members)))}}
+                {{calculatePerPerson(expense.amount,
+                getParticipantCount(expense, members)) | currency: 'VND':
+                'symbol' : '1.0-0' : 'vi'}}
               </td>
               <td mat-footer-cell *matFooterCellDef></td>
             </ng-container>
@@ -64,7 +68,15 @@
           <div class="member-amounts">
             <div *ngFor="let member of members" class="member-amount">
               <span class="member-name">{{member.name}}</span>
-              <span class="amount">{{formatAmount(member.totalAmount)}}</span>
+              <span class="amount"
+                >{{member.totalAmount | currency: 'VND': 'symbol' : '1.0-0' :
+                'vi'}}</span
+              >
+              <span class="is-paid">
+                <mat-icon *ngIf="member.isPaid" class="icon__check">
+                  check
+                </mat-icon>
+              </span>
             </div>
           </div>
         </div>
