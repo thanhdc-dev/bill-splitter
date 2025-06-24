@@ -6,6 +6,7 @@ import { environment } from '../../environments/environment';
 import {
   BillData,
   BillFindAll,
+  BillFindOne,
   ExpenseItem,
   Member,
 } from '../models/bill-splitter.model';
@@ -144,24 +145,27 @@ export class BillSplitterService {
     ); // Prevent division by zero
   }
 
+  private formatBillData() {
+    return {
+      name: 'Bill #',
+      data: {
+        expenses: this.expenses.value,
+        members: this.members.value.map((member) => {
+          return {
+            ...member,
+            participations: Object.fromEntries(member.participations),
+          };
+        }),
+        totalAmount: this.totalAmount.value,
+      },
+    };
+  }
+
   async createBill(): Promise<string> {
     try {
       this.isSaving.next(true);
 
-      const token = this.authService.getAccessToken();
-
-      const billData = {
-        name: 'Bill #',
-        data: {
-          expenses: this.expenses.value,
-          members: this.members.value.map((member) => {
-            return {
-              ...member,
-              participations: Object.fromEntries(member.participations),
-            };
-          }),
-        },
-      };
+      const billData = this.formatBillData();
 
       const response = await firstValueFrom(
         this.http.post<{ code: string }>(
@@ -198,7 +202,7 @@ export class BillSplitterService {
     localStorage.setItem('bill', JSON.stringify(billData));
   }
 
-  loadBillFromStorage() {
+  fetchBillFromStorage() {
     const billString = localStorage.getItem('bill');
     if (!billString) return;
     const bill = JSON.parse(billString);
@@ -222,20 +226,7 @@ export class BillSplitterService {
     try {
       this.isSaving.next(true);
 
-      const token = this.authService.getAccessToken();
-
-      const billData = {
-        name: 'Bill #',
-        data: {
-          expenses: this.expenses.value,
-          members: this.members.value.map((member) => {
-            return {
-              ...member,
-              participations: Object.fromEntries(member.participations),
-            };
-          }),
-        },
-      };
+      const billData = this.formatBillData();
 
       await firstValueFrom(
         this.http.put<{ code: string }>(
@@ -251,12 +242,10 @@ export class BillSplitterService {
     }
   }
 
-  async loadBill(code: string): Promise<void> {
+  async fetchBill(code: string): Promise<BillFindOne> {
     try {
-      const token = this.authService.getAccessToken();
-
       const response = await firstValueFrom(
-        this.http.get<BillData>(
+        this.http.get<BillFindOne>(
           `${environment.apiUrl}/${this.endPoint}/${code}`
         )
       );
@@ -270,7 +259,9 @@ export class BillSplitterService {
       });
       this.expenses.next(expenses);
       this.members.next(members);
+      this.totalAmount.next(data.totalAmount ?? 0);
       this.userId = response.userId;
+      return response;
     } catch (error) {
       console.error('Error loading bill:', error);
       throw error;

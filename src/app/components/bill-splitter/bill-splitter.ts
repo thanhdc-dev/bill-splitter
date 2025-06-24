@@ -18,6 +18,8 @@ import { MemberTableComponent } from '../member-table/member-table';
 import { ResultDisplayComponent } from '../result-display/result-display';
 import { BankComponent } from '../bank/bank';
 import { PaymentComponent } from '../payment/payment';
+import { formatAmount } from '../../shared/helpers';
+import { SeoService } from '../../services';
 
 @Component({
   selector: 'app-bill-splitter',
@@ -46,12 +48,13 @@ export class BillSplitterComponent implements OnInit {
   isAuthor: boolean = true;
 
   constructor(
-    private route: ActivatedRoute,
-    private router: Router,
-    private dialog: MatDialog,
-    private snackBar: MatSnackBar,
-    private billSplitterService: BillSplitterService,
-    private authService: AuthService
+    private readonly route: ActivatedRoute,
+    private readonly router: Router,
+    private readonly dialog: MatDialog,
+    private readonly snackBar: MatSnackBar,
+    private readonly billSplitterService: BillSplitterService,
+    private readonly authService: AuthService,
+    private readonly seoService: SeoService
   ) {
     this.expenses$ = this.billSplitterService.expenses$;
     this.members$ = this.billSplitterService.members$;
@@ -66,32 +69,35 @@ export class BillSplitterComponent implements OnInit {
   async ngOnInit() {
     const code = this.route.snapshot.paramMap.get('code');
     if (code) {
-      try {
-        await this.billSplitterService.loadBill(code);
-        this.snackBar.open('Đã tải dữ liệu thành công!', 'Đóng', {
-          duration: 3000,
-        });
-        if (this.authService.isLoggedIn()) {
-          const userLoggedIn = this.authService.getUserId();
-          this.isAuthor = userLoggedIn
-            ? userLoggedIn == this.billSplitterService.getUserId()
-            : false;
-        } else {
-          this.isAuthor = false;
-        }
-      } catch (error) {
-        this.snackBar.open('Không thể tải dữ liệu!', 'Đóng', {
-          duration: 3000,
-        });
+      const bill = await this.billSplitterService.fetchBill(code);
+      this.snackBar.open('Đã tải dữ liệu thành công!', 'Đóng', {
+        duration: 3000,
+      });
+      if (this.authService.isLoggedIn()) {
+        const userLoggedIn = this.authService.getUserId();
+        this.isAuthor = userLoggedIn
+          ? userLoggedIn == this.billSplitterService.getUserId()
+          : false;
+      } else {
+        this.isAuthor = false;
       }
+
+      console.log(bill)
+      this.seoService.generateTags({
+        title: `Hóa đơn ${bill.name}`,
+        description: `Tổng tiền: ${formatAmount(
+          bill.data.totalAmount
+        )} - Số thành viên tham gia: ${bill.data.members.length}.`,
+      });
     } else {
-      this.billSplitterService.loadBillFromStorage();
+      this.billSplitterService.fetchBillFromStorage();
       this.route.queryParams.subscribe((params) => {
         const save = params['save'];
         if (save == 'true') {
           this.saveBill();
         }
       });
+      this.seoService.generateTags();
     }
   }
 

@@ -8,8 +8,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { AsyncPipe, CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
-import { Meta, Title } from '@angular/platform-browser';
-import { environment } from '../environments/environment';
+import { SeoService } from './services';
 
 @Component({
   selector: 'app-root',
@@ -29,17 +28,16 @@ export class App implements OnInit {
   user$: Observable<AuthUser | null>;
 
   constructor(
-    private title: Title,
-    private meta: Meta,
     private router: Router,
     private dialog: MatDialog,
-    private authService: AuthService
+    private authService: AuthService,
+    private readonly seoService: SeoService
   ) {
     this.user$ = this.authService.user$;
   }
 
   ngOnInit() {
-    this.updateMetaTags();
+    this.seoService.generateTags();
   }
 
   toggleSidebar() {
@@ -63,27 +61,5 @@ export class App implements OnInit {
     this.authService.logout();
     this.router.navigate(['/']);
     this.closeSidebar();
-  }
-
-  private updateMetaTags() {
-    const _title = 'Chia hóa đơn';
-    const _description = 'Bạn cứ chill đi – bill để tôi chia';
-    this.title.setTitle(_title);
-
-    // Standard Meta Tags
-    this.meta.addTag({ name: 'description', content: _description });
-    this.meta.addTag({
-      name: 'keywords',
-      content: 'Bill splitter, Chia hóa đơn, Thanhdc',
-    });
-
-    // Open Graph Meta Tags
-    const origin = environment.appUrl;
-    const thumbnailUrl = `${origin}/thumbnail.webp`;
-    this.meta.addTag({ property: 'og:title', content: `${_title} - Home` });
-    this.meta.addTag({ property: 'og:description', content: _description });
-    this.meta.addTag({ property: 'og:image', content: thumbnailUrl });
-    this.meta.addTag({ property: 'og:url', content: origin });
-    this.meta.addTag({ property: 'og:type', content: 'website' });
   }
 }

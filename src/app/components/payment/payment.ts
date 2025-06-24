@@ -41,7 +41,7 @@ export class PaymentComponent {
     return {
       ...bank,
       label: `${bank.short_name} - ${bank.name}`,
-      logo: `/images/bank-logo/${bank.code}.png`,
+      logo: `/images/bank-logo/${bank.code}.webp`,
     };
   });
   bankInfo!: BankInfoItem;
