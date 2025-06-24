@@ -5,6 +5,7 @@ import { MatTableModule } from '@angular/material/table';
 import { BillSplitterService } from '../../services/bill-splitter.service';
 import { ExpenseItem, Member } from '../../models/bill-splitter.model';
 import { Observable } from 'rxjs';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
   selector: 'app-result-display',
@@ -13,7 +14,8 @@ import { Observable } from 'rxjs';
     CommonModule,
     AsyncPipe,
     MatCardModule,
-    MatTableModule
+    MatTableModule,
+    MatIconModule,
   ],
   templateUrl: './result-display.html',
   styleUrls: ['./result-display.scss']

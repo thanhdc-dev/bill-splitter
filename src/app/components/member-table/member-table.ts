@@ -99,11 +99,20 @@ export class MemberTableComponent {
   }
 
   getDisplayedColumns(): string[] {
-    this.displayedColumns = ['name', ...this.expensesColumns, 'totalAmount'];
+    this.displayedColumns = [
+      'name',
+      ...this.expensesColumns,
+      'isPaid',
+      'totalAmount',
+    ];
     if (this.isAuthor) {
       this.displayedColumns.push('actions');
     }
     return this.displayedColumns;
+  }
+
+  updateIsPaid(memberId: string, isPaid: boolean) {
+    this.billSplitterService.updatePaid(memberId, isPaid);
   }
 
   private filterNameExists(names: string[]) {

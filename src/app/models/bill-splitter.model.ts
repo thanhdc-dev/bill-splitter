@@ -7,6 +7,7 @@ export interface ExpenseItem {
 export interface Member {
   id: string;
   name: string;
+  isPaid: boolean;
   participations: Map<string, boolean>;
   totalAmount: number;
 }
@@ -29,6 +30,7 @@ interface BillFindParticipation {
 interface BillFindOneMember {
   id: string;
   name: string;
+  isPaid: boolean;
   totalAmount: number;
   participations: BillFindParticipation;
 }

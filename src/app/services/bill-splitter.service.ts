@@ -79,6 +79,7 @@ export class BillSplitterService {
     const newMember: Member = {
       id: uuidv4(),
       name,
+      isPaid: false,
       participations,
       totalAmount: 0,
     };
@@ -106,6 +107,17 @@ export class BillSplitterService {
     });
     this.members.next(updatedMembers);
     this.recalculateTotalAmounts();
+  }
+
+  updatePaid(memberId: string, isPaid: boolean) {
+    const updatedMembers = this.members.value.map((member) => {
+      if (member.id === memberId) {
+        return { ...member, isPaid };
+      }
+      return member;
+    });
+    this.members.next(updatedMembers);
+    this.saveBillToStorage();
   }
 
   private updateMemberParticipations(expenseId: string): void {
@@ -216,6 +228,7 @@ export class BillSplitterService {
     });
     this.expenses.next(expenses);
     this.members.next(members);
+    this.totalAmount.next(data.totalAmount);
   }
 
   clearBillStorage() {

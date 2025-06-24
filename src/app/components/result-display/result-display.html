@@ -68,15 +68,17 @@
           <div class="member-amounts">
             <div *ngFor="let member of members" class="member-amount">
               <span class="member-name">{{member.name}}</span>
-              <span class="amount"
-                >{{member.totalAmount | currency: 'VND': 'symbol' : '1.0-0' :
-                'vi'}}</span
-              >
-              <span class="is-paid">
-                <mat-icon *ngIf="member.isPaid" class="icon__check">
-                  check
-                </mat-icon>
-              </span>
+              <div class="flex items-center">
+                <span class="amount"
+                  >{{member.totalAmount | currency: 'VND': 'symbol' : '1.0-0' :
+                  'vi'}}</span
+                >
+                <span class="is-paid">
+                  <mat-icon *ngIf="member.isPaid" class="icon__check">
+                    check
+                  </mat-icon>
+                </span>
+              </div>
             </div>
           </div>
         </div>
