@@ -82,7 +82,6 @@ export class BillSplitterComponent implements OnInit {
         this.isAuthor = false;
       }
 
-      console.log(bill)
       this.seoService.generateTags({
         title: `Hóa đơn ${bill.name}`,
         description: `Tổng tiền: ${formatAmount(

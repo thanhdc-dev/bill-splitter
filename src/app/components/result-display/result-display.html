@@ -69,15 +69,21 @@
             <div *ngFor="let member of members" class="member-amount">
               <span class="member-name">{{member.name}}</span>
               <div class="flex items-center">
-                <span class="amount"
+                <span class="amount mr-2"
                   >{{member.totalAmount | currency: 'VND': 'symbol' : '1.0-0' :
                   'vi'}}</span
                 >
-                <span class="is-paid">
-                  <mat-icon *ngIf="member.isPaid" class="icon__check">
+                <ng-container *ngIf="member.isPaid; then thenBlock else elseBlock"></ng-container>
+                <ng-template #thenBlock>
+                  <mat-icon class="text-green-600" *ngIf="member.isPaid">
                     check
                   </mat-icon>
-                </span>
+                </ng-template>
+                <ng-template #elseBlock>
+                  <mat-icon class="pointer" *ngIf="!member.isPaid" (click)="showQRPopup(member)" role="button">
+                    qr_code
+                  </mat-icon>
+                </ng-template>
               </div>
             </div>
           </div>

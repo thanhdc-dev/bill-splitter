@@ -1,0 +1,34 @@
+<mat-card class="qr-popup-card">
+  <mat-card-header>
+    <mat-card-title>QR Code</mat-card-title>
+  </mat-card-header>
+
+  <mat-card-content>
+    <div class="qr-image-container">
+      <img [src]="data.qrImageUrl" alt="QR Code" class="qr-image" #qrImage />
+    </div>
+  </mat-card-content>
+
+  <mat-card-actions align="end">
+    <button
+      mat-raised-button
+      color="primary"
+      (click)="downloadQRCode()"
+      class="download-button"
+      role="button"
+      tabindex="0"
+    >
+      <mat-icon>download</mat-icon>
+      Download
+    </button>
+    <button
+      mat-raised-button
+      role="button"
+      role="button"
+      tabindex="1"
+      (click)="closeDialog()"
+    >
+      Đóng
+    </button>
+  </mat-card-actions>
+</mat-card>

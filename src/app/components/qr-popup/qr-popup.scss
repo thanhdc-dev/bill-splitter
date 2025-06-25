@@ -1,0 +1,53 @@
+:host {
+  width: "400px";
+  max-width: "90vw";
+}
+
+.qr-popup-card {
+  min-width: 350px;
+  max-width: 500px;
+  padding: 0;
+}
+
+.qr-image-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  background-color: #fafafa;
+  border-radius: 8px;
+  margin: 16px 0;
+}
+
+.qr-image {
+  max-width: 250px;
+  width: 100%;
+  height: auto;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  background: white;
+}
+
+.download-button {
+  margin: 8px;
+}
+
+.download-button mat-icon {
+  margin-right: 8px;
+}
+
+mat-card-header {
+  position: relative;
+  padding: 16px 16px 0 16px;
+}
+
+mat-card-actions {
+  padding: 8px 16px 16px 16px;
+}
+
+@media screen and (max-width: 600px) {
+  .qr-popup-card {
+    min-width: unset;
+    max-width: unset;
+  }
+}
