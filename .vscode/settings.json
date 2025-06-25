@@ -1,0 +1,15 @@
+{
+  "css.validate": false,
+  "scss.validate": false,
+  "tailwindCSS.includeLanguages": {
+    "typescript": "html",
+    "html": "html",
+    "scss": "css"
+  },
+  "tailwindCSS.experimental.classRegex": [
+    ["class\\s*=\\s*['\"]([^'\"]*)['\"]", "['\"]([^'\"]*)['\"]"]
+  ],
+  "emmet.includeLanguages": {
+    "typescript": "html"
+  }
+}
