@@ -4,7 +4,10 @@
       <mat-tab-group mat-stretch-tabs="false" mat-align-tabs="start">
         <mat-tab>
           <ng-template mat-tab-label>
-            <h2 class="mat-tab-label">Khoản mục</h2>
+            <h2 class="mat-tab-label">
+              <span class="label">Khoản mục</span>
+              <mat-icon class="icon">receipt</mat-icon>
+            </h2>
           </ng-template>
           <div class="expense-form">
             <app-expense-form [isAuthor]="isAuthor"></app-expense-form>
@@ -12,7 +15,10 @@
         </mat-tab>
         <mat-tab>
           <ng-template mat-tab-label>
-            <h2 class="mat-tab-label">Thành viên</h2>
+            <h2 class="mat-tab-label">
+              <span class="label">Thành viên</span>
+              <mat-icon class="icon">groups</mat-icon>
+            </h2>
           </ng-template>
           <div class="member-table">
             <app-member-table [isAuthor]="isAuthor"></app-member-table>
@@ -20,7 +26,10 @@
         </mat-tab>
         <mat-tab>
           <ng-template mat-tab-label>
-            <h2 class="mat-tab-label">Thanh toán</h2>
+            <h2 class="mat-tab-label">
+              <span class="label">Thanh toán</span>
+              <mat-icon class="icon">credit_card</mat-icon>
+            </h2>
           </ng-template>
           <div class="payment">
             <app-payment></app-payment>

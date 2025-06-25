@@ -7,6 +7,9 @@
 
   .mat-tab-label {
     margin-bottom: 0;
+    .icon {
+      display: none;
+    }
   }
 
   .mat-mdc-card {
@@ -54,6 +57,12 @@
 
     .mat-tab-label {
       font-size: 1rem;
+      .label {
+        display: none;
+      }
+      .icon {
+        display: block;
+      }
     }
   }
 }
