@@ -1,8 +1,21 @@
 <mat-card class="container">
   <div class="content">
     <div class="left">
-      <h2>Thông tin ngân hàng</h2>
-      <p><strong>Ngân hàng: </strong><span>{{ bankInfo.short_name }} - {{ bankInfo.name }}</span></p>
+      <div class="flex items-baseline justify-between">
+        <h2>Thông tin ngân hàng</h2>
+        <button
+          mat-icon-button
+          aria-label="settings"
+          (click)="onSettingClick()"
+        >
+          <mat-icon>settings</mat-icon>
+        </button>
+      </div>
+      <p>
+        <strong>Ngân hàng: </strong
+        ><span>{{ bankInfo.short_name }} - {{ bankInfo.name }}</span>
+      </p>
+      <p><strong>Họ & tên: </strong><span>{{ bankInfo.accountName }}</span></p>
       <p>
         <strong>Số tài khoản: </strong><span>{{ bankInfo.accountNumber }}</span>
         <button
@@ -16,7 +29,12 @@
       </p>
     </div>
     <div class="right">
-      <img [src]="qrCodeUrl" width="250px" height="250px" alt="QR Code chuyển khoản" />
+      <img
+        [src]="qrCodeUrl"
+        width="250px"
+        height="250px"
+        alt="QR Code chuyển khoản"
+      />
     </div>
   </div>
 </mat-card>

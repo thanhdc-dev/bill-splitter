@@ -1,13 +1,13 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { AfterViewInit, Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { MatTabsModule } from '@angular/material/tabs';
+import { MatTabGroup, MatTabsModule } from '@angular/material/tabs';
 import { ActivatedRoute, Router } from '@angular/router';
-import { firstValueFrom, Observable } from 'rxjs';
+import { firstValueFrom, Observable, Subscription } from 'rxjs';
 import { ExpenseItem, Member } from '../../models/bill-splitter.model';
 import { AuthService } from '../../services/auth.service';
 import { BillSplitterService } from '../../services/bill-splitter.service';
@@ -20,6 +20,7 @@ import { BankComponent } from '../bank/bank';
 import { PaymentComponent } from '../payment/payment';
 import { formatAmount } from '../../shared/helpers';
 import { SeoService } from '../../services';
+import { BillTabControlService } from './bill-tab-control.service';
 
 @Component({
   selector: 'app-bill-splitter',
@@ -40,11 +41,13 @@ import { SeoService } from '../../services';
   templateUrl: './bill-splitter.html',
   styleUrls: ['./bill-splitter.scss'],
 })
-export class BillSplitterComponent implements OnInit {
+export class BillSplitterComponent implements OnInit, AfterViewInit, OnDestroy  {
   expenses$: Observable<ExpenseItem[]>;
   members$: Observable<Member[]>;
   isSaving$: Observable<boolean>;
   hasData: boolean = false;
+  @ViewChild('tabGroup') tabGroup!: MatTabGroup;
+  sub!: Subscription;
   isAuthor: boolean = true;
 
   constructor(
@@ -52,6 +55,7 @@ export class BillSplitterComponent implements OnInit {
     private readonly router: Router,
     private readonly dialog: MatDialog,
     private readonly snackBar: MatSnackBar,
+    private billTabControlService: BillTabControlService,
     private readonly billSplitterService: BillSplitterService,
     private readonly authService: AuthService,
     private readonly seoService: SeoService
@@ -98,6 +102,16 @@ export class BillSplitterComponent implements OnInit {
       });
       this.seoService.generateTags();
     }
+  }
+
+  ngAfterViewInit() {
+    this.sub = this.billTabControlService.tabChange$.subscribe(index => {
+      this.tabGroup.selectedIndex = index;
+    });
+  }
+
+  ngOnDestroy() {
+    this.sub?.unsubscribe();
   }
 
   async saveBill(): Promise<void> {
@@ -147,5 +161,9 @@ export class BillSplitterComponent implements OnInit {
         duration: 3000,
       });
     }
+  }
+
+  activateTab(index: number) {
+    this.tabGroup.selectedIndex = index;
   }
 }

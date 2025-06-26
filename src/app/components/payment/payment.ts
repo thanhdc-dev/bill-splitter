@@ -64,6 +64,10 @@ export class PaymentComponent {
         this.bankInfo?.accountNumber || '',
         [Validators.required],
       ],
+      accountName: [
+        this.bankInfo?.accountName || '',
+        [Validators.required],
+      ],
     });
 
     this.bankForm.valueChanges.subscribe(_ => {
@@ -92,6 +96,7 @@ export class PaymentComponent {
           name: bank?.name,
           bank: bank?.code,
           short_name: bank?.short_name,
+          accountName: formValue.accountName,
           accountNumber: formValue.accountNumber,
         };
         this.billSplitterService.updateBankInfo(data);

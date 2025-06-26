@@ -10,6 +10,8 @@ import { QrPopupComponent } from '../qr-popup/qr-popup';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { buildQRCodeUrl } from '../../shared/helpers';
 import { BankInfoItem } from '../../models/bank.model';
+import { BillTabControlService } from '../bill-splitter/bill-tab-control.service';
+import { MatButtonModule } from '@angular/material/button';
 
 @Component({
   selector: 'app-result-display',
@@ -21,6 +23,7 @@ import { BankInfoItem } from '../../models/bank.model';
     MatTableModule,
     MatIconModule,
     MatDialogModule,
+    MatButtonModule,
   ],
   templateUrl: './result-display.html',
   styleUrls: ['./result-display.scss'],
@@ -34,6 +37,7 @@ export class ResultDisplayComponent {
 
   constructor(
     private dialog: MatDialog,
+    private billTabControlService: BillTabControlService,
     private billSplitterService: BillSplitterService,
   ) {
     this.expenses$ = this.billSplitterService.expenses$;
@@ -85,5 +89,10 @@ export class ResultDisplayComponent {
           qrImageDownloadUrl,
         },
       });
+  }
+
+  onSettingClick() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    this.billTabControlService.changeTab(1); // giả sử tab Setting có index là 1
   }
 }

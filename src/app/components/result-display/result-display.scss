@@ -2,7 +2,9 @@
   margin-top: 16px;
 
   mat-card-title {
-    margin-bottom: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
   }
 
   .table-container {

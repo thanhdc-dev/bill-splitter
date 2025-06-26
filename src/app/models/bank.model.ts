@@ -10,5 +10,6 @@ export interface BankInfoItem {
   name: string;
   bank: string;
   short_name: string;
+  accountName: string;
   accountNumber: string;
 }

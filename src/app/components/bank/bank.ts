@@ -9,6 +9,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { buildUrl } from '../../shared/helpers';
 import { SEPAY_URL } from '../../constants';
+import { BillTabControlService } from '../bill-splitter/bill-tab-control.service';
 
 @Component({
   selector: 'app-bank',
@@ -22,6 +23,7 @@ export class BankComponent {
 
   constructor(
     private snackBar: MatSnackBar,
+    private billTabControlService: BillTabControlService,
     private billSplitterService: BillSplitterService
   ) {
     this.bankInfo$ = this.billSplitterService.bankInfo$;
@@ -49,5 +51,10 @@ export class BankComponent {
       .catch((err) => {
         console.error('Lỗi khi copy:', err);
       });
+  }
+
+  onSettingClick() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    this.billTabControlService.changeTab(2); // giả sử tab Setting có index là 1
   }
 }
