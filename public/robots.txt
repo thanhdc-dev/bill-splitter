@@ -1,0 +1,7 @@
+User-agent: *
+Disallow: /bills
+
+User-agent: *
+Disallow: /auth
+
+Sitemap: https://chiatien.thanhdc.dev/sitemap.xml

@@ -9,6 +9,7 @@
         mat-raised-button
         color="primary"
         class="google-btn"
+        aria-label="login with google"
         (click)="loginWith('google')"
         [disabled]="isLoading"
       >
@@ -39,6 +40,6 @@
   </mat-dialog-content>
 
   <mat-dialog-actions align="end">
-    <button mat-button (click)="onCancel()">Hủy</button>
+    <button aria-label="cancel" mat-button (click)="onCancel()">Hủy</button>
   </mat-dialog-actions>
 </div>

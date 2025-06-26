@@ -3,8 +3,8 @@
   <p>{{data.message}}</p>
 </mat-dialog-content>
 <mat-dialog-actions align="end">
-  <button mat-button (click)="onCancel()">{{data.cancelText}}</button>
-  <button mat-raised-button color="primary" (click)="onConfirm()">
+  <button mat-button (click)="onCancel()" aria-label="cancel">{{data.cancelText}}</button>
+  <button mat-raised-button color="primary" aria-label="confirm" (click)="onConfirm()">
     {{data.confirmText}}
   </button>
 </mat-dialog-actions>
