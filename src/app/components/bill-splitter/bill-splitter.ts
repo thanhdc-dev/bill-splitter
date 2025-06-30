@@ -1,5 +1,11 @@
 import { CommonModule } from '@angular/common';
-import { AfterViewInit, Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import {
+  AfterViewInit,
+  Component,
+  OnDestroy,
+  OnInit,
+  ViewChild,
+} from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
@@ -7,7 +13,14 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTabGroup, MatTabsModule } from '@angular/material/tabs';
 import { ActivatedRoute, Router } from '@angular/router';
-import { firstValueFrom, Observable, Subscription } from 'rxjs';
+import {
+  debounceTime,
+  distinctUntilChanged,
+  filter,
+  firstValueFrom,
+  Observable,
+  Subscription,
+} from 'rxjs';
 import { ExpenseItem, Member } from '../../models/bill-splitter.model';
 import { AuthService } from '../../services/auth.service';
 import { BillSplitterService } from '../../services/bill-splitter.service';
@@ -21,6 +34,9 @@ import { PaymentComponent } from '../payment/payment';
 import { formatAmount } from '../../shared/helpers';
 import { SeoService } from '../../services';
 import { BillTabControlService } from './bill-tab-control.service';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-bill-splitter',
@@ -37,11 +53,14 @@ import { BillTabControlService } from './bill-tab-control.service';
     ResultDisplayComponent,
     BankComponent,
     PaymentComponent,
+    ReactiveFormsModule,
+    MatFormFieldModule,
+    MatInputModule,
   ],
   templateUrl: './bill-splitter.html',
   styleUrls: ['./bill-splitter.scss'],
 })
-export class BillSplitterComponent implements OnInit, AfterViewInit, OnDestroy  {
+export class BillSplitterComponent implements OnInit, AfterViewInit, OnDestroy {
   expenses$: Observable<ExpenseItem[]>;
   members$: Observable<Member[]>;
   isSaving$: Observable<boolean>;
@@ -49,6 +68,8 @@ export class BillSplitterComponent implements OnInit, AfterViewInit, OnDestroy  
   @ViewChild('tabGroup') tabGroup!: MatTabGroup;
   sub!: Subscription;
   isAuthor: boolean = true;
+  today = new Date();
+  nameCtrl = new FormControl();
 
   constructor(
     private readonly route: ActivatedRoute,
@@ -68,6 +89,15 @@ export class BillSplitterComponent implements OnInit, AfterViewInit, OnDestroy  
     this.expenses$.subscribe((expenses) => {
       this.hasData = expenses.length > 0;
     });
+    this.nameCtrl.valueChanges
+      .pipe(
+        debounceTime(300), // tránh spam khi người dùng gõ liên tục
+        distinctUntilChanged(),
+        filter((value) => value !== null && value !== undefined)
+      )
+      .subscribe((name) => {
+        this.billSplitterService.updateName(name);
+      });
   }
 
   async ngOnInit() {
@@ -102,10 +132,14 @@ export class BillSplitterComponent implements OnInit, AfterViewInit, OnDestroy  
       });
       this.seoService.generateTags();
     }
+    const firstNameValue = this.billSplitterService.getName();
+    if (firstNameValue) {
+      this.nameCtrl.patchValue(firstNameValue, { emitEvent: false });
+    }
   }
 
   ngAfterViewInit() {
-    this.sub = this.billTabControlService.tabChange$.subscribe(index => {
+    this.sub = this.billTabControlService.tabChange$.subscribe((index) => {
       this.tabGroup.selectedIndex = index;
     });
   }

@@ -20,6 +20,7 @@ import { BANKS } from '../constants/bank.constants';
 export class BillSplitterService {
   private userId = 0;
   private endPoint = 'bills';
+  private name = new BehaviorSubject<string>(`Bill ${Date.now().toString()}`);
   private expenses = new BehaviorSubject<ExpenseItem[]>([]);
   private members = new BehaviorSubject<Member[]>([]);
   private totalAmount = new BehaviorSubject<number>(0);
@@ -32,6 +33,7 @@ export class BillSplitterService {
   });
   private isSaving = new BehaviorSubject<boolean>(false);
 
+  name$ = this.name.asObservable();
   expenses$ = this.expenses.asObservable();
   members$ = this.members.asObservable();
   totalAmount$ = this.totalAmount.asObservable();
@@ -161,7 +163,7 @@ export class BillSplitterService {
 
   private formatBillData() {
     return {
-      name: 'Bill #',
+      name: this.name.value,
       data: {
         expenses: this.expenses.value,
         members: this.members.value.map((member) => {
@@ -264,7 +266,7 @@ export class BillSplitterService {
           `${environment.apiUrl}/${this.endPoint}/${code}`
         )
       );
-      const { data } = response;
+      const { name, data } = response;
       const expenses = data.expenses || [];
       const members = (data.members || []).map((member) => {
         return {
@@ -272,6 +274,7 @@ export class BillSplitterService {
           participations: new Map(Object.entries(member.participations)),
         };
       });
+      this.name.next(name);
       this.expenses.next(expenses);
       this.members.next(members);
       this.totalAmount.next(data.totalAmount ?? 0);
@@ -294,5 +297,19 @@ export class BillSplitterService {
   updateBankInfo(bankInfo: BankInfoItem) {
     this.bankInfo.next(bankInfo);
     this.saveBillToStorage();
+  }
+
+  async delete(billCode: string) {
+    await firstValueFrom(
+      this.http.delete<BillFindAll>(`${environment.apiUrl}/${this.endPoint}/${billCode}`)
+    );
+  }
+
+  getName() {
+    return this.name.value;
+  }
+
+  updateName(name: string) {
+    this.name.next(name);
   }
 }

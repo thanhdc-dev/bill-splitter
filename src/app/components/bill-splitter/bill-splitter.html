@@ -1,6 +1,14 @@
 <div class="bill-splitter-container">
   <mat-card>
     <mat-card-content>
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Tên hóa đơn</mat-label>
+        <input
+          matInput
+          [formControl]="nameCtrl"
+          placeholder="Tên hóa đơn, cửa hàng, quán ăn..."
+        />
+      </mat-form-field>
       <mat-tab-group #tabGroup mat-stretch-tabs="false" mat-align-tabs="start">
         <mat-tab>
           <ng-template mat-tab-label>
