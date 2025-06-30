@@ -1,22 +1,22 @@
 <div class="list-container">
   <h2 class="list-title">Danh sách</h2>
 
-  <div class="list-wrapper">
+  <div class="bill-wrapper">
     <div
       *ngFor="let item of bills"
-      class="list-item"
+      class="bill"
       (click)="onItemClick(item.code)"
     >
-      <div class="item-content">
-        <div class="item-info">
-          <div class="item-header">
-            <span class="item-code">{{ item.code }}</span>
-            <span class="item-date">{{ formatDate(item.createdAt) }}</span>
+      <div class="bill-content">
+        <div class="bill-info">
+          <div class="bill-header">
+            <span class="bill-code">{{ item.code }}</span>
+            <span class="bill-date">{{ formatDate(item.createdAt) }}</span>
           </div>
-          <h3 class="item-name">{{ item.name }}</h3>
+          <h3 class="bill-name">{{ item.name }}</h3>
         </div>
 
-        <div class="item-actions">
+        <div class="actions">
           <button
             class="copy-btn"
             (click)="onCopyUrl($event, item.code)"
@@ -24,6 +24,15 @@
             aria-label="Copy URL"
           >
             <mat-icon>content_copy</mat-icon>
+          </button>
+          <button
+            class="ml-2"
+            mat-icon-button
+            aria-label="remove"
+            color="warn"
+            (click)="onDelete($event, item.code)"
+          >
+            <mat-icon>delete</mat-icon>
           </button>
         </div>
       </div>

@@ -13,13 +13,13 @@
   text-align: center;
 }
 
-.list-wrapper {
+.bill-wrapper {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
-.list-item {
+.bill {
   background: #ffffff;
   border: 1px solid #e1e8ed;
   border-radius: 12px;
@@ -43,7 +43,7 @@
       transform: scale(1.05);
     }
 
-    .item-name {
+    .bill-name {
       color: #2980b9;
     }
   }
@@ -53,28 +53,28 @@
   }
 }
 
-.item-content {
+.bill-content {
   display: flex;
   justify-content: space-between;
   align-items: center;
   width: 100%;
 }
 
-.item-info {
+.bill-info {
   flex: 1;
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.item-header {
+.bill-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 4px;
 }
 
-.item-code {
+.bill-code {
   background: #e3f2fd;
   color: #1565c0;
   padding: 4px 12px;
@@ -85,13 +85,13 @@
   letter-spacing: 0.5px;
 }
 
-.item-date {
+.bill-date {
   color: #666;
   font-size: 14px;
   font-weight: 400;
 }
 
-.item-name {
+.bill-name {
   color: #2c3e50;
   font-size: 18px;
   font-weight: 500;
@@ -100,7 +100,7 @@
   line-height: 1.4;
 }
 
-.item-actions {
+.actions {
   display: flex;
   align-items: center;
   margin-left: 16px;
@@ -140,26 +140,26 @@
     padding: 16px;
   }
 
-  .list-item {
+  .bill {
     padding: 16px;
   }
 
-  .item-content {
+  .bill-content {
     gap: 12px;
   }
 
-  .item-actions {
+  .actions {
     align-self: flex-end;
     margin-left: 0;
   }
 
-  .item-header {
+  .bill-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 4px;
   }
 
-  .item-name {
+  .bill-name {
     font-size: 16px;
   }
 }
@@ -169,11 +169,11 @@
     font-size: 24px;
   }
 
-  .list-item {
+  .bill {
     padding: 12px;
   }
 
-  .item-name {
+  .bill-name {
     font-size: 15px;
   }
 }

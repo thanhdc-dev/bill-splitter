@@ -5,6 +5,9 @@ import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatButtonModule } from '@angular/material/button';
+import { MatDialog } from '@angular/material/dialog';
+import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog';
+import { firstValueFrom } from 'rxjs';
 
 interface Bill {
   code: string;
@@ -21,12 +24,17 @@ interface Bill {
 export class Bills implements OnInit {
   bills: Bill[] = [];
   constructor(
+    private dialog: MatDialog,
     private snackBar: MatSnackBar,
     private router: Router,
     private billSplitterService: BillSplitterService
   ) {}
 
   async ngOnInit() {
+    await this.loadData();
+  }
+
+  async loadData() {
     this.bills = await this.billSplitterService.getBills();
   }
 
@@ -53,5 +61,26 @@ export class Bills implements OnInit {
   formatDate(dateString: string): string {
     const date = new Date(dateString);
     return date.toLocaleDateString('vi-VN');
+  }
+
+  async onDelete(event: Event, billCode: string) {
+    event.stopPropagation();
+    const confirmLogin = await firstValueFrom(
+      this.dialog
+        .open(ConfirmDialogComponent, {
+          data: {
+            title: 'Xác nhận',
+            message: `Bạn có chắc muốn xóa bill #${billCode}`,
+            confirmText: 'Xóa',
+            cancelText: 'Hủy',
+          },
+        })
+        .afterClosed()
+    );
+
+    if (confirmLogin) {
+      await this.billSplitterService.delete(billCode);
+      await this.loadData();
+    }
   }
 }
