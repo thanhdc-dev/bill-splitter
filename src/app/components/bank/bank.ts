@@ -57,4 +57,8 @@ export class BankComponent {
     window.scrollTo({ top: 0, behavior: 'smooth' });
     this.billTabControlService.changeTab(2); // giả sử tab Setting có index là 1
   }
+
+  isEditable() {
+    return this.billSplitterService.isEditable();
+  }
 }

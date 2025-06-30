@@ -7,9 +7,10 @@
           matInput
           [formControl]="nameCtrl"
           placeholder="Tên hóa đơn, cửa hàng, quán ăn..."
+          [readonly]="!isEditable()"
         />
       </mat-form-field>
-      <mat-tab-group #tabGroup mat-stretch-tabs="false" mat-align-tabs="start">
+      <mat-tab-group #tabGroup mat-stretch-tabs="false" mat-align-tabs="start" *ngIf="isEditable()">
         <mat-tab>
           <ng-template mat-tab-label>
             <h2 class="mat-tab-label">
@@ -18,7 +19,7 @@
             </h2>
           </ng-template>
           <div class="expense-form">
-            <app-expense-form [isAuthor]="isAuthor"></app-expense-form>
+            <app-expense-form></app-expense-form>
           </div>
         </mat-tab>
         <mat-tab>
@@ -29,7 +30,7 @@
             </h2>
           </ng-template>
           <div class="member-table">
-            <app-member-table [isAuthor]="isAuthor"></app-member-table>
+            <app-member-table></app-member-table>
           </div>
         </mat-tab>
         <mat-tab>

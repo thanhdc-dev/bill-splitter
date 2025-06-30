@@ -312,4 +312,12 @@ export class BillSplitterService {
   updateName(name: string) {
     this.name.next(name);
   }
+
+  isEditable() {
+    const isLoggedIn = this.authService.isLoggedIn();
+    if (isLoggedIn) {
+      return this.userId == this.authService.getUserId();
+    }
+    return !this.userId;
+  }
 }

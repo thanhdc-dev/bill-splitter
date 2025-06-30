@@ -95,4 +95,8 @@ export class ResultDisplayComponent {
     window.scrollTo({ top: 0, behavior: 'smooth' });
     this.billTabControlService.changeTab(1); // giả sử tab Setting có index là 1
   }
+
+  isEditable() {
+    return this.billSplitterService.isEditable();
+  }
 }

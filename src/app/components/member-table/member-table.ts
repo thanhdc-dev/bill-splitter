@@ -2,7 +2,6 @@ import { Component, Input } from '@angular/core';
 import { AsyncPipe, CommonModule } from '@angular/common';
 import {
   FormBuilder,
-  FormControl,
   FormGroup,
   ReactiveFormsModule,
   Validators,
@@ -43,7 +42,6 @@ export class MemberTableComponent {
   memberForm: FormGroup;
   displayedColumns: string[] = ['name'];
   expensesColumns: string[] = [];
-  @Input() isAuthor: boolean = false;
 
   constructor(
     private snackBar: MatSnackBar,
@@ -104,10 +102,8 @@ export class MemberTableComponent {
       ...this.expensesColumns,
       'isPaid',
       'totalAmount',
+      'actions',
     ];
-    if (this.isAuthor) {
-      this.displayedColumns.push('actions');
-    }
     return this.displayedColumns;
   }
 

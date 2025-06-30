@@ -2,7 +2,7 @@
   <mat-card-header>
     <mat-card-title>
       <h2>Chi tiết chia tiền</h2>
-      <button mat-icon-button aria-label="settings" (click)="onSettingClick()">
+      <button mat-icon-button aria-label="settings" (click)="onSettingClick()" *ngIf="isEditable()">
         <mat-icon>settings</mat-icon>
       </button>
     </mat-card-title>

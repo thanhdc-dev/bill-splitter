@@ -67,7 +67,6 @@ export class BillSplitterComponent implements OnInit, AfterViewInit, OnDestroy {
   hasData: boolean = false;
   @ViewChild('tabGroup') tabGroup!: MatTabGroup;
   sub!: Subscription;
-  isAuthor: boolean = true;
   today = new Date();
   nameCtrl = new FormControl();
 
@@ -107,14 +106,6 @@ export class BillSplitterComponent implements OnInit, AfterViewInit, OnDestroy {
       this.snackBar.open('Đã tải dữ liệu thành công!', 'Đóng', {
         duration: 3000,
       });
-      if (this.authService.isLoggedIn()) {
-        const userLoggedIn = this.authService.getUserId();
-        this.isAuthor = userLoggedIn
-          ? userLoggedIn == this.billSplitterService.getUserId()
-          : false;
-      } else {
-        this.isAuthor = false;
-      }
 
       this.seoService.generateTags({
         title: `Hóa đơn ${bill.name}`,
@@ -199,5 +190,9 @@ export class BillSplitterComponent implements OnInit, AfterViewInit, OnDestroy {
 
   activateTab(index: number) {
     this.tabGroup.selectedIndex = index;
+  }
+
+  isEditable() {
+    return this.billSplitterService.isEditable();
   }
 }

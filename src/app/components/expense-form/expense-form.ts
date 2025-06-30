@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -33,10 +33,9 @@ import { MatIconModule } from '@angular/material/icon';
   styleUrls: ['./expense-form.scss']
 })
 export class ExpenseFormComponent {
-  displayedColumns: string[] = [];
+  displayedColumns: string[] = ['name', 'amount', 'actions'];
   expenseForm: FormGroup;
   expenses$: Observable<ExpenseItem[]>;
-  @Input() isAuthor: boolean = false;
 
   constructor(
     private fb: FormBuilder,
@@ -51,14 +50,6 @@ export class ExpenseFormComponent {
 
   removeExpense(expenseId: string) {
     this.billSplitterService.removeExpense(expenseId);
-  }
-
-  getDisplayedColumns(): string[] {
-    this.displayedColumns = ['name', 'amount'];
-    if (this.isAuthor) {
-      this.displayedColumns.push('actions');
-    }
-    return this.displayedColumns;
   }
 
   onSubmit() {
