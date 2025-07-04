@@ -172,6 +172,7 @@ export class BillSplitterService {
             participations: Object.fromEntries(member.participations),
           };
         }),
+        bankInfo: this.bankInfo.value,
         totalAmount: this.totalAmount.value,
       },
     };
@@ -223,7 +224,6 @@ export class BillSplitterService {
     if (!billString) return;
     const bill = JSON.parse(billString);
     const { data } = bill;
-    const bankInfo = data?.bankInfo;
     const expenses = data.expenses || [];
     const members = (data.members || []).map((member: any) => {
       return {
@@ -233,7 +233,9 @@ export class BillSplitterService {
     });
     this.expenses.next(expenses);
     this.members.next(members);
-    this.bankInfo.next(bankInfo);
+    if (data.bankInfo) {
+      this.bankInfo.next(data.bankInfo);
+    }
     this.totalAmount.next(data.totalAmount);
   }
 
@@ -280,6 +282,9 @@ export class BillSplitterService {
       this.expenses.next(expenses);
       this.members.next(members);
       this.totalAmount.next(data.totalAmount ?? 0);
+      if (data.bankInfo) {
+        this.bankInfo.next(data.bankInfo);
+      }
       this.userId = response.userId;
       return response;
     } catch (error) {
@@ -321,5 +326,9 @@ export class BillSplitterService {
       return this.userId == this.authService.getUserId();
     }
     return !this.userId;
+  }
+
+  getBankInfo() {
+    return this.bankInfo.value;
   }
 }

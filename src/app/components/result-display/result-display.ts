@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { AsyncPipe, CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatTableModule } from '@angular/material/table';
@@ -28,7 +28,7 @@ import { MatButtonModule } from '@angular/material/button';
   templateUrl: './result-display.html',
   styleUrls: ['./result-display.scss'],
 })
-export class ResultDisplayComponent {
+export class ResultDisplayComponent implements OnInit {
   expenses$: Observable<ExpenseItem[]>;
   members$: Observable<Member[]>;
   displayedColumns: string[] = ['name', 'amount', 'participants', 'perPerson'];
@@ -44,8 +44,14 @@ export class ResultDisplayComponent {
     this.members$ = this.billSplitterService.members$;
     this.bankInfo$ = this.billSplitterService.bankInfo$;
     this.bankInfo$.subscribe((bankInfo) => {
-      this.bankInfo = bankInfo;
+      if (bankInfo) {
+        this.bankInfo = bankInfo;
+      }
     });
+  }
+
+  ngOnInit(): void {
+    this.bankInfo = this.billSplitterService.getBankInfo();
   }
 
   getParticipants(expense: ExpenseItem, members: Member[]): string {

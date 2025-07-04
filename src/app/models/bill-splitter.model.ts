@@ -1,3 +1,5 @@
+import { BankInfoItem } from "./bank.model";
+
 export interface ExpenseItem {
   id: string;
   name: string;
@@ -47,6 +49,7 @@ export interface BillFindOne {
   data: {
     expenses: BillFindOneExpense[];
     members: BillFindOneMember[];
+    bankInfo: BankInfoItem;
     totalAmount: number;
   };
   userId: number;

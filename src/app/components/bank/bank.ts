@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Observable } from 'rxjs';
@@ -17,7 +17,7 @@ import { BillTabControlService } from '../bill-splitter/bill-tab-control.service
   templateUrl: './bank.html',
   styleUrl: './bank.scss',
 })
-export class BankComponent {
+export class BankComponent implements OnInit {
   bankInfo$: Observable<BankInfoItem>;
   bankInfo!: BankInfoItem;
 
@@ -29,8 +29,14 @@ export class BankComponent {
     this.bankInfo$ = this.billSplitterService.bankInfo$;
 
     this.bankInfo$.subscribe((bankInfo) => {
-      this.bankInfo = bankInfo;
+      if (bankInfo) {
+        this.bankInfo = bankInfo;
+      }
     });
+  }
+
+  ngOnInit(): void {
+    this.bankInfo = this.billSplitterService.getBankInfo();
   }
 
   get qrCodeUrl(): string {

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import {
   FormBuilder,
   FormControl,
@@ -34,7 +34,7 @@ import { BANKS } from '../../constants';
   templateUrl: './payment.html',
   styleUrl: './payment.scss',
 })
-export class PaymentComponent {
+export class PaymentComponent implements OnInit {
   bankInfo$: Observable<BankInfoItem>;
   bankForm: FormGroup;
   banks = BANKS.map((bank) => {
@@ -55,22 +55,18 @@ export class PaymentComponent {
   ) {
     this.bankInfo$ = this.billSplitterService.bankInfo$;
     this.bankInfo$.subscribe((bankInfo) => {
-      this.bankInfo = bankInfo;
+      if (bankInfo) {
+        this.bankInfo = bankInfo;
+      }
     });
 
     this.bankForm = this.fb.group({
-      bank: [this.bankInfo?.bank || '', Validators.required],
-      accountNumber: [
-        this.bankInfo?.accountNumber || '',
-        [Validators.required],
-      ],
-      accountName: [
-        this.bankInfo?.accountName || '',
-        [Validators.required],
-      ],
+      bank: ['', Validators.required],
+      accountNumber: ['', [Validators.required]],
+      accountName: ['', [Validators.required]],
     });
 
-    this.bankForm.valueChanges.subscribe(_ => {
+    this.bankForm.valueChanges.subscribe((_) => {
       this.handleFormChanges();
     });
 
@@ -80,10 +76,21 @@ export class PaymentComponent {
     );
   }
 
+  ngOnInit(): void {
+    this.bankInfo = this.billSplitterService.getBankInfo();
+    if (this.bankInfo) {
+      this.bankForm.patchValue({
+        bank: this.bankInfo.bank,
+        accountNumber: this.bankInfo.accountNumber,
+        accountName: this.bankInfo.accountName,
+      });
+    }
+  }
+
   private _filterItems(value: string): any[] {
     const filterValue = value.toLowerCase();
     return this.banks.filter((item) =>
-     item.label.toLowerCase().includes(filterValue)
+      item.label.toLowerCase().includes(filterValue)
     );
   }
 
