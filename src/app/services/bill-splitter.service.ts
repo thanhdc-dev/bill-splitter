@@ -223,6 +223,7 @@ export class BillSplitterService {
     if (!billString) return;
     const bill = JSON.parse(billString);
     const { data } = bill;
+    const bankInfo = data?.bankInfo;
     const expenses = data.expenses || [];
     const members = (data.members || []).map((member: any) => {
       return {
@@ -232,6 +233,7 @@ export class BillSplitterService {
     });
     this.expenses.next(expenses);
     this.members.next(members);
+    this.bankInfo.next(bankInfo);
     this.totalAmount.next(data.totalAmount);
   }
 
