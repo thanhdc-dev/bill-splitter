@@ -64,11 +64,14 @@ export class BillSplitterComponent implements OnInit, AfterViewInit, OnDestroy {
   expenses$: Observable<ExpenseItem[]>;
   members$: Observable<Member[]>;
   isSaving$: Observable<boolean>;
-  hasData: boolean = false;
+  isChange$: Observable<boolean>;
   @ViewChild('tabGroup') tabGroup!: MatTabGroup;
   sub!: Subscription;
   today = new Date();
   nameCtrl = new FormControl();
+  countdown: number = 5;
+  code: string | null = null;
+  private countdownTimer: any;
 
   constructor(
     private readonly route: ActivatedRoute,
@@ -83,11 +86,8 @@ export class BillSplitterComponent implements OnInit, AfterViewInit, OnDestroy {
     this.expenses$ = this.billSplitterService.expenses$;
     this.members$ = this.billSplitterService.members$;
     this.isSaving$ = this.billSplitterService.isSaving$;
+    this.isChange$ = this.billSplitterService.isChange$;
 
-    // Kiểm tra có dữ liệu để enable/disable nút share
-    this.expenses$.subscribe((expenses) => {
-      this.hasData = expenses.length > 0;
-    });
     this.nameCtrl.valueChanges
       .pipe(
         debounceTime(300), // tránh spam khi người dùng gõ liên tục
@@ -99,33 +99,64 @@ export class BillSplitterComponent implements OnInit, AfterViewInit, OnDestroy {
       });
   }
 
-  async ngOnInit() {
-    const code = this.route.snapshot.paramMap.get('code');
-    if (code) {
-      const bill = await this.billSplitterService.fetchBill(code);
-      this.snackBar.open('Đã tải dữ liệu thành công!', 'Đóng', {
-        duration: 3000,
-      });
+  ngOnInit() {
+    this.route.params.subscribe((params) => {
+      this.code = params['code'];
+      if (this.code) {
+        this.loadData(this.code).then((bill) => {
+          this.seoService.generateTags({
+            title: `Hóa đơn ${bill.name}`,
+            description: `Tổng tiền: ${formatAmount(
+              bill.data.totalAmount
+            )} - Số thành viên tham gia: ${bill.data.members.length}.`,
+          });
 
-      this.seoService.generateTags({
-        title: `Hóa đơn ${bill.name}`,
-        description: `Tổng tiền: ${formatAmount(
-          bill.data.totalAmount
-        )} - Số thành viên tham gia: ${bill.data.members.length}.`,
+          this.isChange$.subscribe((isChange) => {
+            if (isChange) {
+              this.resetTimers();
+            } else {
+              this.cancelTimers();
+            }
+          });
+
+          this.patchValueNameCtrl();
+        });
+      }
+    });
+    if (this.code) {
+      this.billSplitterService.fetchBill(this.code).then((bill) => {
+        this.snackBar.open('Đã tải dữ liệu thành công!', 'Đóng', {
+          duration: 3000,
+        });
+
+        this.seoService.generateTags({
+          title: `Hóa đơn ${bill.name}`,
+          description: `Tổng tiền: ${formatAmount(
+            bill.data.totalAmount
+          )} - Số thành viên tham gia: ${bill.data.members.length}.`,
+        });
+
+        this.isChange$.subscribe((isChange) => {
+          if (isChange) {
+            this.resetTimers();
+          } else {
+            this.cancelTimers();
+          }
+        });
+
+        this.patchValueNameCtrl();
       });
     } else {
       this.billSplitterService.fetchBillFromStorage();
       this.route.queryParams.subscribe((params) => {
         const save = params['save'];
         if (save == 'true') {
-          this.saveBill();
+          this.saveBill(true);
         }
       });
       this.seoService.generateTags();
-    }
-    const firstNameValue = this.billSplitterService.getName();
-    if (firstNameValue) {
-      this.nameCtrl.patchValue(firstNameValue, { emitEvent: false });
+
+      this.patchValueNameCtrl();
     }
   }
 
@@ -136,10 +167,24 @@ export class BillSplitterComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy() {
+    this.cancelTimers();
     this.sub?.unsubscribe();
   }
 
-  async saveBill(): Promise<void> {
+  async loadData(code: string) {
+    const bill = await this.billSplitterService.fetchBill(code);
+    this.snackBar.open('Đã tải dữ liệu thành công!', 'Đóng', {
+      duration: 3000,
+    });
+    return bill;
+  }
+
+  async saveBill(isShare?: boolean): Promise<void> {
+    if (!this.isEditable() && this.code) {
+      return this.copyUrlToClipboard(this.code);
+    }
+    this.cancelTimers();
+
     if (!this.authService.isLoggedIn()) {
       const confirmLogin = await firstValueFrom(
         this.dialog
@@ -153,39 +198,43 @@ export class BillSplitterComponent implements OnInit, AfterViewInit, OnDestroy {
           })
           .afterClosed()
       );
+      if (!confirmLogin) return;
 
-      if (confirmLogin) {
-        const loginResult = await firstValueFrom(
-          this.dialog.open(LoginDialogComponent).afterClosed()
-        );
-        if (!loginResult) return;
-      } else {
-        return;
-      }
+      const loginResult = await firstValueFrom(
+        this.dialog.open(LoginDialogComponent).afterClosed()
+      );
+      if (!loginResult) return;
     }
 
+    const isChange = this.billSplitterService.getIsChange();
     try {
-      const queryCode = this.route.snapshot.paramMap.get('code');
-      if (queryCode) {
-        await this.billSplitterService.updateBill(queryCode);
-        await navigator.clipboard.writeText(
-          `${window.location.origin}/${queryCode}`
-        );
+      if (this.code) {
+        if (isChange) {
+          await this.billSplitterService.updateBill(this.code);
+        }
+        if (isShare) {
+          await this.copyUrlToClipboard(this.code);
+        }
       } else {
         const code = await this.billSplitterService.createBill();
+        if (isShare) {
+          await this.copyUrlToClipboard(code);
+        }
         await this.router.navigate(['/', code]);
-        await navigator.clipboard.writeText(
-          `${window.location.origin}/${queryCode}`
-        );
       }
-      this.snackBar.open('Đã Lưu và sao chép URL vào khay nhớ tạm!', 'Đóng', {
-        duration: 3000,
-      });
+      this.billSplitterService.updateIsChange(false);
     } catch (error) {
       this.snackBar.open('Lỗi khi lưu dữ liệu!', 'Đóng', {
         duration: 3000,
       });
     }
+  }
+
+  async copyUrlToClipboard(code: string) {
+    await navigator.clipboard.writeText(`${window.location.origin}/${code}`);
+    this.snackBar.open('Đã sao chép URL vào khay nhớ tạm!', 'Đóng', {
+      duration: 3000,
+    });
   }
 
   activateTab(index: number) {
@@ -194,5 +243,39 @@ export class BillSplitterComponent implements OnInit, AfterViewInit, OnDestroy {
 
   isEditable() {
     return this.billSplitterService.isEditable();
+  }
+
+  resetTimers() {
+    this.cancelTimers();
+    if (this.code && this.isEditable()) {
+      // Khởi động đếm ngược
+      this.countdown = 5;
+      this.countdownTimer = setInterval(() => {
+        this.countdown--;
+        console.log(this.countdownTimer);
+        if (this.countdown === 0) {
+          this.autoSave();
+        }
+      }, 1000);
+    }
+  }
+
+  cancelTimers() {
+    if (this.countdownTimer) {
+      clearInterval(this.countdownTimer);
+      this.countdown = 0;
+    }
+  }
+
+  autoSave() {
+    this.cancelTimers();
+    this.saveBill();
+  }
+
+  private patchValueNameCtrl() {
+    const firstNameValue = this.billSplitterService.getName();
+    if (firstNameValue) {
+      this.nameCtrl.patchValue(firstNameValue, { emitEvent: false });
+    }
   }
 }

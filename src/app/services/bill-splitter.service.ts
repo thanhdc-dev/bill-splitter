@@ -20,7 +20,8 @@ import { BANKS } from '../constants/bank.constants';
 export class BillSplitterService {
   private userId = 0;
   private endPoint = 'bills';
-  private name = new BehaviorSubject<string>(`Bill ${Date.now().toString()}`);
+  private isFetchData = false;
+  private name = new BehaviorSubject<string>(this.getNameDefault());
   private expenses = new BehaviorSubject<ExpenseItem[]>([]);
   private members = new BehaviorSubject<Member[]>([]);
   private totalAmount = new BehaviorSubject<number>(0);
@@ -32,6 +33,7 @@ export class BillSplitterService {
     accountNumber: 'Thanhdc',
   });
   private isSaving = new BehaviorSubject<boolean>(false);
+  private isChange = new BehaviorSubject<boolean>(false);
 
   name$ = this.name.asObservable();
   expenses$ = this.expenses.asObservable();
@@ -39,22 +41,52 @@ export class BillSplitterService {
   totalAmount$ = this.totalAmount.asObservable();
   bankInfo$ = this.bankInfo.asObservable();
   isSaving$ = this.isSaving.asObservable();
+  isChange$ = this.isChange.asObservable();
 
-  constructor(private http: HttpClient, private authService: AuthService) {
+  constructor(private readonly http: HttpClient, private readonly authService: AuthService) {
+    const bankDefault = this.getBankInfoDefault();
+    if (bankDefault) {
+      this.bankInfo.next(bankDefault);
+    }
+    this.name$.subscribe(() => {
+      if (!this.isFetchData && !this.isChange.value) {
+        this.isChange.next(true);
+      }
+    });
+    this.expenses$.subscribe(() => {
+      if (!this.isFetchData && !this.isChange.value) {
+        this.isChange.next(true);
+      }
+    });
+    this.members$.subscribe(() => {
+      if (!this.isFetchData && !this.isChange.value) {
+        this.isChange.next(true);
+      }
+    });
+    this.bankInfo$.subscribe(() => {
+      if (!this.isFetchData && !this.isChange.value) {
+        this.isChange.next(true);
+      }
+    });
+  }
+
+  private getBankInfoDefault() {
     const bankDefault = BANKS.find(({ code }) => code == 'EIB');
     if (bankDefault) {
-      this.bankInfo.next({
+      return {
         bank: bankDefault.code,
         name: bankDefault.name,
         short_name: bankDefault.short_name,
         accountName: 'Đinh Công Thành',
         accountNumber: 'Thanhdc',
-      });
+      };
     }
+    return null;
   }
 
-  getUserId() {
-    return this.userId;
+  private getNameDefault() {
+    const today = new Date();
+    return `Bill ${today.getDate()}/${today.getMonth() + 1}/${today.getFullYear()}`;
   }
 
   addExpense(name: string, amount: number): void {
@@ -121,7 +153,6 @@ export class BillSplitterService {
       return member;
     });
     this.members.next(updatedMembers);
-    this.saveBillToStorage();
   }
 
   private updateMemberParticipations(expenseId: string): void {
@@ -131,7 +162,6 @@ export class BillSplitterService {
       return { ...member, participations: updatedParticipations };
     });
     this.members.next(updatedMembers);
-    this.saveBillToStorage();
   }
 
   private recalculateTotalAmounts(): void {
@@ -150,7 +180,6 @@ export class BillSplitterService {
     this.totalAmount.next(
       this.expenses.value.reduce((total, expense) => total + expense.amount, 0)
     );
-    this.saveBillToStorage();
   }
 
   private getParticipantsCount(expenseId: string): number {
@@ -203,7 +232,7 @@ export class BillSplitterService {
 
   saveBillToStorage() {
     const billData = {
-      name: 'Bill #',
+      name: this.name.value,
       data: {
         expenses: this.expenses.value,
         members: this.members.value.map((member) => {
@@ -223,7 +252,7 @@ export class BillSplitterService {
     const billString = localStorage.getItem('bill');
     if (!billString) return;
     const bill = JSON.parse(billString);
-    const { data } = bill;
+    const { name, data } = bill;
     const expenses = data.expenses || [];
     const members = (data.members || []).map((member: any) => {
       return {
@@ -236,6 +265,7 @@ export class BillSplitterService {
     if (data.bankInfo) {
       this.bankInfo.next(data.bankInfo);
     }
+    this.name.next(name);
     this.totalAmount.next(data.totalAmount);
   }
 
@@ -265,6 +295,7 @@ export class BillSplitterService {
 
   async fetchBill(code: string): Promise<BillFindOne> {
     try {
+      this.isFetchData = true;
       const response = await firstValueFrom(
         this.http.get<BillFindOne>(
           `${environment.apiUrl}/${this.endPoint}/${code}`
@@ -290,6 +321,8 @@ export class BillSplitterService {
     } catch (error) {
       console.error('Error loading bill:', error);
       throw error;
+    } finally {
+      this.isFetchData = false;
     }
   }
 
@@ -303,12 +336,13 @@ export class BillSplitterService {
 
   updateBankInfo(bankInfo: BankInfoItem) {
     this.bankInfo.next(bankInfo);
-    this.saveBillToStorage();
   }
 
   async delete(billCode: string) {
     await firstValueFrom(
-      this.http.delete<BillFindAll>(`${environment.apiUrl}/${this.endPoint}/${billCode}`)
+      this.http.delete<BillFindAll>(
+        `${environment.apiUrl}/${this.endPoint}/${billCode}`
+      )
     );
   }
 
@@ -321,14 +355,24 @@ export class BillSplitterService {
   }
 
   isEditable() {
+    if (!this.userId) return true;
     const isLoggedIn = this.authService.isLoggedIn();
     if (isLoggedIn) {
+      const userId = this.authService.getUserId();
       return this.userId == this.authService.getUserId();
     }
-    return !this.userId;
+    return false;
   }
 
   getBankInfo() {
     return this.bankInfo.value;
+  }
+
+  updateIsChange(isChange: boolean) {
+    this.isChange.next(isChange);
+  }
+
+  getIsChange() {
+    return this.isChange.value;
   }
 }

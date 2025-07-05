@@ -8,7 +8,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { AsyncPipe, CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
-import { SeoService } from './services';
+import { BillSplitterService, SeoService } from './services';
 
 @Component({
   selector: 'app-root',
@@ -31,7 +31,8 @@ export class App implements OnInit {
     private router: Router,
     private dialog: MatDialog,
     private authService: AuthService,
-    private readonly seoService: SeoService
+    private readonly seoService: SeoService,
+    private readonly billSplitterService: BillSplitterService,
   ) {
     this.user$ = this.authService.user$;
   }
@@ -49,6 +50,7 @@ export class App implements OnInit {
   }
 
   openLoginPopup(): void {
+    this.billSplitterService.saveBillToStorage();
     this.dialog.open(LoginDialogComponent);
   }
 
