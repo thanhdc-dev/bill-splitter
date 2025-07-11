@@ -22,7 +22,7 @@ import {
   Observable,
   Subscription,
 } from 'rxjs';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { AuthService, BillSplitterService, SeoService } from '../../services';
 import { formatAmount } from '../../shared/helpers';
@@ -53,7 +53,6 @@ import { BillTabControlService } from './bill-tab-control.service';
 })
 export class BillDetails implements OnInit, OnDestroy, AfterViewInit {
   private readonly route = inject(ActivatedRoute);
-  private readonly router = inject(Router);
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
   private readonly billSplitterService = inject(BillSplitterService);

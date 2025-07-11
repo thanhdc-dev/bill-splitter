@@ -330,7 +330,7 @@ export class BillSplitterService {
 
   async getBills() {
     const response = await firstValueFrom(
-      this.http.get<BillFindAll>(`${environment.apiUrl}/${this.endPoint}/`)
+      this.http.get<BillFindAll>(`${environment.apiUrl}/${this.endPoint}`)
     );
 
     return response.data;

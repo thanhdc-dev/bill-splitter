@@ -12,10 +12,10 @@ import { MatSnackBar } from '@angular/material/snack-bar';
   styleUrl: './oauth-callback.scss',
 })
 export class OauthCallback implements OnInit {
-  private route = inject(ActivatedRoute);
-  private router = inject(Router);
-  private authService = inject(AuthService);
-  private snackBar = inject(MatSnackBar);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly authService = inject(AuthService);
+  private readonly snackBar = inject(MatSnackBar);
 
   provider: string;
   constructor() {

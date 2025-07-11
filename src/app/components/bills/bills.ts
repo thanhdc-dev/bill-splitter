@@ -22,15 +22,15 @@ interface Bill {
   styleUrl: './bills.scss',
 })
 export class Bills implements OnInit {
-  private dialog = inject(MatDialog);
-  private snackBar = inject(MatSnackBar);
-  private router = inject(Router);
-  private billSplitterService = inject(BillSplitterService);
+  private readonly dialog = inject(MatDialog);
+  private readonly snackBar = inject(MatSnackBar);
+  private readonly router = inject(Router);
+  private readonly billSplitterService = inject(BillSplitterService);
 
   bills: Bill[] = [];
 
-  async ngOnInit() {
-    await this.loadData();
+  ngOnInit() {
+    this.loadData();
   }
 
   async loadData() {

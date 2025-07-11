@@ -33,8 +33,8 @@ import { MatIconModule } from '@angular/material/icon';
   styleUrls: ['./expense-form.scss']
 })
 export class ExpenseFormComponent {
-  private fb = inject(FormBuilder);
-  private billSplitterService = inject(BillSplitterService);
+  private readonly fb = inject(FormBuilder);
+  private readonly billSplitterService = inject(BillSplitterService);
 
   displayedColumns: string[] = ['name', 'amount', 'actions'];
   expenseForm: FormGroup;

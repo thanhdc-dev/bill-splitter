@@ -14,9 +14,9 @@ import { MatSnackBar } from '@angular/material/snack-bar';
   styleUrl: './login-dialog.scss'
 })
 export class LoginDialogComponent {
-  private snackBar = inject(MatSnackBar);
-  private dialogRef = inject<MatDialogRef<LoginDialogComponent>>(MatDialogRef);
-  private authService = inject(AuthService);
+  private readonly snackBar = inject(MatSnackBar);
+  private readonly dialogRef = inject<MatDialogRef<LoginDialogComponent>>(MatDialogRef);
+  private readonly authService = inject(AuthService);
 
   isLoading = false;
 

@@ -8,12 +8,11 @@ import { HttpClient } from '@angular/common/http';
   providedIn: 'root',
 })
 export class AuthService {
-  private http = inject(HttpClient);
-
-  private API_URL!: string;
+  private readonly http = inject(HttpClient);
+  private readonly API_URL!: string;
+  private readonly endPoint = 'auth';
+  private readonly userSubject = new BehaviorSubject<AuthUser | null>(null);
   private userId = 0;
-  private endPoint = 'auth';
-  private userSubject = new BehaviorSubject<AuthUser | null>(null);
   public user$ = this.userSubject.asObservable();
 
   constructor() {
