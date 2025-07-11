@@ -3,9 +3,11 @@
 
   <div class="bill-wrapper">
     <div
-      *ngFor="let item of bills"
+      *ngFor="let item of bills; index as index"
       class="bill"
+      [tabindex]="index"
       (click)="onItemClick(item.code)"
+      (keydown)="onItemClick(item.code)"
     >
       <div class="bill-content">
         <div class="bill-info">

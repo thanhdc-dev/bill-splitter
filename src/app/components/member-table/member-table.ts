@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { AsyncPipe, CommonModule } from '@angular/common';
 import {
   FormBuilder,
@@ -36,6 +36,10 @@ import { MatSnackBar } from '@angular/material/snack-bar';
   styleUrls: ['./member-table.scss'],
 })
 export class MemberTableComponent {
+  private readonly snackBar = inject(MatSnackBar);
+  private readonly fb = inject(FormBuilder);
+  private readonly billSplitterService = inject(BillSplitterService);
+
   expenses$: Observable<ExpenseItem[]>;
   members$: Observable<Member[]>;
   memberNames: string[] = [];
@@ -43,11 +47,7 @@ export class MemberTableComponent {
   displayedColumns: string[] = ['name'];
   expensesColumns: string[] = [];
 
-  constructor(
-    private snackBar: MatSnackBar,
-    private fb: FormBuilder,
-    private billSplitterService: BillSplitterService
-  ) {
+  constructor() {
     this.memberForm = this.fb.group({
       name: ['', [Validators.required]],
     });

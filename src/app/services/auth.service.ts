@@ -1,20 +1,22 @@
-import { Injectable } from '@angular/core';
-import { BehaviorSubject, firstValueFrom, Observable, of, tap } from 'rxjs';
+import { Injectable, inject } from '@angular/core';
+import { BehaviorSubject, firstValueFrom, tap } from 'rxjs';
 import { AuthTokens, AuthUser } from '../models/auth.model';
 import { environment } from '../../environments/environment';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
+  private http = inject(HttpClient);
+
   private API_URL!: string;
   private userId = 0;
   private endPoint = 'auth';
   private userSubject = new BehaviorSubject<AuthUser | null>(null);
   public user$ = this.userSubject.asObservable();
 
-  constructor(private http: HttpClient) {
+  constructor() {
     this.API_URL = environment.apiUrl;
   }
 

@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -14,13 +14,11 @@ import { MatSnackBar } from '@angular/material/snack-bar';
   styleUrl: './login-dialog.scss'
 })
 export class LoginDialogComponent {
-  isLoading = false;
+  private snackBar = inject(MatSnackBar);
+  private dialogRef = inject<MatDialogRef<LoginDialogComponent>>(MatDialogRef);
+  private authService = inject(AuthService);
 
-  constructor(
-    private snackBar: MatSnackBar,
-    private dialogRef: MatDialogRef<LoginDialogComponent>,
-    private authService: AuthService
-  ) {}
+  isLoading = false;
 
   async loginWith(provider: string): Promise<void> {
     try {

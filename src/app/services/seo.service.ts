@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
 import { environment } from '../../environments/environment';
 
@@ -6,8 +6,11 @@ import { environment } from '../../environments/environment';
   providedIn: 'root',
 })
 export class SeoService {
-  constructor(private title: Title, private meta: Meta) {}
+  private readonly title = inject(Title);
+  private readonly meta = inject(Meta);
 
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   generateTags(config?: any) {
     const domain = environment.appUrl;
     config = {

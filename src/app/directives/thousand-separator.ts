@@ -1,12 +1,12 @@
-import { Directive, HostListener, ElementRef } from '@angular/core';
+import { Directive, HostListener, ElementRef, inject } from '@angular/core';
 
 @Directive({
   selector: '[appThousandSeparator]',
 })
 export class ThousandSeparatorDirective {
-  private previousValue: string = '';
+  private el = inject<ElementRef<HTMLInputElement>>(ElementRef);
 
-  constructor(private el: ElementRef<HTMLInputElement>) {}
+  private previousValue = '';
 
   @HostListener('paste', ['$event'])
   onPaste(event: ClipboardEvent) {

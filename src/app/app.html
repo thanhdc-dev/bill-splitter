@@ -1,6 +1,9 @@
 <div class="app-container">
   <header class="header">
-    <h1 class="pointer" routerLink="/" aria-label="Home page"><img src="/logo.png" width="48px" height="48px" alt="logo"/></h1>
+    <h1 class="pointer" routerLink="/" aria-label="Home page">
+      <img src="/logo.png" width="48px" height="48px" alt="logo" />
+      <span class="hidden">Logo</span>
+    </h1>
 
     <div class="header__right" *ngIf="user$ | async as user; else loginSection">
       <span class="user-name">Xin chào, {{ user.fullname }}!</span>
@@ -16,7 +19,12 @@
     </div>
 
     <ng-template #loginSection>
-      <button mat-icon-button color="primary" aria-label="login" (click)="openLoginPopup()">
+      <button
+        mat-icon-button
+        color="primary"
+        aria-label="login"
+        (click)="openLoginPopup()"
+      >
         <mat-icon>login</mat-icon>
       </button>
     </ng-template>

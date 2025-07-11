@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, OnDestroy, OnInit, ViewChild, inject } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -19,7 +19,6 @@ import {
   distinctUntilChanged,
   filter,
   firstValueFrom,
-  interval,
   Observable,
   Subscription,
 } from 'rxjs';
@@ -52,7 +51,16 @@ import { BillTabControlService } from './bill-tab-control.service';
   templateUrl: './bill-details.html',
   styleUrl: './bill-details.scss',
 })
-export class BillDetails implements OnInit, OnDestroy {
+export class BillDetails implements OnInit, OnDestroy, AfterViewInit {
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly dialog = inject(MatDialog);
+  private readonly snackBar = inject(MatSnackBar);
+  private readonly billSplitterService = inject(BillSplitterService);
+  private readonly authService = inject(AuthService);
+  private readonly seoService = inject(SeoService);
+  private readonly billTabControlService = inject(BillTabControlService);
+
   code!: string;
   nameCtrl = new FormControl();
   expenses$: Observable<ExpenseItem[]>;
@@ -62,16 +70,7 @@ export class BillDetails implements OnInit, OnDestroy {
   @ViewChild('tabGroup') tabGroup!: MatTabGroup;
   sub!: Subscription;
 
-  constructor(
-    private readonly route: ActivatedRoute,
-    private readonly router: Router,
-    private readonly dialog: MatDialog,
-    private readonly snackBar: MatSnackBar,
-    private readonly billSplitterService: BillSplitterService,
-    private readonly authService: AuthService,
-    private readonly seoService: SeoService,
-    private readonly billTabControlService: BillTabControlService
-  ) {
+  constructor() {
     this.expenses$ = this.billSplitterService.expenses$;
     this.members$ = this.billSplitterService.members$;
     this.isSaving$ = this.billSplitterService.isSaving$;

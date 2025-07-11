@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Observable } from 'rxjs';
@@ -9,7 +9,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { buildUrl } from '../../shared/helpers';
 import { SEPAY_URL } from '../../constants';
-import { BillTabControlService } from '../bill-splitter/bill-tab-control.service';
+import { BillTabControlService } from '../bill-details/bill-tab-control.service';
 
 @Component({
   selector: 'app-bank',
@@ -18,14 +18,14 @@ import { BillTabControlService } from '../bill-splitter/bill-tab-control.service
   styleUrl: './bank.scss',
 })
 export class BankComponent implements OnInit {
+  private readonly snackBar = inject(MatSnackBar);
+  private readonly billTabControlService = inject(BillTabControlService);
+  private readonly billSplitterService = inject(BillSplitterService);
+
   bankInfo$: Observable<BankInfoItem>;
   bankInfo!: BankInfoItem;
 
-  constructor(
-    private snackBar: MatSnackBar,
-    private billTabControlService: BillTabControlService,
-    private billSplitterService: BillSplitterService
-  ) {
+  constructor() {
     this.bankInfo$ = this.billSplitterService.bankInfo$;
 
     this.bankInfo$.subscribe((bankInfo) => {

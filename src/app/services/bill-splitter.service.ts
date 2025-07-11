@@ -1,10 +1,9 @@
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
 import { BehaviorSubject, firstValueFrom } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
 import { environment } from '../../environments/environment';
 import {
-  BillData,
   BillFindAll,
   BillFindOne,
   ExpenseItem,
@@ -18,22 +17,25 @@ import { BANKS } from '../constants/bank.constants';
   providedIn: 'root',
 })
 export class BillSplitterService {
+  private readonly http = inject(HttpClient);
+  private readonly authService = inject(AuthService);
+
   private userId = 0;
-  private endPoint = 'bills';
+  private readonly endPoint = 'bills';
   private isFetchData = false;
-  private name = new BehaviorSubject<string>(this.getNameDefault());
-  private expenses = new BehaviorSubject<ExpenseItem[]>([]);
-  private members = new BehaviorSubject<Member[]>([]);
-  private totalAmount = new BehaviorSubject<number>(0);
-  private bankInfo = new BehaviorSubject<BankInfoItem>({
+  private readonly name = new BehaviorSubject<string>(this.getNameDefault());
+  private readonly expenses = new BehaviorSubject<ExpenseItem[]>([]);
+  private readonly members = new BehaviorSubject<Member[]>([]);
+  private readonly totalAmount = new BehaviorSubject<number>(0);
+  private readonly bankInfo = new BehaviorSubject<BankInfoItem>({
     bank: BANKS[0].code,
     name: BANKS[0].name,
     short_name: BANKS[0].short_name,
     accountName: 'Đinh Công Thành',
     accountNumber: 'Thanhdc',
   });
-  private isSaving = new BehaviorSubject<boolean>(false);
-  private isChange = new BehaviorSubject<boolean>(false);
+  private readonly isSaving = new BehaviorSubject<boolean>(false);
+  private readonly isChange = new BehaviorSubject<boolean>(false);
 
   name$ = this.name.asObservable();
   expenses$ = this.expenses.asObservable();
@@ -43,7 +45,7 @@ export class BillSplitterService {
   isSaving$ = this.isSaving.asObservable();
   isChange$ = this.isChange.asObservable();
 
-  constructor(private readonly http: HttpClient, private readonly authService: AuthService) {
+  constructor() {
     const bankDefault = this.getBankInfoDefault();
     if (bankDefault) {
       this.bankInfo.next(bankDefault);
@@ -254,7 +256,7 @@ export class BillSplitterService {
     const bill = JSON.parse(billString);
     const { name, data } = bill;
     const expenses = data.expenses || [];
-    const members = (data.members || []).map((member: any) => {
+    const members = (data.members || []).map((member: Member) => {
       return {
         ...member,
         participations: new Map(Object.entries(member.participations)),
@@ -358,7 +360,6 @@ export class BillSplitterService {
     if (!this.userId) return true;
     const isLoggedIn = this.authService.isLoggedIn();
     if (isLoggedIn) {
-      const userId = this.authService.getUserId();
       return this.userId == this.authService.getUserId();
     }
     return false;

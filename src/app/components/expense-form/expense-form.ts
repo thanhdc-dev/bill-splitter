@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -33,14 +33,14 @@ import { MatIconModule } from '@angular/material/icon';
   styleUrls: ['./expense-form.scss']
 })
 export class ExpenseFormComponent {
+  private fb = inject(FormBuilder);
+  private billSplitterService = inject(BillSplitterService);
+
   displayedColumns: string[] = ['name', 'amount', 'actions'];
   expenseForm: FormGroup;
   expenses$: Observable<ExpenseItem[]>;
 
-  constructor(
-    private fb: FormBuilder,
-    private billSplitterService: BillSplitterService
-  ) {
+  constructor() {
     this.expenseForm = this.fb.group({
       name: ['', [Validators.required]],
       amount: ['', [Validators.required, Validators.min(0)]]

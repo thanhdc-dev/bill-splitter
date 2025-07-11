@@ -25,9 +25,7 @@ export interface BillData {
   createdAt: string;
 }
 
-interface BillFindParticipation {
-  [expenseId: string]: boolean;
-}
+type BillFindParticipation = Record<string, boolean>;
 
 interface BillFindOneMember {
   id: string;

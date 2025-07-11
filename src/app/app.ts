@@ -1,6 +1,6 @@
 import { AuthUser } from './models/auth.model';
 import { Observable } from 'rxjs';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { Router, RouterLink, RouterOutlet } from '@angular/router';
 import { AuthService } from './services/auth.service';
 import { LoginDialogComponent } from './components/login-dialog/login-dialog';
@@ -24,16 +24,16 @@ import { BillSplitterService, SeoService } from './services';
   styleUrl: './app.scss',
 })
 export class App implements OnInit {
+  private readonly router = inject(Router);
+  private dialog = inject(MatDialog);
+  private authService = inject(AuthService);
+  private readonly seoService = inject(SeoService);
+  private readonly billSplitterService = inject(BillSplitterService);
+
   sidebarOpen = false;
   user$: Observable<AuthUser | null>;
 
-  constructor(
-    private router: Router,
-    private dialog: MatDialog,
-    private authService: AuthService,
-    private readonly seoService: SeoService,
-    private readonly billSplitterService: BillSplitterService,
-  ) {
+  constructor() {
     this.user$ = this.authService.user$;
   }
 

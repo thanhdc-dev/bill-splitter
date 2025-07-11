@@ -19,6 +19,7 @@ import {
 let isRefreshing = false;
 const tokenRefreshedSubject = new BehaviorSubject<string | null>(null);
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<any>, next: HttpHandlerFn) => {
   const authService = inject(AuthService);
   const accessToken = authService.getAccessToken();
@@ -45,6 +46,7 @@ export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<any>, next: 
 };
 
 function handle401Error(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   req: HttpRequest<any>,
   next: HttpHandlerFn,
   authService: AuthService

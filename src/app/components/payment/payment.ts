@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import {
   FormBuilder,
   FormControl,
@@ -14,9 +14,14 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { map, Observable, startWith } from 'rxjs';
 import { NgxMatSelectSearchModule } from 'ngx-mat-select-search';
-import { BankInfoItem } from '../../models/bank.model';
+import { BankInfoItem, BankItem } from '../../models/bank.model';
 import { BillSplitterService } from '../../services/bill-splitter.service';
 import { BANKS } from '../../constants';
+
+interface BankItemLabel extends BankItem {
+  label: string;
+  logo: string;
+}
 
 @Component({
   selector: 'app-payment',
@@ -35,9 +40,12 @@ import { BANKS } from '../../constants';
   styleUrl: './payment.scss',
 })
 export class PaymentComponent implements OnInit {
+  private readonly fb = inject(FormBuilder);
+  private readonly billSplitterService = inject(BillSplitterService);
+
   bankInfo$: Observable<BankInfoItem>;
   bankForm: FormGroup;
-  banks = BANKS.map((bank) => {
+  banks: BankItemLabel[] = BANKS.map((bank) => {
     return {
       ...bank,
       label: `${bank.short_name} - ${bank.name}`,
@@ -47,12 +55,9 @@ export class PaymentComponent implements OnInit {
   bankInfo!: BankInfoItem;
 
   itemFilterCtrl = new FormControl();
-  filteredItems: Observable<any[]>;
+  filteredItems: Observable<BankItemLabel[]>;
 
-  constructor(
-    private fb: FormBuilder,
-    private billSplitterService: BillSplitterService
-  ) {
+  constructor() {
     this.bankInfo$ = this.billSplitterService.bankInfo$;
     this.bankInfo$.subscribe((bankInfo) => {
       if (bankInfo) {
@@ -87,7 +92,7 @@ export class PaymentComponent implements OnInit {
     }
   }
 
-  private _filterItems(value: string): any[] {
+  private _filterItems(value: string): BankItemLabel[] {
     const filterValue = value.toLowerCase();
     return this.banks.filter((item) =>
       item.label.toLowerCase().includes(filterValue)

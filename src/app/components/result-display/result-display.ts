@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { AsyncPipe, CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatTableModule } from '@angular/material/table';
@@ -10,7 +10,7 @@ import { QrPopupComponent } from '../qr-popup/qr-popup';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { buildQRCodeUrl } from '../../shared/helpers';
 import { BankInfoItem } from '../../models/bank.model';
-import { BillTabControlService } from '../bill-splitter/bill-tab-control.service';
+import { BillTabControlService } from '../bill-details/bill-tab-control.service';
 import { MatButtonModule } from '@angular/material/button';
 
 @Component({
@@ -29,17 +29,17 @@ import { MatButtonModule } from '@angular/material/button';
   styleUrls: ['./result-display.scss'],
 })
 export class ResultDisplayComponent implements OnInit {
+  private readonly dialog = inject(MatDialog);
+  private readonly billTabControlService = inject(BillTabControlService);
+  private readonly billSplitterService = inject(BillSplitterService);
+
   expenses$: Observable<ExpenseItem[]>;
   members$: Observable<Member[]>;
   displayedColumns: string[] = ['name', 'amount', 'participants', 'perPerson'];
   bankInfo$: Observable<BankInfoItem>;
   bankInfo!: BankInfoItem;
 
-  constructor(
-    private dialog: MatDialog,
-    private billTabControlService: BillTabControlService,
-    private billSplitterService: BillSplitterService,
-  ) {
+  constructor() {
     this.expenses$ = this.billSplitterService.expenses$;
     this.members$ = this.billSplitterService.members$;
     this.bankInfo$ = this.billSplitterService.bankInfo$;

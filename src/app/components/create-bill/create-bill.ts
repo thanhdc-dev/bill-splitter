@@ -1,10 +1,10 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { AfterViewInit, Component, OnInit, ViewChild, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
-import { MatTabsModule } from '@angular/material/tabs';
+import { MatTabGroup, MatTabsModule } from '@angular/material/tabs';
 import { ExpenseFormComponent } from '../expense-form/expense-form';
 import { MemberTableComponent } from '../member-table/member-table';
 import { ResultDisplayComponent } from '../result-display/result-display';
@@ -14,12 +14,13 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { ExpenseItem, Member } from '../../models/bill-splitter.model';
-import { debounceTime, distinctUntilChanged, filter, firstValueFrom, Observable } from 'rxjs';
+import { debounceTime, distinctUntilChanged, filter, firstValueFrom, Observable, Subscription } from 'rxjs';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { AuthService, BillSplitterService, SeoService } from '../../services';
+import { AuthService, BillSplitterService } from '../../services';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog';
 import { LoginDialogComponent } from '../login-dialog/login-dialog';
 import { ActivatedRoute, Router } from '@angular/router';
+import { BillTabControlService } from '../bill-details/bill-tab-control.service';
 
 @Component({
   selector: 'app-create-bill',
@@ -42,21 +43,23 @@ import { ActivatedRoute, Router } from '@angular/router';
   templateUrl: './create-bill.html',
   styleUrl: './create-bill.scss',
 })
-export class CreateBill implements OnInit {
+export class CreateBill implements OnInit, AfterViewInit {
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly dialog = inject(MatDialog);
+  private readonly snackBar = inject(MatSnackBar);
+  private readonly billSplitterService = inject(BillSplitterService);
+  private readonly authService = inject(AuthService);
+  private readonly billTabControlService = inject(BillTabControlService);
+  @ViewChild('tabGroup') tabGroup!: MatTabGroup;
+  sub!: Subscription;
+
   nameCtrl = new FormControl();
   expenses$: Observable<ExpenseItem[]>;
   members$: Observable<Member[]>;
   isSaving$: Observable<boolean>;
 
-  constructor(
-    private readonly route: ActivatedRoute,
-    private readonly router: Router,
-    private readonly dialog: MatDialog,
-    private readonly snackBar: MatSnackBar,
-    private readonly billSplitterService: BillSplitterService,
-    private readonly authService: AuthService,
-    private readonly seoService: SeoService
-  ) {
+  constructor() {
     this.expenses$ = this.billSplitterService.expenses$;
     this.members$ = this.billSplitterService.members$;
     this.isSaving$ = this.billSplitterService.isSaving$;
@@ -79,6 +82,12 @@ export class CreateBill implements OnInit {
       .subscribe((name) => {
         this.billSplitterService.updateName(name);
       });
+  }
+
+  ngAfterViewInit() {
+    this.sub = this.billTabControlService.tabChange$.subscribe((index) => {
+      this.tabGroup.selectedIndex = index;
+    });
   }
 
   async save(isShare?: boolean) {

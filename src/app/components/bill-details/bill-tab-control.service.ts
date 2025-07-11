@@ -3,7 +3,7 @@ import { Subject } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class BillTabControlService {
-  private tabChangeSubject = new Subject<number>();
+  private readonly tabChangeSubject = new Subject<number>();
   tabChange$ = this.tabChangeSubject.asObservable();
 
   changeTab(index: number) {

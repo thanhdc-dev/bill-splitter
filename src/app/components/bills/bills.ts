@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { BillSplitterService } from '../../services/bill-splitter.service';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -22,13 +22,12 @@ interface Bill {
   styleUrl: './bills.scss',
 })
 export class Bills implements OnInit {
+  private dialog = inject(MatDialog);
+  private snackBar = inject(MatSnackBar);
+  private router = inject(Router);
+  private billSplitterService = inject(BillSplitterService);
+
   bills: Bill[] = [];
-  constructor(
-    private dialog: MatDialog,
-    private snackBar: MatSnackBar,
-    private router: Router,
-    private billSplitterService: BillSplitterService
-  ) {}
 
   async ngOnInit() {
     await this.loadData();
