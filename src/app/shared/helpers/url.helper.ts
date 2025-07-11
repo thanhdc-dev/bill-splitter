@@ -31,10 +31,10 @@ export function buildQRCodeUrl(
     params.amount = encodeURIComponent(options.amount);
   }
   if (options?.des) {
-    params.des = encodeURIComponent(options.des);
+    params.des = options.des;
   }
   if (options?.isDownload) {
-    params.des = encodeURIComponent(options.isDownload);
+    params.download = encodeURIComponent(options.isDownload);
   }
   const url = new URL(`${SEPAY_URL}/img`);
   Object.entries(params).forEach(([key, value]) => {

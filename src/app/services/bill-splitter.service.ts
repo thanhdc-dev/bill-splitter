@@ -88,7 +88,11 @@ export class BillSplitterService {
 
   private getNameDefault() {
     const today = new Date();
-    return `Bill ${today.getDate()}/${today.getMonth() + 1}/${today.getFullYear()}`;
+    const dd = String(today.getDate()).padStart(2, '0');
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const yyyy = today.getFullYear();
+    const formattedDate = `${dd}/${mm}/${yyyy}`;
+    return `Bill ${formattedDate}`;
   }
 
   addExpense(name: string, amount: number): void {

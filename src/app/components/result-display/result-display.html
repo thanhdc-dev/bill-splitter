@@ -75,7 +75,7 @@
         <div class="member-summary" *ngIf="members.length > 0">
           <h3>Tổng tiền mỗi người cần trả:</h3>
           <div class="member-amounts">
-            <div *ngFor="let member of members" class="member-amount">
+            <div *ngFor="let member of members; index as index" class="member-amount">
               <span class="member-name">{{member.name}}</span>
               <div class="flex items-center">
                 <span class="amount mr-2"
