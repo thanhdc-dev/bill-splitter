@@ -1,0 +1,14 @@
+<h2 mat-dialog-title>{{ label }}</h2>
+
+<mat-dialog-content>
+  <mat-form-field appearance="outline" class="w-full">
+    <input matInput type="text" appThousandSeparator *ngIf="type === 'amount'" [(ngModel)]="value" />
+    <input matInput type="number" *ngIf="type === 'number'" [(ngModel)]="value" />
+    <input matInput type="text" *ngIf="type === 'text'" [(ngModel)]="value" />
+  </mat-form-field>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancel()">Cancel</button>
+  <button mat-raised-button color="primary" (click)="save()">Save</button>
+</mat-dialog-actions>
