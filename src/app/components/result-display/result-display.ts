@@ -8,7 +8,11 @@ import { Observable } from 'rxjs';
 import { MatIconModule } from '@angular/material/icon';
 import { QrPopupComponent } from '../qr-popup/qr-popup';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { buildQRCodeUrl, formatAmount } from '../../shared/helpers';
+import {
+  buildQRCodeUrl,
+  removeVietnameseTones,
+  roundedToThousand,
+} from '../../shared/helpers';
 import { BankInfoItem } from '../../models/bank.model';
 import { BillTabControlService } from '../bill-details/bill-tab-control.service';
 import { MatButtonModule } from '@angular/material/button';
@@ -34,7 +38,7 @@ export class ResultDisplayComponent implements OnInit {
   private readonly billSplitterService = inject(BillSplitterService);
 
   billName$: Observable<string>;
-  billName: string = '';
+  billName = '';
   expenses: ExpenseItem[] = [];
   expenses$: Observable<ExpenseItem[]>;
   members: Member[] = [];
@@ -90,6 +94,10 @@ export class ResultDisplayComponent implements OnInit {
     return expenses.reduce((total, expense) => total + expense.amount, 0);
   }
 
+  formatUserAmount(amount: number) {
+    return roundedToThousand(amount);
+  }
+
   showQRPopup(member: Member) {
     const items: string[] = [];
     this.expenses.forEach((expense) => {
@@ -97,23 +105,30 @@ export class ResultDisplayComponent implements OnInit {
       if (isParticipating) {
         const participantsCount = this.getParticipantsCount(expense.id);
         const amount = expense.amount / participantsCount;
-        items.push(`${expense.name} ${amount}`);
+        items.push(`${expense.name} ${this.formatUserAmount(amount)}`);
       }
     });
     const des = `TT ${this.billName} ${member.name} ${items.join(' ')}`;
     const qrImageUrl = buildQRCodeUrl(
       this.bankInfo.accountNumber,
       this.bankInfo.bank,
-      { amount: member.totalAmount, des }
+      { amount: this.formatUserAmount(member.totalAmount), des }
     );
     const qrImageDownloadUrl = buildQRCodeUrl(
       this.bankInfo.accountNumber,
       this.bankInfo.bank,
-      { amount: member.totalAmount, des, isDownload: true }
+      {
+        amount: this.formatUserAmount(member.totalAmount),
+        des,
+        isDownload: true,
+      }
     );
+    const fileName = `${removeVietnameseTones(
+      this.billName
+    )}-${removeVietnameseTones(member.name)}-qr.png`;
     this.dialog.open(QrPopupComponent, {
       data: {
-        fileName: `${member.name}-qr.png`,
+        fileName,
         qrImageUrl,
         qrImageDownloadUrl,
       },
