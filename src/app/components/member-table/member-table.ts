@@ -16,6 +16,7 @@ import { BillSplitterService } from '../../services/bill-splitter.service';
 import { ExpenseItem, Member } from '../../models/bill-splitter.model';
 import { Observable } from 'rxjs';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { QuantitySelector } from '../quantity-selector/quantity-selector';
 
 @Component({
   selector: 'app-member-table',
@@ -31,6 +32,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
     MatIconModule,
     MatFormFieldModule,
     MatInputModule,
+    QuantitySelector,
   ],
   templateUrl: './member-table.html',
   styleUrls: ['./member-table.scss'],
@@ -87,12 +89,13 @@ export class MemberTableComponent {
   updateParticipation(
     memberId: string,
     expenseId: string,
-    isParticipating: boolean
+    quantity: number
   ): void {
+    const validQuantity = Math.max(0, quantity || 0);
     this.billSplitterService.updateParticipation(
       memberId,
       expenseId,
-      isParticipating
+      validQuantity
     );
   }
 
@@ -109,6 +112,17 @@ export class MemberTableComponent {
 
   updateIsPaid(memberId: string, isPaid: boolean) {
     this.billSplitterService.updatePaid(memberId, isPaid);
+  }
+
+  validateAndUpdateQuantity(event: Event, memberId: string, expenseId: string): void {
+    const input = event.target as HTMLInputElement;
+    let value = parseFloat(input.value) || 0;
+
+    // Validate và làm tròn đến 1 chữ số thập phân
+    value = Math.max(0, Math.min(99, Math.round(value * 10) / 10));
+
+    input.value = value.toString();
+    this.updateParticipation(memberId, expenseId, value);
   }
 
   private filterNameExists(names: string[]) {

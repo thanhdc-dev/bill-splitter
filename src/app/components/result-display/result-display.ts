@@ -75,15 +75,18 @@ export class ResultDisplayComponent implements OnInit {
   getParticipants(expense: ExpenseItem, members: Member[]): string {
     return members
       .filter((member) => member.participations.get(expense.id))
-      .map((member) => member.name)
+      .map((member) => {
+        const quantity = member.participations.get(expense.id) || 0;
+        return quantity === 1 ? `${member.name}` : `${member.name}(x${quantity})`;
+      })
       .join(', ');
   }
 
   getParticipantCount(expense: ExpenseItem, members: Member[]): number {
-    return (
-      members.filter((member) => member.participations.get(expense.id))
-        .length || 1
-    );
+    return members.reduce((total, member) => {
+      const quantity = member.participations.get(expense.id) || 0;
+      return total + quantity;
+    }, 0);
   }
 
   calculatePerPerson(amount: number, participantCount: number): number {

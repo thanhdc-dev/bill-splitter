@@ -34,13 +34,20 @@
     >
       <th mat-header-cell *matHeaderCellDef scope="col">
         <span class="column-expense-name">{{expense.name}}</span>
+        <small class="expense-amount"
+          >({{expense.amount | currency: 'VND': 'symbol' : '1.0-0' :
+          'vi'}})</small
+        >
       </th>
       <td mat-cell *matCellDef="let member">
-        <mat-checkbox
-          [checked]="member.participations.get(expense.id)"
-          (change)="updateParticipation(member.id, expense.id, $event.checked)"
-        >
-        </mat-checkbox>
+        <app-quantity-selector
+          [value]="member.participations.get(expense.id) || 0"
+          [step]="0.5"
+          [min]="0"
+          [max]="99"
+          [compact]="true"
+          (valueChange)="updateParticipation(member.id, expense.id, $event)"
+        ></app-quantity-selector>
       </td>
     </ng-container>
 
@@ -67,7 +74,12 @@
     <ng-container matColumnDef="actions">
       <th mat-header-cell *matHeaderCellDef scope="col"></th>
       <td mat-cell *matCellDef="let member">
-        <button mat-icon-button aria-label="remove" color="warn" (click)="removeMember(member.id)">
+        <button
+          mat-icon-button
+          aria-label="remove"
+          color="warn"
+          (click)="removeMember(member.id)"
+        >
           <mat-icon>delete</mat-icon>
         </button>
       </td>

@@ -1,0 +1,39 @@
+<div class="quantity-selector">
+  <button
+    mat-icon-button
+    type="button"
+    class="quantity-btn decrease"
+    [disabled]="value <= min || disabled"
+    (click)="decrease()"
+    [attr.aria-label]="'Giảm ' + step"
+  >
+    <mat-icon>remove</mat-icon>
+  </button>
+  <div class="quantity-input-wrapper">
+    <input
+      #quantityInput
+      type="number"
+      class="quantity-input"
+      [value]="displayValue"
+      [min]="min"
+      [max]="max"
+      [step]="step"
+      [disabled]="disabled"
+      [placeholder]="placeholder"
+      (input)="onInputChange(quantityInput.value)"
+      (blur)="onBlur(quantityInput.value)"
+      (keydown.enter)="quantityInput.blur()"
+    />
+  </div>
+
+  <button
+    mat-icon-button
+    type="button"
+    class="quantity-btn increase"
+    [disabled]="value >= max || disabled"
+    (click)="increase()"
+    [attr.aria-label]="'Tăng ' + step"
+  >
+    <mat-icon>add</mat-icon>
+  </button>
+</div>

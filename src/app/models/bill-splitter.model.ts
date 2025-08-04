@@ -10,7 +10,7 @@ export interface Member {
   id: string;
   name: string;
   isPaid: boolean;
-  participations: Map<string, boolean>;
+  participations: Map<string, number>;
   totalAmount: number;
 }
 

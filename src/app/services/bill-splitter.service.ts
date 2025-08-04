@@ -113,9 +113,9 @@ export class BillSplitterService {
   }
 
   addMember(name: string): void {
-    const participations = new Map<string, boolean>();
+    const participations = new Map<string, number>();
     this.expenses.value.forEach((expense) => {
-      participations.set(expense.id, true);
+      participations.set(expense.id, 0);
     });
 
     const newMember: Member = {
@@ -137,12 +137,12 @@ export class BillSplitterService {
   updateParticipation(
     memberId: string,
     expenseId: string,
-    isParticipating: boolean
+    quantity: number
   ): void {
     const updatedMembers = this.members.value.map((member) => {
       if (member.id === memberId) {
         const updatedParticipations = new Map(member.participations);
-        updatedParticipations.set(expenseId, isParticipating);
+        updatedParticipations.set(expenseId, quantity);
         return { ...member, participations: updatedParticipations };
       }
       return member;
@@ -164,7 +164,7 @@ export class BillSplitterService {
   private updateMemberParticipations(expenseId: string): void {
     const updatedMembers = this.members.value.map((member) => {
       const updatedParticipations = new Map(member.participations);
-      updatedParticipations.set(expenseId, false);
+      updatedParticipations.set(expenseId, 0);
       return { ...member, participations: updatedParticipations };
     });
     this.members.next(updatedMembers);
@@ -174,10 +174,12 @@ export class BillSplitterService {
     const updatedMembers = this.members.value.map((member) => {
       let totalAmount = 0;
       this.expenses.value.forEach((expense) => {
-        const isParticipating = member.participations.get(expense.id);
-        if (isParticipating) {
-          const participantsCount = this.getParticipantsCount(expense.id);
-          totalAmount += expense.amount / participantsCount;
+        const quantity = member.participations.get(expense.id) || 0;
+        if (quantity > 0) {
+          const totalQuantity = this.getTotalQuantity(expense.id);
+          if (totalQuantity > 0) {
+            totalAmount += (expense.amount * quantity) / totalQuantity;
+          }
         }
       });
       return { ...member, totalAmount };
@@ -188,12 +190,11 @@ export class BillSplitterService {
     );
   }
 
-  private getParticipantsCount(expenseId: string): number {
-    return (
-      this.members.value.filter((member) =>
-        member.participations.get(expenseId)
-      ).length || 1
-    ); // Prevent division by zero
+  private getTotalQuantity(expenseId: string): number {
+    return this.members.value.reduce((total, member) => {
+      const quantity = member.participations.get(expenseId) || 0;
+      return total + quantity;
+    }, 0);
   }
 
   private formatBillData() {
@@ -263,7 +264,12 @@ export class BillSplitterService {
     const members = (data.members || []).map((member: Member) => {
       return {
         ...member,
-        participations: new Map(Object.entries(member.participations)),
+        participations: new Map(
+          Object.entries(member.participations).map(([key, value]) => [
+            key,
+            value ? Number(value) : 0,
+          ])
+        ),
       };
     });
     this.expenses.next(expenses);
@@ -312,7 +318,12 @@ export class BillSplitterService {
       const members = (data.members || []).map((member) => {
         return {
           ...member,
-          participations: new Map(Object.entries(member.participations)),
+          participations: new Map(
+            Object.entries(member.participations).map(([key, value]) => [
+              key,
+              value ? Number(value) : 0,
+            ])
+          ),
         };
       });
       this.name.next(name);
