@@ -10,6 +10,7 @@ export interface BankInfoItem {
   name: string;
   bank: string;
   short_name: string;
+  bin: string;
   accountName: string;
   accountNumber: string;
 }

@@ -1,42 +1,5 @@
-import { SEPAY_URL } from '../../constants';
-
 export function buildUrl(base: string, params: Record<string, string>): string {
   const url = new URL(base);
-  Object.entries(params).forEach(([key, value]) => {
-    url.searchParams.append(key, value);
-  });
-  return url.toString();
-}
-
-export function buildQRCodeUrl(
-  acc: string,
-  bank: string,
-  options?: {
-    amount?: number;
-    des?: string;
-    isDownload?: boolean;
-  }
-): string {
-  const params: {
-    acc: string;
-    bank: string;
-    amount?: string;
-    des?: string;
-    download?: string;
-  } = {
-    acc: encodeURIComponent(acc),
-    bank: encodeURIComponent(bank),
-  };
-  if (options?.amount) {
-    params.amount = encodeURIComponent(options.amount);
-  }
-  if (options?.des) {
-    params.des = normalizeTransferContent(options.des);
-  }
-  if (options?.isDownload) {
-    params.download = encodeURIComponent(options.isDownload);
-  }
-  const url = new URL(`${SEPAY_URL}/img`);
   Object.entries(params).forEach(([key, value]) => {
     url.searchParams.append(key, value);
   });
@@ -186,16 +149,4 @@ export function removeVietnameseTones(str: string) {
     .split('')
     .map((char) => vietnameseMap[char] || char)
     .join('');
-}
-
-function normalizeTransferContent(content: string): string {
-  // 1. Loại bỏ ký tự không hợp lệ (chỉ giữ A-Z, a-z, 0-9, khoảng trắng)
-  const removeInvalidChars = (text: string) => {
-    return text.replace(/[^A-Za-z0-9\s]/g, '');
-  };
-
-  // Chuỗi chuẩn hóa
-  let result = removeVietnameseTones(content);
-  result = removeInvalidChars(result);
-  return result;
 }

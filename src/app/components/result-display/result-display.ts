@@ -9,13 +9,13 @@ import { MatIconModule } from '@angular/material/icon';
 import { QrPopupComponent } from '../qr-popup/qr-popup';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import {
-  buildQRCodeUrl,
   removeVietnameseTones,
   roundedToThousand,
 } from '../../shared/helpers';
 import { BankInfoItem } from '../../models/bank.model';
 import { BillTabControlService } from '../bill-details/bill-tab-control.service';
 import { MatButtonModule } from '@angular/material/button';
+import { QRService } from '../../services';
 
 @Component({
   selector: 'app-result-display',
@@ -36,6 +36,7 @@ export class ResultDisplayComponent implements OnInit {
   private readonly dialog = inject(MatDialog);
   private readonly billTabControlService = inject(BillTabControlService);
   private readonly billSplitterService = inject(BillSplitterService);
+  private readonly qrService = inject(QRService);
 
   billName$: Observable<string>;
   billName = '';
@@ -111,18 +112,18 @@ export class ResultDisplayComponent implements OnInit {
         items.push(`${expense.name} ${this.formatUserAmount(amount)}`);
       }
     });
-    const des = `TT ${this.billName} ${member.name} ${items.join(' ')}`;
-    const qrImageUrl = buildQRCodeUrl(
+    const description = `TT ${this.billName} ${member.name} ${items.join(' ')}`;
+    const qrImageUrl = this.qrService.buildQRCodeUrl(
       this.bankInfo.accountNumber,
-      this.bankInfo.bank,
-      { amount: this.formatUserAmount(member.totalAmount), des }
+      this.bankInfo.bin,
+      { amount: this.formatUserAmount(member.totalAmount), description }
     );
-    const qrImageDownloadUrl = buildQRCodeUrl(
+    const qrImageDownloadUrl = this.qrService.buildQRCodeUrl(
       this.bankInfo.accountNumber,
-      this.bankInfo.bank,
+      this.bankInfo.bin,
       {
         amount: this.formatUserAmount(member.totalAmount),
-        des,
+        description,
         isDownload: true,
       }
     );

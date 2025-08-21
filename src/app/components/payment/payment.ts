@@ -108,6 +108,7 @@ export class PaymentComponent implements OnInit {
           name: bank?.name,
           bank: bank?.code,
           short_name: bank?.short_name,
+          bin: bank?.bin,
           accountName: formValue.accountName,
           accountNumber: formValue.accountNumber,
         };

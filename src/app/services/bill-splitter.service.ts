@@ -31,6 +31,7 @@ export class BillSplitterService {
     bank: BANKS[0].code,
     name: BANKS[0].name,
     short_name: BANKS[0].short_name,
+    bin: BANKS[0].bin,
     accountName: 'Đinh Công Thành',
     accountNumber: 'Thanhdc',
   });
@@ -79,6 +80,7 @@ export class BillSplitterService {
         bank: bankDefault.code,
         name: bankDefault.name,
         short_name: bankDefault.short_name,
+        bin: bankDefault.bin,
         accountName: 'Đinh Công Thành',
         accountNumber: 'Thanhdc',
       };

@@ -7,9 +7,8 @@ import { BankInfoItem } from '../../models/bank.model';
 import { BillSplitterService } from '../../services/bill-splitter.service';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { buildUrl } from '../../shared/helpers';
-import { SEPAY_URL } from '../../constants';
 import { BillTabControlService } from '../bill-details/bill-tab-control.service';
+import { QRService } from '../../services';
 
 @Component({
   selector: 'app-bank',
@@ -21,6 +20,7 @@ export class BankComponent implements OnInit {
   private readonly snackBar = inject(MatSnackBar);
   private readonly billTabControlService = inject(BillTabControlService);
   private readonly billSplitterService = inject(BillSplitterService);
+  private readonly qrService = inject(QRService);
 
   bankInfo$: Observable<BankInfoItem>;
   bankInfo!: BankInfoItem;
@@ -41,8 +41,8 @@ export class BankComponent implements OnInit {
 
   get qrCodeUrl(): string {
     const acc = encodeURIComponent(this.bankInfo.accountNumber);
-    const bank = encodeURIComponent(this.bankInfo.bank);
-    return buildUrl(`${SEPAY_URL}/img`, { acc, bank });
+    const bin = encodeURIComponent(this.bankInfo.bin);
+    return this.qrService.buildQRCodeUrl(acc, bin);
   }
 
   onCopyAccountNumber(event: Event) {
