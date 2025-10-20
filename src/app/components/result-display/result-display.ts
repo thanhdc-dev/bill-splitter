@@ -8,10 +8,7 @@ import { Observable } from 'rxjs';
 import { MatIconModule } from '@angular/material/icon';
 import { QrPopupComponent } from '../qr-popup/qr-popup';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import {
-  removeVietnameseTones,
-  roundedToThousand,
-} from '../../shared/helpers';
+import { removeVietnameseTones, roundedToThousand } from '../../shared/helpers';
 import { BankInfoItem } from '../../models/bank.model';
 import { BillTabControlService } from '../bill-details/bill-tab-control.service';
 import { MatButtonModule } from '@angular/material/button';
@@ -78,7 +75,9 @@ export class ResultDisplayComponent implements OnInit {
       .filter((member) => member.participations.get(expense.id))
       .map((member) => {
         const quantity = member.participations.get(expense.id) || 0;
-        return quantity === 1 ? `${member.name}` : `${member.name}(x${quantity})`;
+        return quantity === 1
+          ? `${member.name}`
+          : `${member.name}(x${quantity})`;
       })
       .join(', ');
   }
@@ -104,14 +103,14 @@ export class ResultDisplayComponent implements OnInit {
 
   showQRPopup(member: Member) {
     const items: string[] = [];
-    this.expenses.forEach((expense) => {
+    for (const expense of this.expenses) {
       const isParticipating = member.participations.get(expense.id);
       if (isParticipating) {
         const participantsCount = this.getParticipantsCount(expense.id);
         const amount = expense.amount / participantsCount;
         items.push(`${expense.name} ${this.formatUserAmount(amount)}`);
       }
-    });
+    }
     const description = `TT ${this.billName} ${member.name} ${items.join(' ')}`;
     const qrImageUrl = this.qrService.buildQRCodeUrl(
       this.bankInfo.accountNumber,
@@ -130,6 +129,41 @@ export class ResultDisplayComponent implements OnInit {
     const fileName = `${removeVietnameseTones(
       this.billName
     )}-${removeVietnameseTones(member.name)}-qr.png`;
+    this.dialog.open(QrPopupComponent, {
+      data: {
+        fileName,
+        qrImageUrl,
+        qrImageDownloadUrl,
+      },
+    });
+  }
+
+  showMomoQRPopup(member: Member) {
+    const items: string[] = [];
+    for (const expense of this.expenses) {
+      const isParticipating = member.participations.get(expense.id);
+      if (isParticipating) {
+        const participantsCount = this.getParticipantsCount(expense.id);
+        const amount = expense.amount / participantsCount;
+        items.push(`${expense.name} ${this.formatUserAmount(amount)}`);
+      }
+    }
+    const description = `TT ${this.billName} ${member.name} ${items.join(' ')}`;
+    const qrImageUrl = this.qrService.buildMomoQRCodeUrl(
+      this.bankInfo.accountNumberMomo,
+      { amount: this.formatUserAmount(member.totalAmount), description }
+    );
+    const qrImageDownloadUrl = this.qrService.buildMomoQRCodeUrl(
+      this.bankInfo.accountNumberMomo,
+      {
+        amount: this.formatUserAmount(member.totalAmount),
+        description,
+        isDownload: true,
+      }
+    );
+    const fileName = `${removeVietnameseTones(
+      this.billName
+    )}-${removeVietnameseTones(member.name)}-qr-momo.png`;
     this.dialog.open(QrPopupComponent, {
       data: {
         fileName,

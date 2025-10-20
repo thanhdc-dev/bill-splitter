@@ -1,3 +1,18 @@
+:host ::ng-deep .mat-mdc-tab {
+  .mdc-tab__text-label {
+    // Inactive tab label color
+    color: #555;
+  }
+  &.mdc-tab--active .mdc-tab__text-label {
+    // Active tab label color
+    color: #1976d2 !important;
+  }
+  &.mdc-tab--active.momo .mdc-tab__text-label {
+    // Active tab label color
+    color: #e60076 !important;
+  }
+}
+
 .payment-form {
   width: 100%;
   display: flex;
@@ -12,7 +27,8 @@
     }
   }
 
-  .account-number, .account-name {
+  .account-number,
+  .account-name {
     flex: 1;
   }
 }

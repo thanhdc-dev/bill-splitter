@@ -47,4 +47,39 @@ export class QRService {
 
     return url.toString();
   }
+
+  buildMomoQRCodeUrl(
+    accountNumber: string,
+    options?: {
+      amount?: number;
+      description?: string;
+      isDownload?: boolean;
+    }
+  ): string {
+    const base = `${environment.apiUrl}/${this.endPoint}/momo`;
+    const url = new URL(base);
+    const params: {
+      accountNumber: string;
+      amount?: string;
+      description?: string;
+      isDownload?: string;
+    } = {
+      accountNumber: encodeURIComponent(accountNumber),
+    };
+    if (options?.amount) {
+      params.amount = encodeURIComponent(options.amount);
+    }
+    if (options?.description) {
+      params.description = options.description;
+    }
+    if (options?.isDownload) {
+      params.isDownload = encodeURIComponent(options.isDownload);
+    }
+
+    Object.entries(params).forEach(([key, value]) => {
+      url.searchParams.append(key, value);
+    });
+
+    return url.toString();
+  }
 }

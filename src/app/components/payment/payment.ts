@@ -7,6 +7,7 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
+import { MatDividerModule } from '@angular/material/divider';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -17,6 +18,9 @@ import { NgxMatSelectSearchModule } from 'ngx-mat-select-search';
 import { BankInfoItem, BankItem } from '../../models/bank.model';
 import { BillSplitterService } from '../../services/bill-splitter.service';
 import { BANKS } from '../../constants';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTabsModule } from '@angular/material/tabs';
+import { MatCardModule } from '@angular/material/card';
 
 interface BankItemLabel extends BankItem {
   label: string;
@@ -35,6 +39,10 @@ interface BankItemLabel extends BankItem {
     MatSelectModule,
     ReactiveFormsModule,
     NgxMatSelectSearchModule,
+    MatDividerModule,
+    MatIconModule,
+    MatTabsModule,
+    MatCardModule,
   ],
   templateUrl: './payment.html',
   styleUrl: './payment.scss',
@@ -56,6 +64,7 @@ export class PaymentComponent implements OnInit {
 
   itemFilterCtrl = new FormControl();
   filteredItems: Observable<BankItemLabel[]>;
+  selectedTab: 'bank' | 'momo' = 'bank';
 
   constructor() {
     this.bankInfo$ = this.billSplitterService.bankInfo$;
@@ -66,9 +75,12 @@ export class PaymentComponent implements OnInit {
     });
 
     this.bankForm = this.fb.group({
-      bank: ['', Validators.required],
-      accountNumber: ['', [Validators.required]],
-      accountName: ['', [Validators.required]],
+      bank: [''],
+      accountNumber: [''],
+      accountName: [''],
+      accountNumberMomo: [''],
+      accountNameMomo: [''],
+      numberPhoneMomo: [''],
     });
 
     this.bankForm.valueChanges.subscribe((_) => {
@@ -88,6 +100,9 @@ export class PaymentComponent implements OnInit {
         bank: this.bankInfo.bank,
         accountNumber: this.bankInfo.accountNumber,
         accountName: this.bankInfo.accountName,
+        accountNumberMomo: this.bankInfo.accountNumberMomo,
+        accountNameMomo: this.bankInfo.accountNameMomo,
+        numberPhoneMomo: this.bankInfo.numberPhoneMomo,
       });
     }
   }
@@ -111,9 +126,16 @@ export class PaymentComponent implements OnInit {
           bin: bank?.bin,
           accountName: formValue.accountName,
           accountNumber: formValue.accountNumber,
+          accountNumberMomo: formValue.accountNumberMomo,
+          accountNameMomo: formValue.accountNameMomo,
+          numberPhoneMomo: formValue.numberPhoneMomo,
         };
         this.billSplitterService.updateBankInfo(data);
       }
     }
+  }
+
+  selectTab(tab: 'bank' | 'momo'): void {
+    this.selectedTab = tab;
   }
 }

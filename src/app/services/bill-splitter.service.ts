@@ -28,12 +28,15 @@ export class BillSplitterService {
   private readonly members = new BehaviorSubject<Member[]>([]);
   private readonly totalAmount = new BehaviorSubject<number>(0);
   private readonly bankInfo = new BehaviorSubject<BankInfoItem>({
-    bank: BANKS[0].code,
-    name: BANKS[0].name,
-    short_name: BANKS[0].short_name,
-    bin: BANKS[0].bin,
-    accountName: 'Đinh Công Thành',
-    accountNumber: 'Thanhdc',
+    bank: '',
+    name: '',
+    short_name: '',
+    bin: '',
+    accountName: '',
+    accountNumber: '',
+    accountNumberMomo: '',
+    accountNameMomo: '',
+    numberPhoneMomo: '',
   });
   private readonly isSaving = new BehaviorSubject<boolean>(false);
   private readonly isChange = new BehaviorSubject<boolean>(false);
@@ -83,6 +86,9 @@ export class BillSplitterService {
         bin: bankDefault.bin,
         accountName: 'Đinh Công Thành',
         accountNumber: 'Thanhdc',
+        accountNumberMomo: '',
+        accountNameMomo: '',
+        numberPhoneMomo: '',
       };
     }
     return null;

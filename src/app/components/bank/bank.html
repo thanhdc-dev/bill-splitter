@@ -7,7 +7,6 @@
           mat-icon-button
           aria-label="settings"
           (click)="onSettingClick()"
-          *ngIf="isEditable()"
         >
           <mat-icon>settings</mat-icon>
         </button>
@@ -19,6 +18,53 @@
       <p><strong>Họ & tên: </strong><span>{{ bankInfo.accountName }}</span></p>
       <p>
         <strong>Số tài khoản: </strong><span>{{ bankInfo.accountNumber }}</span>
+        @if(bankInfo.accountNumber && bankInfo.bin) {
+        <button
+          class="copy-btn"
+          (click)="onCopyAccountNumber($event)"
+          title="Copy account number"
+          aria-label="Copy account number"
+        >
+          <mat-icon>content_copy</mat-icon>
+        </button>
+        }
+      </p>
+    </div>
+    <div class="right">
+      @if(qrCodeUrl) {
+      <img
+        [src]="qrCodeUrl"
+        width="250px"
+        height="250px"
+        alt="QR Code chuyển khoản"
+      />
+      }
+    </div>
+  </div>
+</mat-card>
+
+@if(isShowMomoInfo) {
+<mat-card class="container">
+  <div class="content">
+    <div class="left">
+      <div class="flex items-baseline justify-between">
+        <h2>Thông tin Momo</h2>
+        @if(isEditable()) {
+        <button
+          mat-icon-button
+          aria-label="settings"
+          (click)="onSettingClick()"
+        >
+          <mat-icon>settings</mat-icon>
+        </button>
+        }
+      </div>
+      <p>
+        <strong>Họ & tên: </strong><span>{{ bankInfo.accountNameMomo }}</span>
+      </p>
+      <p>
+        <strong>Số điện thoại: </strong
+        ><span>{{ bankInfo.numberPhoneMomo }}</span>
         <button
           class="copy-btn"
           (click)="onCopyAccountNumber($event)"
@@ -30,12 +76,15 @@
       </p>
     </div>
     <div class="right">
+      @if(qrCodeUrlMomo) {
       <img
-        [src]="qrCodeUrl"
+        [src]="qrCodeUrlMomo"
         width="250px"
         height="250px"
-        alt="QR Code chuyển khoản"
+        alt="QR Code momo"
       />
+      }
     </div>
   </div>
 </mat-card>
+}

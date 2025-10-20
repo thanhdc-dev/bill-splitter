@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
@@ -17,14 +17,22 @@ import { MatIconModule } from '@angular/material/icon';
   templateUrl: './qr-popup.html',
   styleUrl: './qr-popup.scss',
 })
-export class QrPopupComponent {
+export class QrPopupComponent implements OnInit {
+  title = 'QR Code';
   private dialogRef = inject<MatDialogRef<QrPopupComponent>>(MatDialogRef);
   data = inject<{
+    title: string;
     qrImageUrl: string;
     qrImageDownloadUrl: string;
     fileName: string;
 }>(MAT_DIALOG_DATA);
 
+
+  ngOnInit(): void {
+    if (this.data.title) {
+      this.title = this.data.title || 'QR Code';
+    }
+  }
 
   async downloadQRCode() {
     try {

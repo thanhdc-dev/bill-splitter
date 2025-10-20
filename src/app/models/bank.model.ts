@@ -13,4 +13,7 @@ export interface BankInfoItem {
   bin: string;
   accountName: string;
   accountNumber: string;
+  accountNumberMomo: string,
+  accountNameMomo: string,
+  numberPhoneMomo: string,
 }

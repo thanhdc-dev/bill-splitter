@@ -24,6 +24,9 @@ export class BankComponent implements OnInit {
 
   bankInfo$: Observable<BankInfoItem>;
   bankInfo!: BankInfoItem;
+  qrCodeUrl!: string;
+  isShowMomoInfo = false;
+  qrCodeUrlMomo!: string;
 
   constructor() {
     this.bankInfo$ = this.billSplitterService.bankInfo$;
@@ -31,6 +34,9 @@ export class BankComponent implements OnInit {
     this.bankInfo$.subscribe((bankInfo) => {
       if (bankInfo) {
         this.bankInfo = bankInfo;
+        this.fetchIsShowMomoInfo();
+        this.getQrCodeUrl();
+        this.getQrCodeUrlMomo();
       }
     });
   }
@@ -39,10 +45,14 @@ export class BankComponent implements OnInit {
     this.bankInfo = this.billSplitterService.getBankInfo();
   }
 
-  get qrCodeUrl(): string {
-    const acc = encodeURIComponent(this.bankInfo.accountNumber);
-    const bin = encodeURIComponent(this.bankInfo.bin);
-    return this.qrService.buildQRCodeUrl(acc, bin);
+  getQrCodeUrl() {
+    if (this.bankInfo.accountNumber && this.bankInfo.bin) {
+      const acc = this.bankInfo.accountNumber;
+      const bin = this.bankInfo.bin;
+      this.qrCodeUrl = this.qrService.buildQRCodeUrl(acc, bin);
+    } else {
+      this.qrCodeUrl = '';
+    }
   }
 
   onCopyAccountNumber(event: Event) {
@@ -66,5 +76,18 @@ export class BankComponent implements OnInit {
 
   isEditable() {
     return this.billSplitterService.isEditable();
+  }
+
+  fetchIsShowMomoInfo() {
+    this.isShowMomoInfo = !!(this.bankInfo.accountNameMomo && this.bankInfo.numberPhoneMomo);
+  }
+
+  getQrCodeUrlMomo() {
+    if (this.bankInfo.accountNumberMomo) {
+      const acc = this.bankInfo.accountNumberMomo;
+      this.qrCodeUrlMomo = this.qrService.buildMomoQRCodeUrl(acc);
+    } else {
+      this.qrCodeUrlMomo = '';
+    }
   }
 }
