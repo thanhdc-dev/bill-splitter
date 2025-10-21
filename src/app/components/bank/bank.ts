@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { Observable } from 'rxjs';
+import { debounceTime, distinctUntilChanged, filter, Observable } from 'rxjs';
 import { BankInfoItem } from '../../models/bank.model';
 import { BillSplitterService } from '../../services/bill-splitter.service';
 import { MatButtonModule } from '@angular/material/button';
@@ -31,14 +31,20 @@ export class BankComponent implements OnInit {
   constructor() {
     this.bankInfo$ = this.billSplitterService.bankInfo$;
 
-    this.bankInfo$.subscribe((bankInfo) => {
-      if (bankInfo) {
-        this.bankInfo = bankInfo;
-        this.fetchIsShowMomoInfo();
-        this.getQrCodeUrl();
-        this.getQrCodeUrlMomo();
-      }
-    });
+    this.bankInfo$
+      .pipe(
+        debounceTime(1000),
+        distinctUntilChanged(),
+        filter((value) => !!value)
+      )
+      .subscribe((bankInfo) => {
+        if (bankInfo) {
+          this.bankInfo = bankInfo;
+          this.fetchIsShowMomoInfo();
+          this.getQrCodeUrl();
+          this.getQrCodeUrlMomo();
+        }
+      });
   }
 
   ngOnInit(): void {
@@ -79,7 +85,9 @@ export class BankComponent implements OnInit {
   }
 
   fetchIsShowMomoInfo() {
-    this.isShowMomoInfo = !!(this.bankInfo.accountNameMomo && this.bankInfo.numberPhoneMomo);
+    this.isShowMomoInfo = !!(
+      this.bankInfo.accountNameMomo && this.bankInfo.numberPhoneMomo
+    );
   }
 
   getQrCodeUrlMomo() {
