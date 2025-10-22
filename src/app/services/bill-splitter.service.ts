@@ -36,7 +36,7 @@ export class BillSplitterService {
     accountNumber: '',
     accountNumberMomo: '',
     accountNameMomo: '',
-    numberPhoneMomo: '',
+    phoneNumberMomo: '',
   });
   private readonly isSaving = new BehaviorSubject<boolean>(false);
   private readonly isChange = new BehaviorSubject<boolean>(false);
@@ -88,7 +88,7 @@ export class BillSplitterService {
         accountNumber: 'Thanhdc',
         accountNumberMomo: '',
         accountNameMomo: '',
-        numberPhoneMomo: '',
+        phoneNumberMomo: '',
       };
     }
     return null;

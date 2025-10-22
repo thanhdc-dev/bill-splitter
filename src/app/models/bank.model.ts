@@ -15,5 +15,5 @@ export interface BankInfoItem {
   accountNumber: string;
   accountNumberMomo: string,
   accountNameMomo: string,
-  numberPhoneMomo: string,
+  phoneNumberMomo: string,
 }

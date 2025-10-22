@@ -86,7 +86,7 @@ export class BankComponent implements OnInit {
 
   fetchIsShowMomoInfo() {
     this.isShowMomoInfo = !!(
-      this.bankInfo.accountNameMomo && this.bankInfo.numberPhoneMomo
+      this.bankInfo.accountNameMomo && this.bankInfo.phoneNumberMomo
     );
   }
 

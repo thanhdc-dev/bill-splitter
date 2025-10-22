@@ -80,7 +80,7 @@ export class PaymentComponent implements OnInit {
       accountName: [''],
       accountNumberMomo: [''],
       accountNameMomo: [''],
-      numberPhoneMomo: [''],
+      phoneNumberMomo: [''],
     });
 
     this.bankForm.valueChanges.subscribe((_) => {
@@ -102,7 +102,7 @@ export class PaymentComponent implements OnInit {
         accountName: this.bankInfo.accountName,
         accountNumberMomo: this.bankInfo.accountNumberMomo,
         accountNameMomo: this.bankInfo.accountNameMomo,
-        numberPhoneMomo: this.bankInfo.numberPhoneMomo,
+        phoneNumberMomo: this.bankInfo.phoneNumberMomo,
       });
     }
   }
@@ -128,7 +128,7 @@ export class PaymentComponent implements OnInit {
           accountNumber: formValue.accountNumber,
           accountNumberMomo: formValue.accountNumberMomo,
           accountNameMomo: formValue.accountNameMomo,
-          numberPhoneMomo: formValue.numberPhoneMomo,
+          phoneNumberMomo: formValue.phoneNumberMomo,
         };
         this.billSplitterService.updateBankInfo(data);
       }
