@@ -1,0 +1,85 @@
+<div class="settings-container">
+  <h2 class="settings-title">Thông Tin Thanh Toán</h2>
+
+  <form [formGroup]="settingsForm" class="payment-form" (ngSubmit)="onSubmit()">
+    <mat-tab-group class="w-full">
+      <mat-tab formGroupName="bankAccount">
+        <ng-template mat-tab-label>
+          <mat-icon>account_balance</mat-icon>
+          <span class="pl-0.5">Ngân hàng</span>
+        </ng-template>
+
+        <mat-card>
+          <mat-form-field class="select-bank mt-4">
+            <mat-label>Chọn ngân hàng</mat-label>
+            <mat-select formControlName="bankBin">
+              <mat-option>
+                <ngx-mat-select-search
+                  [formControl]="itemFilterCtrl"
+                  [placeholderLabel]="'Nhập mã hoặc tên để tìm kiếm'"
+                ></ngx-mat-select-search>
+              </mat-option>
+              <mat-option
+                *ngFor="let item of filteredItems | async"
+                [value]="item.bin"
+              >
+                <div class="bank-info">
+                  <div>
+                    <img [src]="item.logo" width="70" alt="logo" />
+                  </div>
+                  <div class="bank-name">{{ item.label }}</div>
+                </div>
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="account-name">
+            <mat-label>Họ & Tên</mat-label>
+            <input matInput type="text" formControlName="accountName" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="account-number">
+            <mat-label>Số tài khoản</mat-label>
+            <input matInput type="text" formControlName="accountNumber" />
+          </mat-form-field>
+        </mat-card>
+      </mat-tab>
+
+      <mat-tab formGroupName="momoWallet" labelClass="momo">
+        <ng-template mat-tab-label>
+          <mat-icon>smartphone</mat-icon>
+          <span class="pl-0.5">Momo</span>
+        </ng-template>
+
+        <mat-card>
+          <mat-form-field appearance="outline" class="account-name-momo mt-4">
+            <mat-label>Họ & Tên</mat-label>
+            <input matInput type="text" formControlName="accountName" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="phone-number-momo">
+            <mat-label>Số điện thoại</mat-label>
+            <input matInput type="text" formControlName="phoneNumber" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="account-number-momo">
+            <mat-label>Số tài khoản</mat-label>
+            <input matInput type="text" formControlName="accountNumber" />
+          </mat-form-field>
+        </mat-card>
+      </mat-tab>
+    </mat-tab-group>
+
+    <div class="button-group flex justify-end">
+      <button
+        mat-raised-button
+        color="primary"
+        class="save-button"
+        type="submit"
+        [disabled]="settingsForm.invalid"
+      >
+        Lưu
+      </button>
+    </div>
+  </form>
+</div>

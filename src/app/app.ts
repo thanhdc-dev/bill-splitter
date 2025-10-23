@@ -59,6 +59,11 @@ export class App implements OnInit {
     this.closeSidebar();
   }
 
+  redirectToSetting() {
+    this.router.navigate(['/setting']);
+    this.closeSidebar();
+  }
+
   logout(): void {
     this.authService.logout();
     this.router.navigate(['/']);
