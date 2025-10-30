@@ -68,11 +68,6 @@ export class PaymentComponent implements OnInit {
 
   constructor() {
     this.bankInfo$ = this.billSplitterService.bankInfo$;
-    this.bankInfo$.subscribe((bankInfo) => {
-      if (bankInfo) {
-        this.bankInfo = bankInfo;
-      }
-    });
 
     this.bankForm = this.fb.group({
       bank: [''],
@@ -94,17 +89,19 @@ export class PaymentComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.bankInfo = this.billSplitterService.getBankInfo();
-    if (this.bankInfo) {
-      this.bankForm.patchValue({
-        bank: this.bankInfo.bank,
-        accountNumber: this.bankInfo.accountNumber,
-        accountName: this.bankInfo.accountName,
-        accountNumberMomo: this.bankInfo.accountNumberMomo,
-        accountNameMomo: this.bankInfo.accountNameMomo,
-        phoneNumberMomo: this.bankInfo.phoneNumberMomo,
-      });
-    }
+    this.bankInfo$.subscribe((bankInfo) => {
+      if (bankInfo) {
+        this.bankInfo = bankInfo;
+        this.bankForm.patchValue({
+          bank: this.bankInfo.bank,
+          accountNumber: this.bankInfo.accountNumber,
+          accountName: this.bankInfo.accountName,
+          accountNumberMomo: this.bankInfo.accountNumberMomo,
+          accountNameMomo: this.bankInfo.accountNameMomo,
+          phoneNumberMomo: this.bankInfo.phoneNumberMomo,
+        }, { emitEvent: false });
+      }
+    });
   }
 
   private _filterItems(value: string): BankItemLabel[] {
