@@ -22,7 +22,7 @@ export class BillSplitterService {
   private userId = 0;
   private readonly endPoint = 'bills';
   private isFetchData = false;
-  private readonly bankInfoDefault = {
+  private readonly bankInfoDefault: BankInfoItem = {
     bank: '',
     name: '',
     short_name: '',

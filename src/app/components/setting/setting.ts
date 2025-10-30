@@ -19,24 +19,12 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { UserService } from '../../services';
+import { SettingsData } from '../../interfaces';
 
 interface BankItemLabel extends BankItem {
   label: string;
   logo: string;
 }
-
-interface SettingsData {
-  bankAccount: {
-    bankBin: string;
-    accountName: string;
-    accountNumber: string;
-  };
-  momoWallet: {
-    accountName: string;
-    accountNumber: string;
-    phoneNumber: string;
-  };
-};
 
 @Component({
   selector: 'app-setting',

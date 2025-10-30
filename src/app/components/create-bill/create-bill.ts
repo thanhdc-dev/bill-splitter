@@ -1,5 +1,11 @@
 import { CommonModule } from '@angular/common';
-import { AfterViewInit, Component, OnInit, ViewChild, inject } from '@angular/core';
+import {
+  AfterViewInit,
+  Component,
+  OnInit,
+  ViewChild,
+  inject,
+} from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
@@ -14,13 +20,23 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { ExpenseItem, Member } from '../../models/bill-splitter.model';
-import { debounceTime, distinctUntilChanged, filter, firstValueFrom, Observable, Subscription } from 'rxjs';
+import {
+  debounceTime,
+  distinctUntilChanged,
+  filter,
+  firstValueFrom,
+  Observable,
+  Subscription,
+} from 'rxjs';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { AuthService, BillSplitterService } from '../../services';
+import { AuthService, BillSplitterService, UserService } from '../../services';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog';
 import { LoginDialogComponent } from '../login-dialog/login-dialog';
 import { ActivatedRoute, Router } from '@angular/router';
 import { BillTabControlService } from '../bill-details/bill-tab-control.service';
+import { BANKS } from '../../constants';
+import { SettingsData } from '../../interfaces';
+import { BankInfoItem } from '../../models';
 
 @Component({
   selector: 'app-create-bill',
@@ -51,6 +67,7 @@ export class CreateBill implements OnInit, AfterViewInit {
   private readonly billSplitterService = inject(BillSplitterService);
   private readonly authService = inject(AuthService);
   private readonly billTabControlService = inject(BillTabControlService);
+  private readonly userService = inject(UserService);
   @ViewChild('tabGroup') tabGroup!: MatTabGroup;
   sub!: Subscription;
 
@@ -68,13 +85,14 @@ export class CreateBill implements OnInit, AfterViewInit {
 
   ngOnInit() {
     this.billSplitterService.fetchBillFromStorage();
-      this.route.queryParams.subscribe((params) => {
-        if (params['save'] && params['save'] === 'true') {
-          this.save();
-        } else {
-          this.billSplitterService.resetBill();
-        }
-      });
+    this.route.queryParams.subscribe((params) => {
+      if (params['save'] && params['save'] === 'true') {
+        this.save();
+      } else {
+        this.billSplitterService.resetBill();
+        this.fetchUserSetting();
+      }
+    });
     this.nameCtrl.valueChanges
       .pipe(
         debounceTime(300), // tránh spam khi người dùng gõ liên tục
@@ -127,10 +145,52 @@ export class CreateBill implements OnInit, AfterViewInit {
     }
   }
 
-  private  async copyUrlToClipboard(code: string) {
+  private async copyUrlToClipboard(code: string) {
     await navigator.clipboard.writeText(`${window.location.origin}/${code}`);
     this.snackBar.open('Đã sao chép URL vào khay nhớ tạm!', 'Đóng', {
       duration: 3000,
     });
+  }
+
+  private fetchUserSetting() {
+    if (this.authService.isLoggedIn()) {
+      Promise.all([
+        this.userService.getSettingBankAccount(),
+        this.userService.getSettingMomoWallet(),
+      ]).then(
+        ([bankAccount, momoWallet]: [
+          SettingsData['bankAccount'],
+          SettingsData['momoWallet']
+        ]) => {
+          const bankInfo: BankInfoItem = {
+            bank: '',
+            name: '',
+            short_name: '',
+            bin: '',
+            accountName: '',
+            accountNumber: '',
+            accountNumberMomo: '',
+            accountNameMomo: '',
+            phoneNumberMomo: ''
+          };
+          const bank = BANKS.find(({ bin }) => bin == bankAccount.bankBin);
+          if (bankAccount && bank) {
+            bankInfo.bank = bank.code;
+            bankInfo.name = bank.name;
+            bankInfo.short_name = bank.short_name;
+            bankInfo.bin = bankAccount.bankBin;
+            bankInfo.accountName = bankAccount.accountName;
+            bankInfo.accountNumber = bankAccount.accountNumber;
+          }
+          if (momoWallet) {
+            bankInfo.accountNumberMomo = momoWallet.accountNumber;
+            bankInfo.accountNameMomo = momoWallet.accountName;
+            bankInfo.phoneNumberMomo = momoWallet.phoneNumber;
+          }
+
+          this.billSplitterService.updateBankInfo(bankInfo);
+        }
+      );
+    }
   }
 }

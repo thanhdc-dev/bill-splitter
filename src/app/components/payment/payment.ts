@@ -5,7 +5,6 @@ import {
   FormControl,
   FormGroup,
   ReactiveFormsModule,
-  Validators,
 } from '@angular/forms';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatButtonModule } from '@angular/material/button';
@@ -92,14 +91,8 @@ export class PaymentComponent implements OnInit {
     this.bankInfo$.subscribe((bankInfo) => {
       if (bankInfo) {
         this.bankInfo = bankInfo;
-        this.bankForm.patchValue({
-          bank: this.bankInfo.bank,
-          accountNumber: this.bankInfo.accountNumber,
-          accountName: this.bankInfo.accountName,
-          accountNumberMomo: this.bankInfo.accountNumberMomo,
-          accountNameMomo: this.bankInfo.accountNameMomo,
-          phoneNumberMomo: this.bankInfo.phoneNumberMomo,
-        }, { emitEvent: false });
+        this.bankForm.patchValue({ ...bankInfo }, { emitEvent: false });
+        this.itemFilterCtrl.patchValue(`${bankInfo.short_name} - ${bankInfo.name}`)
       }
     });
   }
