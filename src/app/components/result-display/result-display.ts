@@ -102,26 +102,18 @@ export class ResultDisplayComponent implements OnInit {
   }
 
   showQRPopup(member: Member) {
-    const items: string[] = [];
-    for (const expense of this.expenses) {
-      const isParticipating = member.participations.get(expense.id);
-      if (isParticipating) {
-        const participantsCount = this.getParticipantsCount(expense.id);
-        const amount = expense.amount / participantsCount;
-        items.push(`${expense.name} ${this.formatUserAmount(amount)}`);
-      }
-    }
-    const description = `TT ${this.billName} ${member.name} ${items.join(' ')}`;
+    const totalAmountFormatted = this.formatUserAmount(member.totalAmount);
+    const description = `${member.name} TT ${this.billName}`;
     const qrImageUrl = this.qrService.buildQRCodeUrl(
       this.bankInfo.accountNumber,
       this.bankInfo.bin,
-      { amount: this.formatUserAmount(member.totalAmount), description }
+      { amount: totalAmountFormatted, description }
     );
     const qrImageDownloadUrl = this.qrService.buildQRCodeUrl(
       this.bankInfo.accountNumber,
       this.bankInfo.bin,
       {
-        amount: this.formatUserAmount(member.totalAmount),
+        amount: totalAmountFormatted,
         description,
         isDownload: true,
       }
@@ -139,24 +131,16 @@ export class ResultDisplayComponent implements OnInit {
   }
 
   showMomoQRPopup(member: Member) {
-    const items: string[] = [];
-    for (const expense of this.expenses) {
-      const isParticipating = member.participations.get(expense.id);
-      if (isParticipating) {
-        const participantsCount = this.getParticipantsCount(expense.id);
-        const amount = expense.amount / participantsCount;
-        items.push(`${expense.name} ${this.formatUserAmount(amount)}`);
-      }
-    }
-    const description = `TT ${this.billName} ${member.name} ${items.join(' ')}`;
+    const totalAmountFormatted = this.formatUserAmount(member.totalAmount);
+    const description = `${member.name} TT ${this.billName}`;
     const qrImageUrl = this.qrService.buildMomoQRCodeUrl(
       this.bankInfo.accountNumberMomo,
-      { amount: this.formatUserAmount(member.totalAmount), description }
+      { amount: totalAmountFormatted, description }
     );
     const qrImageDownloadUrl = this.qrService.buildMomoQRCodeUrl(
       this.bankInfo.accountNumberMomo,
       {
-        amount: this.formatUserAmount(member.totalAmount),
+        amount: totalAmountFormatted,
         description,
         isDownload: true,
       }
@@ -171,13 +155,6 @@ export class ResultDisplayComponent implements OnInit {
         qrImageDownloadUrl,
       },
     });
-  }
-
-  private getParticipantsCount(expenseId: string): number {
-    return (
-      this.members.filter((member) => member.participations.get(expenseId))
-        .length || 1
-    ); // Prevent division by zero
   }
 
   onSettingClick() {
