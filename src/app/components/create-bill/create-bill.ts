@@ -71,6 +71,8 @@ export class CreateBill implements OnInit, AfterViewInit {
       this.route.queryParams.subscribe((params) => {
         if (params['save'] && params['save'] === 'true') {
           this.save();
+        } else {
+          this.billSplitterService.resetBill();
         }
       });
     this.nameCtrl.valueChanges

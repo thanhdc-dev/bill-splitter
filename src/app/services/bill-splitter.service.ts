@@ -22,11 +22,7 @@ export class BillSplitterService {
   private userId = 0;
   private readonly endPoint = 'bills';
   private isFetchData = false;
-  private readonly name = new BehaviorSubject<string>(this.getNameDefault());
-  private readonly expenses = new BehaviorSubject<ExpenseItem[]>([]);
-  private readonly members = new BehaviorSubject<Member[]>([]);
-  private readonly totalAmount = new BehaviorSubject<number>(0);
-  private readonly bankInfo = new BehaviorSubject<BankInfoItem>({
+  private readonly bankInfoDefault = {
     bank: '',
     name: '',
     short_name: '',
@@ -36,7 +32,12 @@ export class BillSplitterService {
     accountNumberMomo: '',
     accountNameMomo: '',
     phoneNumberMomo: '',
-  });
+  };
+  private readonly name = new BehaviorSubject<string>(this.getNameDefault());
+  private readonly expenses = new BehaviorSubject<ExpenseItem[]>([]);
+  private readonly members = new BehaviorSubject<Member[]>([]);
+  private readonly totalAmount = new BehaviorSubject<number>(0);
+  private readonly bankInfo = new BehaviorSubject<BankInfoItem>(this.bankInfoDefault);
   private readonly isSaving = new BehaviorSubject<boolean>(false);
   private readonly isChange = new BehaviorSubject<boolean>(false);
 
@@ -144,6 +145,15 @@ export class BillSplitterService {
       return member;
     });
     this.members.next(updatedMembers);
+  }
+
+  resetBill() {
+    this.name.next(this.getNameDefault());
+    this.expenses.next([]);
+    this.members.next([]);
+    this.totalAmount.next(0);
+    this.bankInfo.next(this.bankInfoDefault);
+    this.userId = 0;
   }
 
   private updateMemberParticipations(expenseId: string): void {
