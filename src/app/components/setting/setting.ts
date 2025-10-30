@@ -20,6 +20,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { UserService } from '../../services';
 import { SettingsData } from '../../interfaces';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 interface BankItemLabel extends BankItem {
   label: string;
@@ -44,6 +45,7 @@ interface BankItemLabel extends BankItem {
   styleUrl: './setting.scss',
 })
 export class Setting implements OnInit {
+  private readonly snackBar = inject(MatSnackBar);
   private readonly fb = inject(FormBuilder);
   private readonly userService = inject(UserService);
 
@@ -117,6 +119,9 @@ export class Setting implements OnInit {
   async onSubmit() {
     if (this.settingsForm.valid) {
       await this.userService.updateSetting(this.settingsForm.value);
+      this.snackBar.open('Đã lưu cài đặt!', 'Đóng', {
+        duration: 3000,
+      });
     } else {
       this.settingsForm.markAllAsTouched();
     }
