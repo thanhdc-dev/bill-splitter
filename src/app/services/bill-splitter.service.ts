@@ -11,7 +11,6 @@ import {
 } from '../models/bill-splitter.model';
 import { AuthService } from './auth.service';
 import { BankInfoItem } from '../models/bank.model';
-import { BANKS } from '../constants/bank.constants';
 
 @Injectable({
   providedIn: 'root',
@@ -50,10 +49,6 @@ export class BillSplitterService {
   isChange$ = this.isChange.asObservable();
 
   constructor() {
-    const bankDefault = this.getBankInfoDefault();
-    if (bankDefault) {
-      this.bankInfo.next(bankDefault);
-    }
     this.name$.subscribe(() => {
       if (!this.isFetchData && !this.isChange.value) {
         this.isChange.next(true);
@@ -74,24 +69,6 @@ export class BillSplitterService {
         this.isChange.next(true);
       }
     });
-  }
-
-  private getBankInfoDefault() {
-    const bankDefault = BANKS.find(({ code }) => code == 'EIB');
-    if (bankDefault) {
-      return {
-        bank: bankDefault.code,
-        name: bankDefault.name,
-        short_name: bankDefault.short_name,
-        bin: bankDefault.bin,
-        accountName: 'Đinh Công Thành',
-        accountNumber: 'Thanhdc',
-        accountNumberMomo: '',
-        accountNameMomo: '',
-        phoneNumberMomo: '',
-      };
-    }
-    return null;
   }
 
   private getNameDefault() {
