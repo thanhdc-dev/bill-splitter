@@ -50,7 +50,9 @@ export class App implements OnInit {
   }
 
   openLoginPopup(): void {
-    this.billSplitterService.saveBillToStorage();
+    if (!this.billSplitterService.isBillDataEmpty()) {
+      this.billSplitterService.saveBillToStorage();
+    }
     this.dialog.open(LoginDialogComponent);
   }
 

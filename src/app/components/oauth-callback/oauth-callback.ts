@@ -2,8 +2,8 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ActivatedRoute, Router } from '@angular/router';
-import { AuthService } from '../../services/auth.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { AuthService, BillSplitterService } from '../../services';
 
 @Component({
   selector: 'app-oauth-callback',
@@ -16,6 +16,7 @@ export class OauthCallback implements OnInit {
   private readonly router = inject(Router);
   private readonly authService = inject(AuthService);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly billSplitterService = inject(BillSplitterService);
 
   provider: string;
   constructor() {
@@ -67,7 +68,11 @@ export class OauthCallback implements OnInit {
         sessionStorage.removeItem('oauth_flow');
 
         // Chuyển hướng về trang chính
-        this.router.navigate([''], { queryParams: { save: true } });
+        const queryParams: Record<string, string> = {};
+        if (!this.billSplitterService.isBillEmptyInStorage()) {
+          queryParams['save'] = 'true';
+        }
+        this.router.navigate([''], { queryParams });
       }
     } catch (error) {
       console.error('Error verifying Google code:', error);

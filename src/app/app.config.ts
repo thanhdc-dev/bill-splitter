@@ -1,5 +1,11 @@
-import { ApplicationConfig, inject, provideAppInitializer, provideBrowserGlobalErrorListeners, provideZoneChangeDetection } from '@angular/core';
-import { provideRouter } from '@angular/router';
+import {
+  ApplicationConfig,
+  inject,
+  provideAppInitializer,
+  provideBrowserGlobalErrorListeners,
+  provideZoneChangeDetection,
+} from '@angular/core';
+import { provideRouter, withRouterConfig } from '@angular/router';
 
 import { routes } from './app.routes';
 import { provideAnimations } from '@angular/platform-browser/animations';
@@ -21,7 +27,12 @@ export const appConfig: ApplicationConfig = {
     }),
     provideBrowserGlobalErrorListeners(),
     provideZoneChangeDetection({ eventCoalescing: true }),
-    provideRouter(routes),
+    provideRouter(
+      routes,
+      withRouterConfig({
+        onSameUrlNavigation: 'reload',
+      })
+    ),
     provideAnimations(),
     provideHttpClient(withInterceptors([authInterceptor])),
     {
@@ -29,16 +40,16 @@ export const appConfig: ApplicationConfig = {
       useValue: {
         hasBackdrop: true,
         disableClose: false,
-        autoFocus: true
-      }
+        autoFocus: true,
+      },
     },
     {
       provide: MAT_SNACK_BAR_DEFAULT_OPTIONS,
       useValue: {
         duration: 3000,
         horizontalPosition: 'center',
-        verticalPosition: 'bottom'
-      }
-    }
-  ]
+        verticalPosition: 'bottom',
+      },
+    },
+  ],
 };

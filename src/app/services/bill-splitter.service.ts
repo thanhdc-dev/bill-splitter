@@ -232,6 +232,10 @@ export class BillSplitterService {
     }
   }
 
+  isBillDataEmpty() {
+    return !this.members.value.length && !this.expenses.value.length;
+  }
+
   saveBillToStorage() {
     const billData = {
       name: this.name.value,
@@ -248,6 +252,10 @@ export class BillSplitterService {
       },
     };
     localStorage.setItem('bill', JSON.stringify(billData));
+  }
+
+  isBillEmptyInStorage() {
+    return !localStorage.getItem('bill');
   }
 
   fetchBillFromStorage() {
