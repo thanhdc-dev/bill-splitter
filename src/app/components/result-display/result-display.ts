@@ -44,6 +44,8 @@ export class ResultDisplayComponent implements OnInit {
   displayedColumns: string[] = ['name', 'amount', 'participants', 'perPerson'];
   bankInfo$: Observable<BankInfoItem>;
   bankInfo!: BankInfoItem;
+  isShowBankInfo = false;
+  isShowMomoInfo = false;
 
   constructor() {
     this.billName$ = this.billSplitterService.name$;
@@ -62,6 +64,8 @@ export class ResultDisplayComponent implements OnInit {
     this.bankInfo$.subscribe((bankInfo) => {
       if (bankInfo) {
         this.bankInfo = bankInfo;
+        this.fetchIsShowBankInfo();
+        this.fetchIsShowMomoInfo();
       }
     });
   }
@@ -164,5 +168,17 @@ export class ResultDisplayComponent implements OnInit {
 
   isEditable() {
     return this.billSplitterService.isEditable();
+  }
+
+  fetchIsShowBankInfo() {
+    this.isShowBankInfo = !!(
+      this.bankInfo.accountNumber && this.bankInfo.bin
+    );
+  }
+
+  fetchIsShowMomoInfo() {
+    this.isShowMomoInfo = !!(
+      this.bankInfo.accountNameMomo && this.bankInfo.phoneNumberMomo
+    );
   }
 }

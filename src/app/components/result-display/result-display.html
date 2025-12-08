@@ -95,6 +95,7 @@
                 <mat-icon class="text-green-600"> check </mat-icon>
                 } @else {
                 <div class="flex">
+                  @if(isShowBankInfo) {
                   <button
                     mat-icon-button
                     (click)="showQRPopup(member)"
@@ -103,6 +104,8 @@
                   >
                     <mat-icon>qr_code</mat-icon>
                   </button>
+                  }
+                  @if(isShowMomoInfo) {
                   <button
                     mat-icon-button
                     (click)="showMomoQRPopup(member)"
@@ -116,6 +119,7 @@
                       src="/images/bank-logo/momo.webp"
                     />
                   </button>
+                  }
                 </div>
                 }
               </div>
