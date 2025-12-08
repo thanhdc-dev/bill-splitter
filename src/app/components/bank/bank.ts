@@ -75,6 +75,20 @@ export class BankComponent implements OnInit {
       });
   }
 
+  onCopyMomoAccountNumber(event: Event) {
+    event.stopPropagation();
+    navigator.clipboard
+      .writeText(this.bankInfo.phoneNumberMomo)
+      .then(() => {
+        this.snackBar.open('Số điện thoại MOMO đã được sao chép!', 'Đóng', {
+          duration: 3000,
+        });
+      })
+      .catch((err) => {
+        console.error('Lỗi khi copy:', err);
+      });
+  }
+
   onSettingClick() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
     this.billTabControlService.changeTab(2); // giả sử tab Setting có index là 1
