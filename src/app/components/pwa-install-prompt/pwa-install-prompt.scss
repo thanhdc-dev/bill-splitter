@@ -1,0 +1,141 @@
+.install-prompt {
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  left: 0;
+  transform: translateX(0);
+  background: white;
+  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  animation: slideUp 0.3s ease-out;
+
+  // Desktop
+  @media (min-width: 768px) {
+    bottom: 16px;
+    right: auto;
+    left: 50%;
+    transform: translateX(-50%);
+    max-width: 500px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  }
+}
+
+.prompt-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+
+  // Mobile
+  @media (max-width: 767px) {
+    padding: 12px 16px;
+    gap: 8px;
+  }
+}
+
+.prompt-icon {
+  flex-shrink: 0;
+
+  mat-icon {
+    font-size: 32px;
+    width: 32px;
+    height: 32px;
+    color: var(--primary-color, #1976d2);
+
+    @media (max-width: 767px) {
+      font-size: 28px;
+      width: 28px;
+      height: 28px;
+    }
+  }
+}
+
+.prompt-text {
+  flex: 1;
+  min-width: 0;
+
+  p {
+    margin: 0;
+    line-height: 1.4;
+  }
+
+  .prompt-title {
+    font-size: 16px;
+    color: #333;
+
+    @media (max-width: 767px) {
+      font-size: 14px;
+    }
+  }
+
+  .prompt-description {
+    font-size: 14px;
+    color: #666;
+    margin-top: 2px;
+
+    @media (max-width: 767px) {
+      font-size: 12px;
+      display: none; // Ẩn trên màn hình nhỏ
+    }
+  }
+}
+
+.prompt-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+
+  button {
+    &.close-btn {
+      mat-icon {
+        color: var(--primary-color, #fff);
+      }
+    }
+
+    @media (max-width: 767px) {
+      &[mat-raised-button] {
+        font-size: 13px;
+        padding: 0 12px;
+        min-width: auto;
+      }
+    }
+  }
+}
+
+// Animation
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+// Dark mode support
+@media (prefers-color-scheme: dark) {
+  .install-prompt {
+    background: #2d2d2d;
+
+    .prompt-title {
+      color: #fff;
+    }
+
+    .prompt-description {
+      color: #aaa;
+    }
+  }
+}
+
+// Safe area for notched devices
+@supports (padding: env(safe-area-inset-bottom)) {
+  .install-prompt {
+    @media (max-width: 767px) {
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+  }
+}

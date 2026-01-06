@@ -1,0 +1,21 @@
+@if (showInstallPrompt) {
+<div class="install-prompt">
+  <div class="prompt-content">
+    <div class="prompt-icon">
+      <mat-icon>get_app</mat-icon>
+    </div>
+    <div class="prompt-text">
+      <p class="prompt-title">Cài đặt ứng dụng</p>
+      <p class="prompt-description">Trải nghiệm tốt hơn khi cài đặt</p>
+    </div>
+    <div class="prompt-actions">
+      <button mat-raised-button color="primary" (click)="installPwa()">
+        Cài đặt
+      </button>
+      <button mat-icon-button class="close-btn" (click)="dismissPrompt()" aria-label="Đóng">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+  </div>
+</div>
+}
