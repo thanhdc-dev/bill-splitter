@@ -51,22 +51,22 @@ export class BillSplitterService {
 
   constructor() {
     this.name$.subscribe(() => {
-      if (!this.isFetchData && !this.isChange.value) {
+      if (!this.isFetchData) {
         this.isChange.next(true);
       }
     });
     this.expenses$.subscribe(() => {
-      if (!this.isFetchData && !this.isChange.value) {
+      if (!this.isFetchData) {
         this.isChange.next(true);
       }
     });
     this.members$.subscribe(() => {
-      if (!this.isFetchData && !this.isChange.value) {
+      if (!this.isFetchData) {
         this.isChange.next(true);
       }
     });
     this.bankInfo$.subscribe(() => {
-      if (!this.isFetchData && !this.isChange.value) {
+      if (!this.isFetchData) {
         this.isChange.next(true);
       }
     });

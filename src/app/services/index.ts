@@ -3,3 +3,4 @@ export * from './seo.service';
 export * from './bill-splitter.service';
 export * from './qr.service';
 export * from './user.service';
+export * from './bill-auto-save.service';

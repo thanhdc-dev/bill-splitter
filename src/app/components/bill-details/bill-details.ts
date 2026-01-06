@@ -1,5 +1,12 @@
 import { CommonModule } from '@angular/common';
-import { AfterViewInit, Component, OnDestroy, OnInit, ViewChild, inject } from '@angular/core';
+import {
+  AfterViewInit,
+  Component,
+  OnDestroy,
+  OnInit,
+  ViewChild,
+  inject,
+} from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -24,7 +31,12 @@ import {
 } from 'rxjs';
 import { ActivatedRoute } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { AuthService, BillSplitterService, SeoService } from '../../services';
+import {
+  AuthService,
+  BillAutoSaveService,
+  BillSplitterService,
+  SeoService,
+} from '../../services';
 import { formatAmount } from '../../shared/helpers';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog';
 import { LoginDialogComponent } from '../login-dialog/login-dialog';
@@ -59,6 +71,7 @@ export class BillDetails implements OnInit, OnDestroy, AfterViewInit {
   private readonly authService = inject(AuthService);
   private readonly seoService = inject(SeoService);
   private readonly billTabControlService = inject(BillTabControlService);
+  private readonly billAutoSaveService = inject(BillAutoSaveService);
 
   code!: string;
   nameCtrl = new FormControl();
@@ -66,6 +79,7 @@ export class BillDetails implements OnInit, OnDestroy, AfterViewInit {
   members$: Observable<Member[]>;
   isSaving$: Observable<boolean>;
   isChange$: Observable<boolean>;
+  counter$: Observable<number>;
   @ViewChild('tabGroup') tabGroup!: MatTabGroup;
   sub!: Subscription;
 
@@ -74,6 +88,7 @@ export class BillDetails implements OnInit, OnDestroy, AfterViewInit {
     this.members$ = this.billSplitterService.members$;
     this.isSaving$ = this.billSplitterService.isSaving$;
     this.isChange$ = this.billSplitterService.isChange$;
+    this.counter$ = this.billAutoSaveService.counter$;
     this.code = this.route.snapshot.paramMap.get('code') ?? '';
     this.nameCtrl.valueChanges
       .pipe(
@@ -84,6 +99,10 @@ export class BillDetails implements OnInit, OnDestroy, AfterViewInit {
       .subscribe((name) => {
         this.billSplitterService.updateName(name);
       });
+
+    this.counter$.subscribe((counter) => {
+      console.log(`Auto-save countdown: ${counter} seconds remaining`);
+    });
   }
 
   ngOnInit() {
@@ -96,6 +115,8 @@ export class BillDetails implements OnInit, OnDestroy, AfterViewInit {
           bill.data.totalAmount
         )} - Số thành viên tham gia: ${bill.data.members.length}.`,
       });
+
+      this.billAutoSaveService.startMonitoring();
     });
   }
 
@@ -107,6 +128,7 @@ export class BillDetails implements OnInit, OnDestroy, AfterViewInit {
 
   ngOnDestroy() {
     this.sub?.unsubscribe();
+    this.billAutoSaveService.stopMonitoring();
   }
 
   isEditable() {
@@ -148,6 +170,7 @@ export class BillDetails implements OnInit, OnDestroy, AfterViewInit {
     if (isShare) {
       await this.copyUrlToClipboard(this.code);
     }
+    this.billAutoSaveService.stopCountdown();
   }
 
   private async loadData() {

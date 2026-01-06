@@ -54,7 +54,7 @@
   </mat-card>
   <app-result-display></app-result-display>
   <app-bank></app-bank>
-  <div class="buttons flex flex-col gap-4 fixed bottom-7 right-7">
+  <div class="buttons flex flex-col items-end gap-4 fixed bottom-7 right-7">
     <!-- Sticky Share Button -->
     <button
       mat-fab
@@ -70,6 +70,7 @@
     <!-- Sticky Auto Save Button -->
     <button
       mat-fab
+      [extended]="(isChange$ | async)"
       color="primary"
       class="auto-save-button"
       aria-label="Button save"
@@ -79,6 +80,9 @@
       <mat-icon
         >{{(isChange$ | async) ? 'cloud_upload' : 'cloud_done'}}</mat-icon
       >
+      @if(isChange$ | async) {
+      <span>{{ counter$ | async }}</span>
+      }
     </button>
   </div>
 </div>
