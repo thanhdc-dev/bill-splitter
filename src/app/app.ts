@@ -9,6 +9,7 @@ import { AsyncPipe, CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { BillSplitterService, SeoService } from './services';
+import { PwaInstallPromptComponent } from './components/pwa-install-prompt/pwa-install-prompt';
 
 @Component({
   selector: 'app-root',
@@ -19,6 +20,7 @@ import { BillSplitterService, SeoService } from './services';
     MatIconModule,
     MatButtonModule,
     RouterLink,
+    PwaInstallPromptComponent,
   ],
   templateUrl: './app.html',
   styleUrl: './app.scss',

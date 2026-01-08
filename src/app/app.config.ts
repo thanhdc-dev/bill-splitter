@@ -14,6 +14,9 @@ import { MAT_SNACK_BAR_DEFAULT_OPTIONS } from '@angular/material/snack-bar';
 import { MAT_DIALOG_DEFAULT_OPTIONS } from '@angular/material/dialog';
 import { authInterceptor } from './interceptors/auth-interceptor';
 import { AuthService } from './services/auth.service';
+import { provideServiceWorker } from '@angular/service-worker';
+import { PwaUpdateService } from './services/pwa-update.service';
+import { environment } from '../environments/environment';
 
 export function initializeApp(authService: AuthService) {
   return () => authService.initialize();
@@ -23,6 +26,9 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideAppInitializer(() => {
       const authService = inject(AuthService);
+      const pwaUpdateService = inject(PwaUpdateService);
+
+      pwaUpdateService.init();
       return authService.initialize();
     }),
     provideBrowserGlobalErrorListeners(),
@@ -51,5 +57,9 @@ export const appConfig: ApplicationConfig = {
         verticalPosition: 'bottom',
       },
     },
+    provideServiceWorker('ngsw-worker.js', {
+      enabled: environment.production,
+      registrationStrategy: 'registerWhenStable:30000'
+    }),
   ],
 };
