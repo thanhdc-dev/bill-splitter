@@ -7,14 +7,14 @@
           matInput
           [formControl]="nameCtrl"
           placeholder="Tên hóa đơn, cửa hàng, quán ăn..."
-          [readonly]="!isEditable()"
+          [readonly]="!isEditable"
         />
       </mat-form-field>
+      @if (isEditable) {
       <mat-tab-group
         #tabGroup
         mat-stretch-tabs="false"
         mat-align-tabs="start"
-        *ngIf="isEditable()"
       >
         <mat-tab>
           <ng-template mat-tab-label>
@@ -50,6 +50,14 @@
           </div>
         </mat-tab>
       </mat-tab-group>
+      }
+      <app-image-upload
+        [maxFiles]="5"
+        [maxFileSize]="5*1024*1024"
+        [imageUrls]="oldImages"
+        (imagesChanged)="onImagesChanged($event)"
+      >
+      </app-image-upload>
     </mat-card-content>
   </mat-card>
   <app-result-display></app-result-display>
@@ -68,21 +76,18 @@
       <mat-icon>{{(isSaving$ | async) ? 'sync' : 'share'}}</mat-icon>
     </button>
     <!-- Sticky Auto Save Button -->
+    @if(isEditable) {
     <button
       mat-fab
-      [extended]="(isChange$ | async)"
       color="primary"
       class="auto-save-button"
       aria-label="Button save"
-      *ngIf="isEditable()"
       (click)="save()"
     >
       <mat-icon
         >{{(isChange$ | async) ? 'cloud_upload' : 'cloud_done'}}</mat-icon
       >
-      @if(isChange$ | async) {
-      <span>{{ counter$ | async }}</span>
-      }
     </button>
+    }
   </div>
 </div>

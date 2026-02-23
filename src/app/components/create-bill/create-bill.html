@@ -44,6 +44,12 @@
           </div>
         </mat-tab>
       </mat-tab-group>
+
+      <app-image-upload
+        [maxFiles]="5"
+        [maxFileSize]="5*1024*1024"
+        (imagesChanged)="onImagesChanged($event)">
+      </app-image-upload>
     </mat-card-content>
   </mat-card>
   <app-result-display></app-result-display>

@@ -1,0 +1,117 @@
+<div class="image-upload-container">
+  <!-- Upload Area -->
+  <div
+    class="upload-area"
+    [class.drag-over]="dragOver"
+    (dragover)="onDragOver($event)"
+    (dragleave)="onDragLeave($event)"
+    (drop)="onDrop($event)"
+    (click)="triggerFileInput()"
+    (keydown)="triggerFileInput()"
+  >
+    <input
+      type="file"
+      id="file-input"
+      class="file-input"
+      multiple
+      accept="image/*"
+      (change)="onFileSelected($event)"
+    />
+
+    <div class="upload-icon">
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+        />
+      </svg>
+    </div>
+
+    <div class="upload-text">
+      <p class="primary-text">Nhấn để chọn ảnh hoặc kéo thả ảnh vào đây</p>
+      <p class="secondary-text">
+        Hỗ trợ: JPG, PNG, WEBP (Tối đa {{ maxFiles }} ảnh, {{ maxFileSize /
+        (1024 * 1024) }}MB/ảnh)
+      </p>
+    </div>
+  </div>
+
+  <!-- Image Previews -->
+  <div class="preview-container" *ngIf="images.length > 0">
+    <div class="preview-header">
+      <h3>Ảnh đã chọn ({{ images.length }})</h3>
+      <button class="clear-all-btn" (click)="clearAll()" type="button">
+        Xóa tất cả
+      </button>
+    </div>
+
+    <div class="preview-grid">
+      <div
+        class="preview-item"
+        *ngFor="let image of images; let i = index"
+        (click)="openPreview(i)"
+        (keydown)="openPreview(i)"
+      >
+        <img [src]="image.url" [alt]="'preview-item-' + i" />
+        <button
+          class="remove-btn"
+          (click)="removeImage(i); $event.stopPropagation();"
+          type="button"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+        <div class="image-info">
+          <span class="image-name">{{ image.file.name }}</span>
+          @if (image.file) {
+          <span class="image-size"
+            >{{ (image.file.size / 1024).toFixed(1) }} KB</span
+          >
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal xem chi tiết ảnh -->
+    @if (previewIndex !== null) {
+    <div
+      class="image-modal"
+      (click)="closePreview()"
+      (keydown)="closePreview()"
+    >
+      <div
+        class="image-modal-content"
+        (click)="$event.stopPropagation()"
+        (keydown)="$event.stopPropagation()"
+      >
+        <img
+          [src]="images[previewIndex]?.url"
+          class="image-modal-img"
+          [alt]="'img-full-' + previewIndex"
+        />
+        <button class="close-modal-btn" (click)="closePreview()" type="button">
+          &times;
+        </button>
+      </div>
+    </div>
+    }
+  </div>
+</div>

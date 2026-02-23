@@ -41,6 +41,13 @@ import { formatAmount } from '../../shared/helpers';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog';
 import { LoginDialogComponent } from '../login-dialog/login-dialog';
 import { BillTabControlService } from './bill-tab-control.service';
+import { ImageUploadComponent } from '../image-upload/image-upload';
+
+interface ImagePreview {
+  id?: number;
+  file: File;
+  url: string;
+}
 
 @Component({
   selector: 'app-bill-details',
@@ -59,6 +66,7 @@ import { BillTabControlService } from './bill-tab-control.service';
     ResultDisplayComponent,
     BankComponent,
     PaymentComponent,
+    ImageUploadComponent,
   ],
   templateUrl: './bill-details.html',
   styleUrl: './bill-details.scss',
@@ -82,6 +90,9 @@ export class BillDetails implements OnInit, OnDestroy, AfterViewInit {
   counter$: Observable<number>;
   @ViewChild('tabGroup') tabGroup!: MatTabGroup;
   sub!: Subscription;
+  isEditable = false;
+  oldImages: { id: number; url: string }[] = [];
+  images: ImagePreview[] = [];
 
   constructor() {
     this.expenses$ = this.billSplitterService.expenses$;
@@ -94,29 +105,30 @@ export class BillDetails implements OnInit, OnDestroy, AfterViewInit {
       .pipe(
         debounceTime(300), // tránh spam khi người dùng gõ liên tục
         distinctUntilChanged(),
-        filter((value) => value !== null && value !== undefined)
+        filter((value) => value !== null && value !== undefined),
       )
       .subscribe((name) => {
         this.billSplitterService.updateName(name);
       });
 
-    this.counter$.subscribe((counter) => {
+    this.counter$.pipe(
+        distinctUntilChanged(),
+        filter((value) => value !== null && value !== undefined),
+      ).subscribe((counter) => {
       console.log(`Auto-save countdown: ${counter} seconds remaining`);
+      if (counter === 0) {
+        const isChange = this.billSplitterService.getIsChange();
+        if (isChange) {
+          this.save();
+        }
+      }
     });
   }
 
   ngOnInit() {
-    this.loadData().then((bill) => {
-      this.nameCtrl.patchValue(bill.name, { emitEvent: false });
-
-      this.seoService.generateTags({
-        title: `Hóa đơn ${bill.name}`,
-        description: `Tổng tiền: ${formatAmount(
-          bill.data.totalAmount
-        )} - Số thành viên tham gia: ${bill.data.members.length}.`,
-      });
-
+    this.init().then(() => {
       this.billAutoSaveService.startMonitoring();
+      this.isEditable = this.billSplitterService.isEditable();
     });
   }
 
@@ -131,13 +143,43 @@ export class BillDetails implements OnInit, OnDestroy, AfterViewInit {
     this.billAutoSaveService.stopMonitoring();
   }
 
-  isEditable() {
-    return this.billSplitterService.isEditable();
+  async init() {
+    this.oldImages = [];
+    this.images = [];
+    const bill = await this.loadData();
+    this.nameCtrl.patchValue(bill.name, { emitEvent: false });
+
+    if (bill.files) {
+      this.oldImages = bill.files.map(({ id, url }) => ({ id, url }));
+      this.billSplitterService.setFileIds(bill.files.map(({ id }) => id));
+    }
+
+    this.seoService.generateTags({
+      title: `Hóa đơn ${bill.name}`,
+      description: `Tổng tiền: ${formatAmount(
+        bill.data.totalAmount,
+      )} - Số thành viên tham gia: ${bill.data.members.length}.`,
+    });
+  }
+
+  onImagesChanged(images: ImagePreview[]) {
+    console.log('Selected images:', structuredClone(images));
+    this.images = images;
+    const imageIds = images.filter(({ id }) => id !== undefined).map(({ id }) => id) as number[];
+    // Kiểm tra nếu số lượng ảnh đã thay đổi so với ảnh cũ → đánh dấu có thay đổi
+    console.log('imageIds:', imageIds.length);
+    console.log('images:', images.length);
+    const isAddingNewImage = images.some(({ id }) => !id);
+    const isRemovingImage = this.oldImages.some(oldImg => !imageIds.includes(oldImg.id));
+    if (isAddingNewImage || isRemovingImage) {
+      this.billSplitterService.updateIsChange(true);
+    }
+    this.billSplitterService.setFileIds(imageIds);
   }
 
   async save(isShare?: boolean) {
     const isChange = this.billSplitterService.getIsChange();
-    if (isShare && (!this.isEditable() || !isChange)) {
+    if (isShare && (!this.isEditable || !isChange)) {
       this.copyUrlToClipboard(this.code);
       return;
     }
@@ -153,24 +195,46 @@ export class BillDetails implements OnInit, OnDestroy, AfterViewInit {
               cancelText: 'Hủy',
             },
           })
-          .afterClosed()
+          .afterClosed(),
       );
       if (!confirmLogin) return;
 
       const loginResult = await firstValueFrom(
-        this.dialog.open(LoginDialogComponent).afterClosed()
+        this.dialog.open(LoginDialogComponent).afterClosed(),
       );
       if (!loginResult) return;
     }
 
     if (isChange) {
-      await this.billSplitterService.updateBill(this.code);
-      this.billSplitterService.updateIsChange(false);
+      if (this.images.length) {
+        console.log(structuredClone(this.images));
+        const oldFileIds = this.billSplitterService.getFileIds();
+        const newImages = this.images.filter(({ id }) => !id).map(img => img.file);
+        console.log('New images to upload:', newImages);
+        if (newImages.length) {
+          const newFiles = await this.billSplitterService.uploadImages(newImages);
+          const newFileIds = newFiles.map((file) => file.id);
+          this.billSplitterService.setFileIds([...oldFileIds, ...newFileIds]);
+        }
+      }
+      this.billSplitterService
+        .updateBill(this.code)
+        .then(() => {
+          this.billSplitterService.updateIsChange(false);
+          console.log('Bill saved successfully');
+          this.snackBar.open('Hóa đơn đã được lưu!', 'Đóng', {
+            duration: 3000,
+          });
+          this.billAutoSaveService.stopCountdown();
+          this.init();
+        })
+        .catch((error) => {
+          console.error('Failed to save bill:', error);
+        });
     }
     if (isShare) {
       await this.copyUrlToClipboard(this.code);
     }
-    this.billAutoSaveService.stopCountdown();
   }
 
   private async loadData() {

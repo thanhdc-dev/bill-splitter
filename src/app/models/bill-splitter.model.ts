@@ -52,6 +52,10 @@ export interface BillFindOne {
   };
   userId: number;
   createdAt: string;
+  files: {
+    id: number;
+    url: string;
+  }[];
 }
 
 export interface BillFindAll {

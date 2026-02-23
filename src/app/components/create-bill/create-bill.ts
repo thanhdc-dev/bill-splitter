@@ -37,6 +37,12 @@ import { BillTabControlService } from '../bill-details/bill-tab-control.service'
 import { BANKS } from '../../constants';
 import { SettingsData } from '../../interfaces';
 import { BankInfoItem } from '../../models';
+import { ImageUploadComponent } from '../image-upload/image-upload';
+
+interface ImagePreview {
+  file: File;
+  url: string;
+}
 
 @Component({
   selector: 'app-create-bill',
@@ -55,6 +61,7 @@ import { BankInfoItem } from '../../models';
     ResultDisplayComponent,
     BankComponent,
     PaymentComponent,
+    ImageUploadComponent,
   ],
   templateUrl: './create-bill.html',
   styleUrl: './create-bill.scss',
@@ -75,6 +82,7 @@ export class CreateBill implements OnInit, AfterViewInit {
   expenses$: Observable<ExpenseItem[]>;
   members$: Observable<Member[]>;
   isSaving$: Observable<boolean>;
+  files: File[] = [];
 
   constructor() {
     this.expenses$ = this.billSplitterService.expenses$;
@@ -97,7 +105,7 @@ export class CreateBill implements OnInit, AfterViewInit {
       .pipe(
         debounceTime(300), // tránh spam khi người dùng gõ liên tục
         distinctUntilChanged(),
-        filter((value) => value !== null && value !== undefined)
+        filter((value) => value),
       )
       .subscribe((name) => {
         this.billSplitterService.updateName(name);
@@ -122,20 +130,33 @@ export class CreateBill implements OnInit, AfterViewInit {
               cancelText: 'Hủy',
             },
           })
-          .afterClosed()
+          .afterClosed(),
       );
       if (!confirmLogin) return;
+      if (this.files.length) {
+        const files = await this.billSplitterService.uploadImages(this.files);
+        const fileIds = files.map((file) => file.id);
+        this.billSplitterService.setFileIds(fileIds);
+      }
       this.billSplitterService.saveBillToStorage();
       const loginResult = await firstValueFrom(
-        this.dialog.open(LoginDialogComponent).afterClosed()
+        this.dialog.open(LoginDialogComponent).afterClosed(),
       );
       if (!loginResult) return;
+    } else if (this.files.length) {
+      const files = await this.billSplitterService.uploadImages(this.files);
+      const fileIds = files.map((file) => file.id);
+      this.billSplitterService.setFileIds(fileIds);
     }
     const code = await this.billSplitterService.createBill();
     if (isShare) {
       await this.copyUrlToClipboard(code);
     }
     await this.router.navigate(['/', code]);
+  }
+
+  onImagesChanged(images: ImagePreview[]) {
+    this.files = images.map((img) => img.file);
   }
 
   private patchValueNameCtrl() {
@@ -160,7 +181,7 @@ export class CreateBill implements OnInit, AfterViewInit {
       ]).then(
         ([bankAccount, momoWallet]: [
           SettingsData['bankAccount'],
-          SettingsData['momoWallet']
+          SettingsData['momoWallet'],
         ]) => {
           const bankInfo: BankInfoItem = {
             bank: '',
@@ -171,25 +192,26 @@ export class CreateBill implements OnInit, AfterViewInit {
             accountNumber: '',
             accountNumberMomo: '',
             accountNameMomo: '',
-            phoneNumberMomo: ''
+            phoneNumberMomo: '',
           };
           const bank = BANKS.find(({ bin }) => bin == bankAccount.bankBin);
-          if (bankAccount && bank) {
-            bankInfo.bank = bank.code;
-            bankInfo.name = bank.name;
-            bankInfo.short_name = bank.short_name;
-            bankInfo.bin = bankAccount.bankBin;
-            bankInfo.accountName = bankAccount.accountName;
-            bankInfo.accountNumber = bankAccount.accountNumber;
+          if (bank || (momoWallet && Object.keys(momoWallet).length)) {
+            if (bank) {
+              bankInfo.bank = bank.code;
+              bankInfo.name = bank.name;
+              bankInfo.short_name = bank.short_name;
+              bankInfo.bin = bankAccount.bankBin;
+              bankInfo.accountName = bankAccount.accountName;
+              bankInfo.accountNumber = bankAccount.accountNumber;
+            }
+            if (momoWallet && Object.keys(momoWallet).length) {
+              bankInfo.accountNumberMomo = momoWallet.accountNumber;
+              bankInfo.accountNameMomo = momoWallet.accountName;
+              bankInfo.phoneNumberMomo = momoWallet.phoneNumber;
+            }
+            this.billSplitterService.updateBankInfo(bankInfo, true);
           }
-          if (momoWallet) {
-            bankInfo.accountNumberMomo = momoWallet.accountNumber;
-            bankInfo.accountNameMomo = momoWallet.accountName;
-            bankInfo.phoneNumberMomo = momoWallet.phoneNumber;
-          }
-
-          this.billSplitterService.updateBankInfo(bankInfo);
-        }
+        },
       );
     }
   }

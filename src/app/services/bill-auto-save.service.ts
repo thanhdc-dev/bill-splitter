@@ -30,9 +30,10 @@ export class BillAutoSaveService implements OnDestroy {
   }
 
   startMonitoring() {
-    if (this.billSplitterService.isEditable() && this.isOnBillDetailPage()) {
+    if (this.billSplitterService.isEditable()) {
       this.intervalSub = this.billSplitterService.isChange$.subscribe(
         (isChange) => {
+          console.log(`Change detected: ${isChange}`);
           if (isChange) {
             // Nếu có thay đổi → reset timer và counter
             this.resetTimer();
@@ -55,11 +56,10 @@ export class BillAutoSaveService implements OnDestroy {
     // Đếm ngược mỗi giây
     this.countdownSub = interval(1000).subscribe(() => {
       this.countdownSeconds--;
-      this.counterSubject.next(this.countdownSeconds);
       console.log(`Countdown: ${this.countdownSeconds} seconds remaining`);
+      this.counterSubject.next(this.countdownSeconds);
       if (this.countdownSeconds <= 0) {
         this.stopCountdown();
-        this.autoSave();
       }
     });
   }
@@ -79,16 +79,5 @@ export class BillAutoSaveService implements OnDestroy {
       !currentUrl.startsWith('/auth') &&
       currentUrl !== '/'
     );
-  }
-
-  private autoSave() {
-    const currentUrl = this.router.url;
-    const billCode = currentUrl.slice(1);
-    if (billCode && this.billSplitterService.getIsChange()) {
-      this.billSplitterService
-        .updateBill(billCode)
-        .then(() => this.billSplitterService.updateIsChange(false))
-        .catch(() => console.error('Auto save failed'));
-    }
   }
 }

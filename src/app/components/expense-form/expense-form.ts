@@ -64,9 +64,10 @@ export class ExpenseFormComponent {
       },
     });
 
-    dialogRef.afterClosed().subscribe((result: string) => {
-      if (result !== undefined) {
-        expense.name = result;
+    dialogRef.afterClosed().subscribe((name: string) => {
+      if (name !== undefined) {
+        expense.name = name;
+        this.billSplitterService.updateExpenseName(expense.id, name);
       }
     });
   }
@@ -82,7 +83,12 @@ export class ExpenseFormComponent {
 
     dialogRef.afterClosed().subscribe((result: number) => {
       if (result !== undefined) {
-        expense.amount = +result;
+        const amount = +result;
+        if (Number.isNaN(amount) || amount < 0) {
+          return;
+        }
+        expense.amount = amount;
+        this.billSplitterService.updateExpenseAmount(expense.id, amount);
       }
     });
   }

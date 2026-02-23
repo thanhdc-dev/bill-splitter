@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { BehaviorSubject, firstValueFrom } from 'rxjs';
+import { BehaviorSubject, distinctUntilChanged, firstValueFrom } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
 import { environment } from '../../environments/environment';
 import {
@@ -21,7 +21,7 @@ export class BillSplitterService {
 
   private userId = 0;
   private readonly endPoint = 'bills';
-  private isFetchData = false;
+  private isFetchData = true;
   private readonly bankInfoDefault: BankInfoItem = {
     bank: '',
     name: '',
@@ -37,9 +37,12 @@ export class BillSplitterService {
   private readonly expenses = new BehaviorSubject<ExpenseItem[]>([]);
   private readonly members = new BehaviorSubject<Member[]>([]);
   private readonly totalAmount = new BehaviorSubject<number>(0);
-  private readonly bankInfo = new BehaviorSubject<BankInfoItem>(this.bankInfoDefault);
+  private readonly bankInfo = new BehaviorSubject<BankInfoItem>(
+    this.bankInfoDefault,
+  );
   private readonly isSaving = new BehaviorSubject<boolean>(false);
   private readonly isChange = new BehaviorSubject<boolean>(false);
+  private readonly fileIds = new BehaviorSubject<number[]>([]);
 
   name$ = this.name.asObservable();
   expenses$ = this.expenses.asObservable();
@@ -48,25 +51,30 @@ export class BillSplitterService {
   bankInfo$ = this.bankInfo.asObservable();
   isSaving$ = this.isSaving.asObservable();
   isChange$ = this.isChange.asObservable();
+  fileIds$ = this.fileIds.asObservable();
 
   constructor() {
-    this.name$.subscribe(() => {
+    this.name$.pipe(distinctUntilChanged()).subscribe((value) => {
       if (!this.isFetchData) {
+        console.log('Name changed, marking as changed', value);
         this.isChange.next(true);
       }
     });
-    this.expenses$.subscribe(() => {
+    this.expenses$.pipe(distinctUntilChanged()).subscribe((value) => {
       if (!this.isFetchData) {
+        console.log('Expenses changed, marking as changed', value);
         this.isChange.next(true);
       }
     });
-    this.members$.subscribe(() => {
+    this.members$.pipe(distinctUntilChanged()).subscribe((value) => {
       if (!this.isFetchData) {
+        console.log('Members changed, marking as changed', value);
         this.isChange.next(true);
       }
     });
-    this.bankInfo$.subscribe(() => {
+    this.bankInfo$.pipe(distinctUntilChanged()).subscribe((value) => {
       if (!this.isFetchData) {
+        console.log('Bank info changed, marking as changed', value);
         this.isChange.next(true);
       }
     });
@@ -91,11 +99,35 @@ export class BillSplitterService {
     this.updateMemberParticipations(newExpense.id);
   }
 
+  updateExpenseName(expenseId: string, name: string): void {
+    const updatedExpenses = this.expenses.value.map((expense) => {
+      if (expense.id === expenseId) {
+        return { ...expense, name };
+      }
+      return expense;
+    });
+    this.expenses.next(updatedExpenses);
+  }
+
+  updateExpenseAmount(expenseId: string, amount: number): void {
+    const updatedExpenses = this.expenses.value.map((expense) => {
+      if (expense.id === expenseId) {
+        return { ...expense, amount };
+      }
+      return expense;
+    });
+    this.expenses.next(updatedExpenses);
+  }
+
   removeExpense(id: string): void {
     this.expenses.next(
-      this.expenses.value.filter((expense) => expense.id !== id)
+      this.expenses.value.filter((expense) => expense.id !== id),
     );
     this.recalculateTotalAmounts();
+  }
+
+  getExpenses(): ExpenseItem[] {
+    return this.expenses.value;
   }
 
   addMember(name: string): void {
@@ -123,7 +155,7 @@ export class BillSplitterService {
   updateParticipation(
     memberId: string,
     expenseId: string,
-    quantity: number
+    quantity: number,
   ): void {
     const updatedMembers = this.members.value.map((member) => {
       if (member.id === memberId) {
@@ -148,12 +180,19 @@ export class BillSplitterService {
   }
 
   resetBill() {
-    this.name.next(this.getNameDefault());
-    this.expenses.next([]);
-    this.members.next([]);
-    this.totalAmount.next(0);
-    this.bankInfo.next(this.bankInfoDefault);
-    this.userId = 0;
+    console.log('Resetting bill data');
+    new Promise((resolve) => {
+      this.isFetchData = true;
+      this.name.next(this.getNameDefault());
+      this.expenses.next([]);
+      this.members.next([]);
+      this.totalAmount.next(0);
+      this.bankInfo.next(this.bankInfoDefault);
+      this.userId = 0;
+      resolve(null);
+    }).then(() => {
+      this.isFetchData = false;
+    });
   }
 
   private updateMemberParticipations(expenseId: string): void {
@@ -181,7 +220,7 @@ export class BillSplitterService {
     });
     this.members.next(updatedMembers);
     this.totalAmount.next(
-      this.expenses.value.reduce((total, expense) => total + expense.amount, 0)
+      this.expenses.value.reduce((total, expense) => total + expense.amount, 0),
     );
   }
 
@@ -206,6 +245,7 @@ export class BillSplitterService {
         bankInfo: this.bankInfo.value,
         totalAmount: this.totalAmount.value,
       },
+      fileIds: [...this.fileIds.value],
     };
   }
 
@@ -218,8 +258,8 @@ export class BillSplitterService {
       const response = await firstValueFrom(
         this.http.post<{ code: string }>(
           `${environment.apiUrl}/${this.endPoint}`,
-          billData
-        )
+          billData,
+        ),
       );
       this.clearBillStorage();
 
@@ -250,6 +290,7 @@ export class BillSplitterService {
         totalAmount: this.totalAmount.value,
         bankInfo: this.bankInfo.value,
       },
+      fileIds: this.fileIds.value,
     };
     localStorage.setItem('bill', JSON.stringify(billData));
   }
@@ -259,10 +300,11 @@ export class BillSplitterService {
   }
 
   fetchBillFromStorage() {
+    this.isFetchData = true;
     const billString = localStorage.getItem('bill');
     if (!billString) return;
     const bill = JSON.parse(billString);
-    const { name, data } = bill;
+    const { name, data, fileIds } = bill;
     const expenses = data.expenses || [];
     const members = (data.members || []).map((member: Member) => {
       return {
@@ -271,7 +313,7 @@ export class BillSplitterService {
           Object.entries(member.participations).map(([key, value]) => [
             key,
             value ? Number(value) : 0,
-          ])
+          ]),
         ),
       };
     });
@@ -281,11 +323,17 @@ export class BillSplitterService {
       this.bankInfo.next(data.bankInfo);
     }
     this.name.next(name);
+    this.fileIds.next(fileIds || []);
     this.totalAmount.next(data.totalAmount);
+    console.log('Fetched bill from storage:', bill);
+    setTimeout(() => {
+      this.isFetchData = false;
+    });
   }
 
   clearBillStorage() {
     localStorage.removeItem('bill');
+    this.fileIds.next([]);
   }
 
   async updateBill(code: string) {
@@ -294,11 +342,12 @@ export class BillSplitterService {
 
       const billData = this.formatBillData();
 
+      console.log('Updating bill with data:', billData);
       await firstValueFrom(
         this.http.put<{ code: string }>(
           `${environment.apiUrl}/${this.endPoint}/${code}`,
-          billData
-        )
+          billData,
+        ),
       );
     } catch (error) {
       console.error('Error saving bill:', error);
@@ -313,8 +362,8 @@ export class BillSplitterService {
       this.isFetchData = true;
       const response = await firstValueFrom(
         this.http.get<BillFindOne>(
-          `${environment.apiUrl}/${this.endPoint}/${code}`
-        )
+          `${environment.apiUrl}/${this.endPoint}/${code}`,
+        ),
       );
       const { name, data } = response;
       const expenses = data.expenses || [];
@@ -325,7 +374,7 @@ export class BillSplitterService {
             Object.entries(member.participations).map(([key, value]) => [
               key,
               value ? Number(value) : 0,
-            ])
+            ]),
           ),
         };
       });
@@ -348,21 +397,22 @@ export class BillSplitterService {
 
   async getBills() {
     const response = await firstValueFrom(
-      this.http.get<BillFindAll>(`${environment.apiUrl}/${this.endPoint}`)
+      this.http.get<BillFindAll>(`${environment.apiUrl}/${this.endPoint}`),
     );
 
     return response.data;
   }
 
-  updateBankInfo(bankInfo: BankInfoItem) {
+  updateBankInfo(bankInfo: BankInfoItem, isFetchData = false) {
+    this.isFetchData = isFetchData;
     this.bankInfo.next(bankInfo);
   }
 
   async delete(billCode: string) {
     await firstValueFrom(
       this.http.delete<BillFindAll>(
-        `${environment.apiUrl}/${this.endPoint}/${billCode}`
-      )
+        `${environment.apiUrl}/${this.endPoint}/${billCode}`,
+      ),
     );
   }
 
@@ -393,5 +443,26 @@ export class BillSplitterService {
 
   getIsChange() {
     return this.isChange.value;
+  }
+
+  setFileIds(fileIds: number[]) {
+    this.fileIds.next(fileIds);
+  }
+
+  getFileIds(): number[] {
+    return this.fileIds.value;
+  }
+
+  async uploadImages(files: File[]): Promise<{ id: number; url: string }[]> {
+    const URL = `${environment.apiUrl}/${this.endPoint}/upload-images`;
+    const formData = new FormData();
+
+    files.forEach((file) => {
+      formData.append('files', file);
+    });
+
+    return firstValueFrom(this.http.post(URL, formData)) as Promise<
+      { id: number; url: string }[]
+    >;
   }
 }
