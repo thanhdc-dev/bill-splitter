@@ -164,6 +164,16 @@
           }
         }
 
+        @media (max-width: 767px) {
+          .remove-btn {
+            opacity: 1 !important;
+          }
+
+          .image-info {
+            opacity: 1 !important;
+          }
+        }
+
         img {
           width: 100%;
           height: 100%;
