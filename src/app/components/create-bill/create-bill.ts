@@ -149,6 +149,7 @@ export class CreateBill implements OnInit, AfterViewInit {
       this.billSplitterService.setFileIds(fileIds);
     }
     const code = await this.billSplitterService.createBill();
+    this.billSplitterService.updateIsChange(false);
     if (isShare) {
       await this.copyUrlToClipboard(code);
     }
