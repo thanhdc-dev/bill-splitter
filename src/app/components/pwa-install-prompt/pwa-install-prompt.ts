@@ -23,7 +23,7 @@ export class PwaInstallPromptComponent implements OnInit {
       event.preventDefault();
       this.deferredPrompt = event;
       this.showInstallPrompt = true;
-    });
+    }, { once: true });
   }
 
   async installPwa() {
