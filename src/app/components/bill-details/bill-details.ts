@@ -115,7 +115,6 @@ export class BillDetails implements OnInit, OnDestroy, AfterViewInit {
         distinctUntilChanged(),
         filter((value) => value !== null && value !== undefined),
       ).subscribe((counter) => {
-      console.log(`Auto-save countdown: ${counter} seconds remaining`);
       if (counter === 0) {
         const isChange = this.billSplitterService.getIsChange();
         if (isChange) {
@@ -146,7 +145,7 @@ export class BillDetails implements OnInit, OnDestroy, AfterViewInit {
   async init() {
     this.oldImages = [];
     this.images = [];
-    const bill = await this.loadData();
+    const bill = await this.billSplitterService.fetchBill(this.code);
     this.nameCtrl.patchValue(bill.name, { emitEvent: false });
 
     if (bill.files) {
@@ -163,12 +162,9 @@ export class BillDetails implements OnInit, OnDestroy, AfterViewInit {
   }
 
   onImagesChanged(images: ImagePreview[]) {
-    console.log('Selected images:', structuredClone(images));
     this.images = images;
     const imageIds = images.filter(({ id }) => id !== undefined).map(({ id }) => id) as number[];
     // Kiểm tra nếu số lượng ảnh đã thay đổi so với ảnh cũ → đánh dấu có thay đổi
-    console.log('imageIds:', imageIds.length);
-    console.log('images:', images.length);
     const isAddingNewImage = images.some(({ id }) => !id);
     const isRemovingImage = this.oldImages.some(oldImg => !imageIds.includes(oldImg.id));
     if (isAddingNewImage || isRemovingImage) {
@@ -207,10 +203,8 @@ export class BillDetails implements OnInit, OnDestroy, AfterViewInit {
 
     if (isChange) {
       if (this.images.length) {
-        console.log(structuredClone(this.images));
         const oldFileIds = this.billSplitterService.getFileIds();
         const newImages = this.images.filter(({ id }) => !id).map(img => img.file);
-        console.log('New images to upload:', newImages);
         if (newImages.length) {
           const newFiles = await this.billSplitterService.uploadImages(newImages);
           const newFileIds = newFiles.map((file) => file.id);
@@ -221,7 +215,6 @@ export class BillDetails implements OnInit, OnDestroy, AfterViewInit {
         .updateBill(this.code)
         .then(() => {
           this.billSplitterService.updateIsChange(false);
-          console.log('Bill saved successfully');
           this.snackBar.open('Hóa đơn đã được lưu!', 'Đóng', {
             duration: 3000,
           });
@@ -229,20 +222,12 @@ export class BillDetails implements OnInit, OnDestroy, AfterViewInit {
           this.init();
         })
         .catch((error) => {
-          console.error('Failed to save bill:', error);
+          console.error('Có lỗi khi lưu hóa đơn:', error);
         });
     }
     if (isShare) {
       await this.copyUrlToClipboard(this.code);
     }
-  }
-
-  private async loadData() {
-    const bill = await this.billSplitterService.fetchBill(this.code);
-    this.snackBar.open('Đã tải dữ liệu thành công!', 'Đóng', {
-      duration: 3000,
-    });
-    return bill;
   }
 
   private async copyUrlToClipboard(code: string) {

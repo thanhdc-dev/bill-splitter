@@ -54,27 +54,23 @@ export class BillSplitterService {
   fileIds$ = this.fileIds.asObservable();
 
   constructor() {
-    this.name$.pipe(distinctUntilChanged()).subscribe((value) => {
+    this.name$.pipe(distinctUntilChanged()).subscribe(() => {
       if (!this.isFetchData) {
-        console.log('Name changed, marking as changed', value);
         this.isChange.next(true);
       }
     });
-    this.expenses$.pipe(distinctUntilChanged()).subscribe((value) => {
+    this.expenses$.pipe(distinctUntilChanged()).subscribe(() => {
       if (!this.isFetchData) {
-        console.log('Expenses changed, marking as changed', value);
         this.isChange.next(true);
       }
     });
-    this.members$.pipe(distinctUntilChanged()).subscribe((value) => {
+    this.members$.pipe(distinctUntilChanged()).subscribe(() => {
       if (!this.isFetchData) {
-        console.log('Members changed, marking as changed', value);
         this.isChange.next(true);
       }
     });
-    this.bankInfo$.pipe(distinctUntilChanged()).subscribe((value) => {
+    this.bankInfo$.pipe(distinctUntilChanged()).subscribe(() => {
       if (!this.isFetchData) {
-        console.log('Bank info changed, marking as changed', value);
         this.isChange.next(true);
       }
     });
@@ -180,7 +176,6 @@ export class BillSplitterService {
   }
 
   resetBill() {
-    console.log('Resetting bill data');
     new Promise((resolve) => {
       this.isFetchData = true;
       this.name.next(this.getNameDefault());
@@ -325,7 +320,6 @@ export class BillSplitterService {
     this.name.next(name);
     this.fileIds.next(fileIds || []);
     this.totalAmount.next(data.totalAmount);
-    console.log('Fetched bill from storage:', bill);
     setTimeout(() => {
       this.isFetchData = false;
     });
@@ -342,7 +336,6 @@ export class BillSplitterService {
 
       const billData = this.formatBillData();
 
-      console.log('Updating bill with data:', billData);
       await firstValueFrom(
         this.http.put<{ code: string }>(
           `${environment.apiUrl}/${this.endPoint}/${code}`,

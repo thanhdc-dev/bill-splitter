@@ -27,7 +27,6 @@ export class ImageUploadComponent {
     this.images = [];
     const imageUrlsSet = new Set(this.images.map((img) => img.url));
     let imageIndex = 1;
-    console.log(`Total image URLs received: ${images.length}`);
     images.forEach(async ({ id, url }) => {
       if (!imageUrlsSet.has(url)) {
         try {
@@ -106,7 +105,6 @@ export class ImageUploadComponent {
     }
 
     let imageIndex = 1;
-    console.log(`file valid: ${validFiles.length}`);
     validFiles.forEach((file) => {
       const reader = new FileReader();
       reader.onload = (e: ProgressEvent<FileReader>) => {
@@ -114,7 +112,6 @@ export class ImageUploadComponent {
           file: file,
           url: e.target?.result as string,
         });
-        console.log(`file index: ${imageIndex}, file name: ${file.name}`);
         if (imageIndex === validFiles.length) {
           this.emitImages();
         }

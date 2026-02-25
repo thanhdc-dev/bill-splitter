@@ -33,7 +33,6 @@ export class BillAutoSaveService implements OnDestroy {
     if (this.billSplitterService.isEditable()) {
       this.intervalSub = this.billSplitterService.isChange$.subscribe(
         (isChange) => {
-          console.log(`Change detected: ${isChange}`);
           if (isChange) {
             // Nếu có thay đổi → reset timer và counter
             this.resetTimer();
