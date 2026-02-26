@@ -49,15 +49,16 @@ export class BillAutoSaveService implements OnDestroy {
   }
 
   private startCountdown() {
-    this.countdownSeconds = this.SAVE_DELAY; // Bắt đầu từ 5 giây
+    this.countdownSeconds = this.SAVE_DELAY; // Bắt đầu từ 3 giây
     this.counterSubject.next(this.countdownSeconds);
 
     // Đếm ngược mỗi giây
     this.countdownSub = interval(1000).subscribe(() => {
       this.countdownSeconds--;
-      console.log(`Countdown: ${this.countdownSeconds} seconds remaining`);
-      this.counterSubject.next(this.countdownSeconds);
-      if (this.countdownSeconds <= 0) {
+      if (this.countdownSeconds >= 0) {
+        console.log(`Countdown: ${this.countdownSeconds} seconds remaining`);
+        this.counterSubject.next(this.countdownSeconds);
+      } else {
         this.stopCountdown();
       }
     });
