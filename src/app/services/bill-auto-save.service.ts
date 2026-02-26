@@ -71,13 +71,4 @@ export class BillAutoSaveService implements OnDestroy {
     }
     this.counterSubject.next(0); // Reset counter về 0
   }
-
-  private isOnBillDetailPage(): boolean {
-    const currentUrl = this.router.url;
-    return (
-      !currentUrl.startsWith('/bills') &&
-      !currentUrl.startsWith('/auth') &&
-      currentUrl !== '/'
-    );
-  }
 }
