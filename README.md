@@ -21,7 +21,7 @@
 * **Framework Frontend:** Angular 20
 * **Thiết Kế Giao Diện:** Tailwind CSS 4, Angular Material, và SCSS
 * **PWA:** Angular Service Worker
-* **Thư Viện Khác:** RxJS, `uuid`, `ngx-mat-select-search`
+* **Thư Viện Khác:** RxJS, `ngx-mat-select-search`
 
 ## Hướng Dẫn Cài Đặt
 

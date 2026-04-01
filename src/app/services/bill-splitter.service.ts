@@ -1,7 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { BehaviorSubject, distinctUntilChanged, firstValueFrom } from 'rxjs';
-import { v4 as uuidv4 } from 'uuid';
 import { environment } from '../../environments/environment';
 import {
   BillFindAll,
@@ -87,7 +86,7 @@ export class BillSplitterService {
 
   addExpense(name: string, amount: number): void {
     const newExpense: ExpenseItem = {
-      id: uuidv4(),
+      id: crypto.randomUUID(),
       name,
       amount,
     };
@@ -133,7 +132,7 @@ export class BillSplitterService {
     });
 
     const newMember: Member = {
-      id: uuidv4(),
+      id: crypto.randomUUID(),
       name,
       isPaid: false,
       participations,
