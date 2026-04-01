@@ -1,21 +1,23 @@
 import { inject, Injectable, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
-import { BehaviorSubject, interval, Subscription } from 'rxjs';
+import { BehaviorSubject, Subject, Subscription, timer } from 'rxjs';
+import { filter, map, switchMap, takeUntil, takeWhile, tap } from 'rxjs/operators';
 import { BillSplitterService } from './bill-splitter.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class BillAutoSaveService implements OnDestroy {
-  private intervalSub?: Subscription;
-  private countdownSub?: Subscription;
-  private readonly saveTimer?: number;
   private readonly router = inject(Router);
   private readonly billSplitterService = inject(BillSplitterService);
+  
+  private monitorSub?: Subscription;
   private readonly counterSubject = new BehaviorSubject<number>(0);
   public counter$ = this.counterSubject.asObservable();
+  
+  // Tín hiệu hủy bộ đếm thủ công
+  private cancel$ = new Subject<void>();
 
-  private countdownSeconds = 0;
   private readonly SAVE_DELAY = 3; // 3s
 
   ngOnDestroy() {
@@ -23,52 +25,30 @@ export class BillAutoSaveService implements OnDestroy {
   }
 
   stopMonitoring() {
-    this.intervalSub?.unsubscribe();
+    this.monitorSub?.unsubscribe();
     this.stopCountdown();
-    clearTimeout(this.saveTimer);
-    this.counterSubject.complete();
+  }
+
+  stopCountdown() {
+    this.cancel$.next();
+    this.counterSubject.next(0);
   }
 
   startMonitoring() {
     if (this.billSplitterService.isEditable()) {
-      this.intervalSub = this.billSplitterService.isChange$.subscribe(
-        (isChange) => {
-          if (isChange) {
-            // Nếu có thay đổi → reset timer và counter
-            this.resetTimer();
-            this.startCountdown();
-          }
-        }
-      );
+      this.monitorSub = this.billSplitterService.isChange$.pipe(
+        filter((isChange) => isChange),
+        switchMap(() => {
+          // Bắt đầu một timer phát sinh mỗi 1 giây (1000ms), 
+          // Timer này sẽ bị tự động hủy và tạo mới lại vòng lặp nếu isChange$ phát dữ liệu mới.
+          return timer(0, 1000).pipe(
+            map((i) => this.SAVE_DELAY - i),
+            tap((remaining) => this.counterSubject.next(remaining)),
+            takeWhile((remaining) => remaining > 0),
+            takeUntil(this.cancel$)
+          );
+        })
+      ).subscribe();
     }
-  }
-
-  private resetTimer() {
-    clearTimeout(this.saveTimer);
-    this.stopCountdown();
-  }
-
-  private startCountdown() {
-    this.countdownSeconds = this.SAVE_DELAY; // Bắt đầu từ 3 giây
-    this.counterSubject.next(this.countdownSeconds);
-
-    // Đếm ngược mỗi giây
-    this.countdownSub = interval(1000).subscribe(() => {
-      this.countdownSeconds--;
-      if (this.countdownSeconds >= 0) {
-        console.log(`Countdown: ${this.countdownSeconds} seconds remaining`);
-        this.counterSubject.next(this.countdownSeconds);
-      } else {
-        this.stopCountdown();
-      }
-    });
-  }
-
-  stopCountdown() {
-    if (this.countdownSub) {
-      this.countdownSub.unsubscribe();
-      this.countdownSub = undefined;
-    }
-    this.counterSubject.next(0); // Reset counter về 0
   }
 }

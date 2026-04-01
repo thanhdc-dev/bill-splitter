@@ -319,9 +319,7 @@ export class BillSplitterService {
     this.name.next(name);
     this.fileIds.next(fileIds || []);
     this.totalAmount.next(data.totalAmount);
-    setTimeout(() => {
-      this.isFetchData = false;
-    });
+    this.isFetchData = false;
   }
 
   clearBillStorage() {
