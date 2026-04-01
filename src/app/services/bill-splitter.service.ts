@@ -199,12 +199,24 @@ export class BillSplitterService {
   }
 
   private recalculateTotalAmounts(): void {
+    const expenseTotalQuantities = new Map<string, number>();
+    this.members.value.forEach((member) => {
+      member.participations.forEach((quantity, expenseId) => {
+        if (quantity > 0) {
+          expenseTotalQuantities.set(
+            expenseId,
+            (expenseTotalQuantities.get(expenseId) || 0) + quantity,
+          );
+        }
+      });
+    });
+
     const updatedMembers = this.members.value.map((member) => {
       let totalAmount = 0;
       this.expenses.value.forEach((expense) => {
         const quantity = member.participations.get(expense.id) || 0;
         if (quantity > 0) {
-          const totalQuantity = this.getTotalQuantity(expense.id);
+          const totalQuantity = expenseTotalQuantities.get(expense.id) || 0;
           if (totalQuantity > 0) {
             totalAmount += (expense.amount * quantity) / totalQuantity;
           }
@@ -216,13 +228,6 @@ export class BillSplitterService {
     this.totalAmount.next(
       this.expenses.value.reduce((total, expense) => total + expense.amount, 0),
     );
-  }
-
-  private getTotalQuantity(expenseId: string): number {
-    return this.members.value.reduce((total, member) => {
-      const quantity = member.participations.get(expenseId) || 0;
-      return total + quantity;
-    }, 0);
   }
 
   private formatBillData() {
