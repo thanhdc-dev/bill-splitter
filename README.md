@@ -1,59 +1,66 @@
-# BillSplitter
+<div align="center">
+  <h1>🧾 Bill Splitter</h1>
+  <p>Một ứng dụng web thông minh, nhanh chóng và bảo mật giúp bạn dễ dàng tính toán và chia sẻ tiền hóa đơn với bạn bè và gia đình.</p>
+</div>
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.0.0.
+---
 
-## Development server
+## Tính Năng
 
-To start a local development server, run:
+* **Chia Tiền Linh Hoạt:** Chia đều hóa đơn cho một nhóm hoặc chia theo phần/số lượng cụ thể
+* **Tạo Mã QR Thanh Toán Nhanh:** Tạo ngay mã QR chuyên dụng cho việc chuyển khoản ngân hàng, ví điện tử Momo trực tiếp giúp thanh toán nhanh nhất.
+* **Lưu & Chia Sẻ Hóa Đơn:** Tự động lưu các dữ liệu hóa đơn của bạn và dễ dàng chia sẻ chúng thông qua các đường liên kết (link) ngắn.
+* **Xác Thực Nhanh Chóng:** Quy trình đăng nhập an toàn, tiện dụng, hỗ trợ OAuth qua **Google** và **Zalo**.
+* **Tải Lên Ảnh Biên Lai:** Cho phép đính kèm hình ảnh hóa đơn/biên lai trực tiếp vào hóa đơn được tạo để đảm bảo sự minh bạch.
+* **Hỗ Trợ PWA:** Có thể cài đặt trực tiếp như một Progressive Web App (PWA) trên các thiết bị iOS và Android để đem lại trải nghiệm mượt mà như ứng dụng gốc.
+* **Giao Diện Sáng/Tối:** Hệ thống hỗ trợ chuyển đổi giao diện nền Sáng/Tối (Dark/Light theme) tích hợp sẵn phù hợp với tùy chọn của riêng bạn.
+* **Tối Ưu Hóa SEO:** Đảm bảo các liên kết chia sẻ hóa đơn có khả năng hiển thị trước (preview) đầy đủ, nổi bật trên các mạng xã hội.
 
+## Nền Tảng Công Nghệ
+
+* **Framework Frontend:** Angular 20
+* **Thiết Kế Giao Diện:** Tailwind CSS 4, Angular Material, và SCSS
+* **PWA:** Angular Service Worker
+* **Thư Viện Khác:** RxJS, `uuid`, `ngx-mat-select-search`
+
+## Hướng Dẫn Cài Đặt
+
+### Yêu Cầu Trước Khi Cài Đặt
+
+Đảm bảo bạn đã cài đặt [Node.js](https://nodejs.org/) trên máy tính của mình. Ứng dụng đã có sẵn file `.nvmrc` chỉ định phiên bản Node.js phù hợp nhất.
+
+### Cài Đặt
+
+1. Sao chép (*Clone*) mã nguồn (repository):
+   ```bash
+   git clone <repository-url>
+   cd bill-splitter
+   ```
+
+2. Cài đặt các thư viện phụ thuộc:
+   ```bash
+   npm install
+   ```
+
+### Khởi Chạy Môi Trường Phát Triển
+
+Để chạy server phát triển trong máy tính của bạn:
 ```bash
+npm start
+# hoặc 
 ng serve
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+Hãy mở trình duyệt và truy cập vào `http://localhost:4200/`. Ứng dụng sẽ tự động tải lại bất cứ khi nào bạn thay đổi bất kỳ tập tin mã nguồn nào.
 
-## Code scaffolding
+### Build Ứng Dụng (Production)
 
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+Để biên dịch và build dự án cho môi trường Release (sản phẩm hoàn thiện), hãy chạy:
 
 ```bash
-ng generate --help
+npm run build:prod
+# hoặc
+ng build --configuration=production
 ```
 
-## Building
-
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+Các file cấu thành ứng dụng sau khi build xong sẽ được tự động lưu trữ trong thư mục `dist/`.
