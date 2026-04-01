@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable, inject } from '@angular/core';
-import { BehaviorSubject, distinctUntilChanged, firstValueFrom } from 'rxjs';
+import { Injectable, inject, signal } from '@angular/core';
+import { toObservable } from '@angular/core/rxjs-interop';
+import { firstValueFrom } from 'rxjs';
 import { environment } from '../../environments/environment';
 import {
   BillFindAll,
@@ -20,7 +21,6 @@ export class BillSplitterService {
 
   private userId = 0;
   private readonly endPoint = 'bills';
-  private isFetchData = true;
   private readonly bankInfoDefault: BankInfoItem = {
     bank: '',
     name: '',
@@ -32,50 +32,32 @@ export class BillSplitterService {
     accountNameMomo: '',
     phoneNumberMomo: '',
   };
-  private readonly name = new BehaviorSubject<string>(this.getNameDefault());
-  private readonly expenses = new BehaviorSubject<ExpenseItem[]>([]);
-  private readonly members = new BehaviorSubject<Member[]>([]);
-  private readonly totalAmount = new BehaviorSubject<number>(0);
-  private readonly bankInfo = new BehaviorSubject<BankInfoItem>(
-    this.bankInfoDefault,
-  );
-  private readonly isSaving = new BehaviorSubject<boolean>(false);
-  private readonly isChange = new BehaviorSubject<boolean>(false);
-  private readonly fileIds = new BehaviorSubject<number[]>([]);
 
-  name$ = this.name.asObservable();
-  expenses$ = this.expenses.asObservable();
-  members$ = this.members.asObservable();
-  totalAmount$ = this.totalAmount.asObservable();
-  bankInfo$ = this.bankInfo.asObservable();
-  isSaving$ = this.isSaving.asObservable();
-  isChange$ = this.isChange.asObservable();
-  fileIds$ = this.fileIds.asObservable();
+  public readonly name = signal<string>(this.getNameDefault());
+  public readonly expenses = signal<ExpenseItem[]>([]);
+  public readonly members = signal<Member[]>([]);
+  public readonly totalAmount = signal<number>(0);
+  public readonly bankInfo = signal<BankInfoItem>(this.bankInfoDefault);
+  public readonly isSaving = signal<boolean>(false);
+  public readonly isChange = signal<boolean>(false);
+  public readonly fileIds = signal<number[]>([]);
 
-  constructor() {
-    this.name$.pipe(distinctUntilChanged()).subscribe(() => {
-      if (!this.isFetchData) {
-        this.isChange.next(true);
-      }
-    });
-    this.expenses$.pipe(distinctUntilChanged()).subscribe(() => {
-      if (!this.isFetchData) {
-        this.isChange.next(true);
-      }
-    });
-    this.members$.pipe(distinctUntilChanged()).subscribe(() => {
-      if (!this.isFetchData) {
-        this.isChange.next(true);
-      }
-    });
-    this.bankInfo$.pipe(distinctUntilChanged()).subscribe(() => {
-      if (!this.isFetchData) {
-        this.isChange.next(true);
-      }
-    });
+  public readonly name$ = toObservable(this.name);
+  public readonly expenses$ = toObservable(this.expenses);
+  public readonly members$ = toObservable(this.members);
+  public readonly totalAmount$ = toObservable(this.totalAmount);
+  public readonly bankInfo$ = toObservable(this.bankInfo);
+  public readonly isSaving$ = toObservable(this.isSaving);
+  public readonly isChange$ = toObservable(this.isChange);
+  public readonly fileIds$ = toObservable(this.fileIds);
+
+  constructor() {}
+
+  private markAsChanged() {
+    this.isChange.set(true);
   }
 
-  private getNameDefault() {
+  private getNameDefault(): string {
     const today = new Date();
     const dd = String(today.getDate()).padStart(2, '0');
     const mm = String(today.getMonth() + 1).padStart(2, '0');
@@ -90,44 +72,43 @@ export class BillSplitterService {
       name,
       amount,
     };
-    this.expenses.next([...this.expenses.value, newExpense]);
+    this.expenses.update((exps) => [...exps, newExpense]);
     this.updateMemberParticipations(newExpense.id);
+    this.markAsChanged();
   }
 
   updateExpenseName(expenseId: string, name: string): void {
-    const updatedExpenses = this.expenses.value.map((expense) => {
-      if (expense.id === expenseId) {
-        return { ...expense, name };
-      }
-      return expense;
-    });
-    this.expenses.next(updatedExpenses);
+    this.expenses.update((exps) =>
+      exps.map((expense) =>
+        expense.id === expenseId ? { ...expense, name } : expense
+      )
+    );
+    this.markAsChanged();
   }
 
   updateExpenseAmount(expenseId: string, amount: number): void {
-    const updatedExpenses = this.expenses.value.map((expense) => {
-      if (expense.id === expenseId) {
-        return { ...expense, amount };
-      }
-      return expense;
-    });
-    this.expenses.next(updatedExpenses);
+    this.expenses.update((exps) =>
+      exps.map((expense) =>
+        expense.id === expenseId ? { ...expense, amount } : expense
+      )
+    );
+    this.recalculateTotalAmounts();
+    this.markAsChanged();
   }
 
   removeExpense(id: string): void {
-    this.expenses.next(
-      this.expenses.value.filter((expense) => expense.id !== id),
-    );
+    this.expenses.update((exps) => exps.filter((e) => e.id !== id));
     this.recalculateTotalAmounts();
+    this.markAsChanged();
   }
 
   getExpenses(): ExpenseItem[] {
-    return this.expenses.value;
+    return this.expenses();
   }
 
   addMember(name: string): void {
     const participations = new Map<string, number>();
-    this.expenses.value.forEach((expense) => {
+    this.expenses().forEach((expense) => {
       participations.set(expense.id, 0);
     });
 
@@ -138,82 +119,79 @@ export class BillSplitterService {
       participations,
       totalAmount: 0,
     };
-    this.members.next([...this.members.value, newMember]);
+    this.members.update((mems) => [...mems, newMember]);
     this.recalculateTotalAmounts();
+    this.markAsChanged();
   }
 
   removeMember(id: string): void {
-    this.members.next(this.members.value.filter((member) => member.id !== id));
+    this.members.update((mems) => mems.filter((m) => m.id !== id));
     this.recalculateTotalAmounts();
+    this.markAsChanged();
   }
 
-  updateParticipation(
-    memberId: string,
-    expenseId: string,
-    quantity: number,
-  ): void {
-    const updatedMembers = this.members.value.map((member) => {
-      if (member.id === memberId) {
-        const updatedParticipations = new Map(member.participations);
-        updatedParticipations.set(expenseId, quantity);
-        return { ...member, participations: updatedParticipations };
-      }
-      return member;
-    });
-    this.members.next(updatedMembers);
+  updateParticipation(memberId: string, expenseId: string, quantity: number): void {
+    this.members.update((mems) =>
+      mems.map((member) => {
+        if (member.id === memberId) {
+          const updatedParticipations = new Map(member.participations);
+          updatedParticipations.set(expenseId, quantity);
+          return { ...member, participations: updatedParticipations };
+        }
+        return member;
+      })
+    );
     this.recalculateTotalAmounts();
+    this.markAsChanged();
   }
 
   updatePaid(memberId: string, isPaid: boolean) {
-    const updatedMembers = this.members.value.map((member) => {
-      if (member.id === memberId) {
-        return { ...member, isPaid };
-      }
-      return member;
-    });
-    this.members.next(updatedMembers);
+    this.members.update((mems) =>
+      mems.map((member) =>
+        member.id === memberId ? { ...member, isPaid } : member
+      )
+    );
+    this.markAsChanged();
   }
 
   resetBill() {
-    new Promise((resolve) => {
-      this.isFetchData = true;
-      this.name.next(this.getNameDefault());
-      this.expenses.next([]);
-      this.members.next([]);
-      this.totalAmount.next(0);
-      this.bankInfo.next(this.bankInfoDefault);
-      this.userId = 0;
-      resolve(null);
-    }).then(() => {
-      this.isFetchData = false;
-    });
+    this.name.set(this.getNameDefault());
+    this.expenses.set([]);
+    this.members.set([]);
+    this.totalAmount.set(0);
+    this.bankInfo.set(this.bankInfoDefault);
+    this.userId = 0;
   }
 
   private updateMemberParticipations(expenseId: string): void {
-    const updatedMembers = this.members.value.map((member) => {
-      const updatedParticipations = new Map(member.participations);
-      updatedParticipations.set(expenseId, 0);
-      return { ...member, participations: updatedParticipations };
-    });
-    this.members.next(updatedMembers);
+    this.members.update((mems) =>
+      mems.map((member) => {
+        const updatedParticipations = new Map(member.participations);
+        updatedParticipations.set(expenseId, 0);
+        return { ...member, participations: updatedParticipations };
+      })
+    );
   }
 
   private recalculateTotalAmounts(): void {
+    const mems = this.members();
+    const exps = this.expenses();
+
     const expenseTotalQuantities = new Map<string, number>();
-    this.members.value.forEach((member) => {
+    mems.forEach((member) => {
       member.participations.forEach((quantity, expenseId) => {
         if (quantity > 0) {
           expenseTotalQuantities.set(
             expenseId,
-            (expenseTotalQuantities.get(expenseId) || 0) + quantity,
+            (expenseTotalQuantities.get(expenseId) || 0) + quantity
           );
         }
       });
     });
 
-    const updatedMembers = this.members.value.map((member) => {
+    const updatedMembers = mems.map((member) => {
       let totalAmount = 0;
-      this.expenses.value.forEach((expense) => {
+      exps.forEach((expense) => {
         const quantity = member.participations.get(expense.id) || 0;
         if (quantity > 0) {
           const totalQuantity = expenseTotalQuantities.get(expense.id) || 0;
@@ -224,41 +202,42 @@ export class BillSplitterService {
       });
       return { ...member, totalAmount };
     });
-    this.members.next(updatedMembers);
-    this.totalAmount.next(
-      this.expenses.value.reduce((total, expense) => total + expense.amount, 0),
+
+    this.members.set(updatedMembers);
+    this.totalAmount.set(
+      exps.reduce((total, expense) => total + expense.amount, 0)
     );
   }
 
   private formatBillData() {
     return {
-      name: this.name.value,
+      name: this.name(),
       data: {
-        expenses: this.expenses.value,
-        members: this.members.value.map((member) => {
+        expenses: this.expenses(),
+        members: this.members().map((member) => {
           return {
             ...member,
             participations: Object.fromEntries(member.participations),
           };
         }),
-        bankInfo: this.bankInfo.value,
-        totalAmount: this.totalAmount.value,
+        bankInfo: this.bankInfo(),
+        totalAmount: this.totalAmount(),
       },
-      fileIds: [...this.fileIds.value],
+      fileIds: [...this.fileIds()],
     };
   }
 
   async createBill(): Promise<string> {
     try {
-      this.isSaving.next(true);
+      this.isSaving.set(true);
 
       const billData = this.formatBillData();
 
       const response = await firstValueFrom(
         this.http.post<{ code: string }>(
           `${environment.apiUrl}/${this.endPoint}`,
-          billData,
-        ),
+          billData
+        )
       );
       this.clearBillStorage();
 
@@ -267,29 +246,29 @@ export class BillSplitterService {
       console.error('Error saving bill:', error);
       throw error;
     } finally {
-      this.isSaving.next(false);
+      this.isSaving.set(false);
     }
   }
 
   isBillDataEmpty() {
-    return !this.members.value.length && !this.expenses.value.length;
+    return !this.members().length && !this.expenses().length;
   }
 
   saveBillToStorage() {
     const billData = {
-      name: this.name.value,
+      name: this.name(),
       data: {
-        expenses: this.expenses.value,
-        members: this.members.value.map((member) => {
+        expenses: this.expenses(),
+        members: this.members().map((member) => {
           return {
             ...member,
             participations: Object.fromEntries(member.participations),
           };
         }),
-        totalAmount: this.totalAmount.value,
-        bankInfo: this.bankInfo.value,
+        totalAmount: this.totalAmount(),
+        bankInfo: this.bankInfo(),
       },
-      fileIds: this.fileIds.value,
+      fileIds: this.fileIds(),
     };
     localStorage.setItem('bill', JSON.stringify(billData));
   }
@@ -299,9 +278,10 @@ export class BillSplitterService {
   }
 
   fetchBillFromStorage() {
-    this.isFetchData = true;
     const billString = localStorage.getItem('bill');
-    if (!billString) return;
+    if (!billString) {
+        return;
+    }
     const bill = JSON.parse(billString);
     const { name, data, fileIds } = bill;
     const expenses = data.expenses || [];
@@ -312,53 +292,51 @@ export class BillSplitterService {
           Object.entries(member.participations).map(([key, value]) => [
             key,
             value ? Number(value) : 0,
-          ]),
+          ])
         ),
       };
     });
-    this.expenses.next(expenses);
-    this.members.next(members);
+    this.expenses.set(expenses);
+    this.members.set(members);
     if (data.bankInfo) {
-      this.bankInfo.next(data.bankInfo);
+      this.bankInfo.set(data.bankInfo);
     }
-    this.name.next(name);
-    this.fileIds.next(fileIds || []);
-    this.totalAmount.next(data.totalAmount);
-    this.isFetchData = false;
+    this.name.set(name);
+    this.fileIds.set(fileIds || []);
+    this.totalAmount.set(data.totalAmount);
   }
 
   clearBillStorage() {
     localStorage.removeItem('bill');
-    this.fileIds.next([]);
+    this.fileIds.set([]);
   }
 
   async updateBill(code: string) {
     try {
-      this.isSaving.next(true);
+      this.isSaving.set(true);
 
       const billData = this.formatBillData();
 
       await firstValueFrom(
         this.http.put<{ code: string }>(
           `${environment.apiUrl}/${this.endPoint}/${code}`,
-          billData,
-        ),
+          billData
+        )
       );
     } catch (error) {
       console.error('Error saving bill:', error);
       throw error;
     } finally {
-      this.isSaving.next(false);
+      this.isSaving.set(false);
     }
   }
 
   async fetchBill(code: string): Promise<BillFindOne> {
     try {
-      this.isFetchData = true;
       const response = await firstValueFrom(
         this.http.get<BillFindOne>(
-          `${environment.apiUrl}/${this.endPoint}/${code}`,
-        ),
+          `${environment.apiUrl}/${this.endPoint}/${code}`
+        )
       );
       const { name, data } = response;
       const expenses = data.expenses || [];
@@ -369,54 +347,53 @@ export class BillSplitterService {
             Object.entries(member.participations).map(([key, value]) => [
               key,
               value ? Number(value) : 0,
-            ]),
+            ])
           ),
         };
       });
-      this.name.next(name);
-      this.expenses.next(expenses);
-      this.members.next(members);
-      this.totalAmount.next(data.totalAmount ?? 0);
+      this.name.set(name);
+      this.expenses.set(expenses);
+      this.members.set(members);
+      this.totalAmount.set(data.totalAmount ?? 0);
       if (data.bankInfo) {
-        this.bankInfo.next(data.bankInfo);
+        this.bankInfo.set(data.bankInfo);
       }
       this.userId = response.userId;
       return response;
     } catch (error) {
       console.error('Error loading bill:', error);
       throw error;
-    } finally {
-      this.isFetchData = false;
     }
   }
 
   async getBills() {
     const response = await firstValueFrom(
-      this.http.get<BillFindAll>(`${environment.apiUrl}/${this.endPoint}`),
+      this.http.get<BillFindAll>(`${environment.apiUrl}/${this.endPoint}`)
     );
 
     return response.data;
   }
 
   updateBankInfo(bankInfo: BankInfoItem, isFetchData = false) {
-    this.isFetchData = isFetchData;
-    this.bankInfo.next(bankInfo);
+    this.bankInfo.set(bankInfo);
+    if (!isFetchData) this.markAsChanged();
   }
 
   async delete(billCode: string) {
     await firstValueFrom(
       this.http.delete<BillFindAll>(
-        `${environment.apiUrl}/${this.endPoint}/${billCode}`,
-      ),
+        `${environment.apiUrl}/${this.endPoint}/${billCode}`
+      )
     );
   }
 
   getName() {
-    return this.name.value;
+    return this.name();
   }
 
   updateName(name: string) {
-    this.name.next(name);
+    this.name.set(name);
+    this.markAsChanged();
   }
 
   isEditable() {
@@ -429,23 +406,23 @@ export class BillSplitterService {
   }
 
   getBankInfo() {
-    return this.bankInfo.value;
+    return this.bankInfo();
   }
 
   updateIsChange(isChange: boolean) {
-    this.isChange.next(isChange);
+    this.isChange.set(isChange);
   }
 
   getIsChange() {
-    return this.isChange.value;
+    return this.isChange();
   }
 
   setFileIds(fileIds: number[]) {
-    this.fileIds.next(fileIds);
+    this.fileIds.set(fileIds);
   }
 
   getFileIds(): number[] {
-    return this.fileIds.value;
+    return this.fileIds();
   }
 
   async uploadImages(files: File[]): Promise<{ id: number; url: string }[]> {
