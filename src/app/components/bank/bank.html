@@ -1,3 +1,4 @@
+@if(bankInfo.accountNumber && bankInfo.bin) {
 <mat-card class="container">
   <div class="content">
     <div class="left">
@@ -5,51 +6,36 @@
         <h2>Thông tin ngân hàng</h2>
         <div class="flex justify-end">
           @if(qrCodeUrl) {
-            <a mat-icon-button [href]="qrCodeUrl+'&isDownload=true'" download="QR-code-bank" target="_blank" color="primary" aria-label="Tải xuống QR ngân hàng">
-              <mat-icon>download</mat-icon>
-            </a>
-            }
-          <button
-            mat-icon-button
-            aria-label="settings"
-            (click)="onSettingClick()"
-          >
+          <a mat-icon-button [href]="qrCodeUrl+'&isDownload=true'" download="QR-code-bank" target="_blank"
+            color="primary" aria-label="Tải xuống QR ngân hàng">
+            <mat-icon>download</mat-icon>
+          </a>
+          }
+          <button mat-icon-button aria-label="settings" (click)="onSettingClick()">
             <mat-icon>settings</mat-icon>
           </button>
         </div>
       </div>
       <p>
-        <strong>Ngân hàng: </strong
-        ><span>{{ bankInfo.short_name }} - {{ bankInfo.name }}</span>
+        <strong>Ngân hàng: </strong><span>{{ bankInfo.short_name }} - {{ bankInfo.name }}</span>
       </p>
       <p><strong>Họ & tên: </strong><span>{{ bankInfo.accountName }}</span></p>
       <p>
         <strong>Số tài khoản: </strong><span>{{ bankInfo.accountNumber }}</span>
-        @if(bankInfo.accountNumber && bankInfo.bin) {
-        <button
-          class="copy-btn"
-          (click)="onCopyAccountNumber($event)"
-          title="Copy account number"
-          aria-label="Copy account number"
-        >
+        <button class="copy-btn" (click)="onCopyAccountNumber($event)" title="Copy account number"
+          aria-label="Copy account number">
           <mat-icon>content_copy</mat-icon>
         </button>
-        }
       </p>
     </div>
     <div class="right">
       @if(qrCodeUrl) {
-      <img
-        [src]="qrCodeUrl"
-        width="250px"
-        height="250px"
-        alt="QR Code chuyển khoản"
-      />
+      <img [src]="qrCodeUrl" width="250px" height="250px" alt="QR Code chuyển khoản" />
       }
     </div>
   </div>
 </mat-card>
-
+}
 @if(isShowMomoInfo) {
 <mat-card class="container">
   <div class="content">
@@ -58,16 +44,13 @@
         <h2>Thông tin Momo</h2>
         <div class="flex justify-end">
           @if(qrCodeUrlMomo) {
-          <a mat-icon-button [href]="qrCodeUrlMomo+'&isDownload=true'" download="QR-code-momo" target="_blank" color="primary" aria-label="Tải xuống QR MOMO">
+          <a mat-icon-button [href]="qrCodeUrlMomo+'&isDownload=true'" download="QR-code-momo" target="_blank"
+            color="primary" aria-label="Tải xuống QR MOMO">
             <mat-icon>download</mat-icon>
           </a>
           }
           @if(isEditable()) {
-          <button
-            mat-icon-button
-            aria-label="settings"
-            (click)="onSettingClick()"
-          >
+          <button mat-icon-button aria-label="settings" (click)="onSettingClick()">
             <mat-icon>settings</mat-icon>
           </button>
           }
@@ -77,26 +60,16 @@
         <strong>Họ & tên: </strong><span>{{ bankInfo.accountNameMomo }}</span>
       </p>
       <p>
-        <strong>Số điện thoại: </strong
-        ><span>{{ bankInfo.phoneNumberMomo }}</span>
-        <button
-          class="copy-btn"
-          (click)="onCopyMomoAccountNumber($event)"
-          title="Copy account number"
-          aria-label="Copy account number"
-        >
+        <strong>Số điện thoại: </strong><span>{{ bankInfo.phoneNumberMomo }}</span>
+        <button class="copy-btn" (click)="onCopyMomoAccountNumber($event)" title="Copy account number"
+          aria-label="Copy account number">
           <mat-icon>content_copy</mat-icon>
         </button>
       </p>
     </div>
     <div class="right">
       @if(qrCodeUrlMomo) {
-      <img
-        [src]="qrCodeUrlMomo"
-        width="250px"
-        height="250px"
-        alt="QR Code momo"
-      />
+      <img [src]="qrCodeUrlMomo" width="250px" height="250px" alt="QR Code momo" />
       }
     </div>
   </div>

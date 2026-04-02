@@ -1,61 +1,76 @@
 .bill-splitter-container {
-  padding: 16px;
-  max-width: 1200px;
+  max-width: 1000px;
+  /* Bóp gọn lại cho cân đối */
   margin: 0 auto;
   position: relative;
   min-height: 100vh;
 
+  /* Card container for the main inputs */
+  >.mat-mdc-card {
+    border: none;
+    box-shadow: var(--shadow-sm) !important;
+    background-color: var(--surface-color);
+  }
+
   .mat-tab-label {
     margin-bottom: 0;
+    font-weight: 500;
+    font-size: 0.95rem;
+
     .icon {
       display: none;
     }
   }
 
-  .mat-mdc-card {
+  .mat-mdc-tab-header {
     margin-bottom: 16px;
+    border-bottom: 1px solid var(--border-color);
   }
 
   .expense-form,
   .member-table,
   .payment,
   .result-display {
-    padding-top: 10px;
-    padding-bottom: 10px;
+    padding-top: 20px;
+    /* Tăng khoảng cách cho thoáng */
+    padding-bottom: 20px;
   }
 
+  /* Floating Action Buttons */
   .buttons {
     z-index: 999;
-    .mat-icon {
-      animation: none;
+
+    button {
+      transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+      &:hover {
+        transform: scale(1.1);
+      }
     }
 
-    &.share-button__syncing .mat-icon {
+    .share-button__syncing .mat-icon {
       animation: rotate 1s linear infinite;
     }
   }
 
   @keyframes rotate {
     from {
-      transform: rotate(360deg);
-    }
-    to {
       transform: rotate(0deg);
+    }
+
+    to {
+      transform: rotate(360deg);
     }
   }
 
   @media screen and (max-width: 600px) {
-    padding: 8px;
-
-    .mat-mdc-card {
-      margin-bottom: 12px;
-    }
-
     .mat-tab-label {
       font-size: 1rem;
+
       .label {
         display: none;
       }
+
       .icon {
         display: block;
       }

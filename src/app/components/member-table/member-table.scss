@@ -3,60 +3,107 @@
 }
 
 .add-member-form {
-  width: 100%;
   display: flex;
-  gap: 16px;
-  align-items: flex-start;
+  gap: 12px;
+  align-items: center;
   flex-wrap: wrap;
+  margin-bottom: 24px;
+  padding: 16px;
+  background-color: #f8fafc;
+  border-radius: var(--border-radius-md);
+  border: 1px solid var(--border-color);
 
   mat-form-field {
     flex: 1;
-    min-width: 200px;
+    min-width: 240px;
+
+    ::ng-deep .mat-mdc-form-field-subscript-wrapper {
+      display: none;
+    }
   }
 
   button {
-    min-width: 160px;
-    height: 56px; // Match form field height
+    height: 56px;
+    padding: 0 24px !important;
+    border-radius: var(--border-radius-sm) !important;
+    font-weight: 600;
   }
 }
 
 .table-scroll {
-  width: 100%;
-  overflow-y: auto;
-  margin-top: 16px;
+  width: calc(100% - 2px);
+  overflow-x: auto;
+  border-radius: var(--border-radius-md);
+  border: 1px solid var(--border-color);
+  background: var(--surface-color);
 
   table {
     width: 100%;
-    min-width: 500px; // Ensure table doesn't get too cramped
+    min-width: 600px;
+
+    th.mat-header-cell {
+      background-color: #f8fafc;
+      color: var(--text-secondary);
+      font-weight: 600;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    td.mat-cell {
+      padding: 12px 16px;
+      border-bottom: 1px solid #f1f5f9;
+      color: var(--text-primary);
+    }
 
     .mat-column-name {
-      padding-left: 8px;
-      min-width: 120px;
+      font-weight: 500;
+      min-width: 150px;
     }
 
     .column-expense-name {
-      padding-left: 10px;
+      display: block;
+      line-height: 1.2;
+    }
+
+    .expense-amount {
+      color: var(--text-secondary);
+      font-size: 0.75rem;
+      font-weight: 400;
+      margin-top: 2px;
+      display: block;
     }
 
     .mat-column-totalAmount {
       width: 120px;
+      font-weight: 600;
+      color: var(--primary-color);
+      text-align: right;
     }
 
     .mat-column-actions {
       width: 48px;
-      padding-right: 8px;
-    }
+      text-align: center;
 
-    td.mat-cell {
-      padding: 8px;
+      button {
+        opacity: 0.6;
+        transition: opacity 0.2s, color 0.2s;
+
+        &:hover {
+          opacity: 1;
+        }
+      }
     }
   }
 }
 
 @media screen and (max-width: 600px) {
   .add-member-form {
-    flex-direction: column;
-    gap: 8px;
+    padding: 12px;
+
+    mat-form-field {
+      width: 100%;
+      min-width: unset;
+    }
 
     button {
       width: 100%;
@@ -64,20 +111,7 @@
     }
   }
 
-  table {
-    min-width: 400px;
-
-    .mat-column-name {
-      min-width: 100px;
-    }
-
-    td.mat-cell {
-      padding: 4px 8px;
-      font-size: 14px;
-    }
-
-    .mat-checkbox {
-      transform: scale(0.9);
-    }
+  .table-scroll {
+    border-radius: var(--border-radius-sm);
   }
 }

@@ -1,20 +1,9 @@
 <form [formGroup]="memberForm" (ngSubmit)="onSubmit()" class="add-member-form">
   <mat-form-field appearance="outline">
     <mat-label>Tên thành viên</mat-label>
-    <input
-      matInput
-      formControlName="name"
-      placeholder="Nhập tên thành viên"
-      (keydown.enter)="onSubmit()"
-    />
+    <input matInput formControlName="name" placeholder="Nhập tên thành viên" (keydown.enter)="onSubmit()" />
   </mat-form-field>
-  <button
-    mat-raised-button
-    color="primary"
-    type="submit"
-    aria-label="submit"
-    [disabled]="!memberForm.valid"
-  >
+  <button mat-raised-button color="primary" type="submit" aria-label="submit" [disabled]="!memberForm.valid">
     Thêm thành viên
   </button>
 </form>
@@ -28,36 +17,22 @@
     </ng-container>
 
     <!-- Dynamic Expense Columns -->
-    <ng-container
-      *ngFor="let expense of expenses$ | async"
-      [matColumnDef]="expense.id"
-    >
+    <ng-container *ngFor="let expense of expenses$ | async" [matColumnDef]="expense.id">
       <th mat-header-cell *matHeaderCellDef scope="col">
         <span class="column-expense-name">{{expense.name}}</span>
-        <small class="expense-amount"
-          >({{expense.amount | currency: 'VND': 'symbol' : '1.0-0' :
-          'vi'}})</small
-        >
+        <small class="expense-amount">({{expense.amount | currency: 'VND': 'symbol' : '1.0-0' :
+          'vi'}})</small>
       </th>
       <td mat-cell *matCellDef="let member">
-        <app-quantity-selector
-          [value]="member.participations.get(expense.id) || 0"
-          [step]="0.5"
-          [min]="0"
-          [max]="99"
-          [compact]="true"
-          (valueChange)="updateParticipation(member.id, expense.id, $event)"
-        ></app-quantity-selector>
+        <app-quantity-selector [value]="member.participations.get(expense.id) || 0" [step]="0.5" [min]="0" [max]="99"
+          [compact]="true" (valueChange)="updateParticipation(member.id, expense.id, $event)"></app-quantity-selector>
       </td>
     </ng-container>
 
     <ng-container matColumnDef="isPaid">
       <th mat-header-cell *matHeaderCellDef scope="col">Thanh toán</th>
       <td mat-cell *matCellDef="let member">
-        <mat-checkbox
-          [checked]="member.isPaid"
-          (change)="updateIsPaid(member.id, $event.checked)"
-        >
+        <mat-checkbox [checked]="member.isPaid" (change)="updateIsPaid(member.id, $event.checked)">
         </mat-checkbox>
       </td>
     </ng-container>
@@ -74,12 +49,7 @@
     <ng-container matColumnDef="actions">
       <th mat-header-cell *matHeaderCellDef scope="col"></th>
       <td mat-cell *matCellDef="let member">
-        <button
-          mat-icon-button
-          aria-label="remove"
-          color="warn"
-          (click)="removeMember(member.id)"
-        >
+        <button mat-icon-button aria-label="remove" color="warn" (click)="removeMember(member.id)">
           <mat-icon>delete</mat-icon>
         </button>
       </td>

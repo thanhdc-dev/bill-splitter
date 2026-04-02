@@ -1,85 +1,102 @@
 .container {
   max-width: 600px;
-  margin: 20px auto;
-  padding: 16px;
+  margin: 24px auto;
+  padding: 24px;
+  background: var(--surface-color);
+  border-radius: var(--border-radius-lg);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-md);
 }
 
 h3 {
-  margin: 0 0 16px;
-  font-size: 16px;
-  font-weight: 500;
+  margin: 0 0 20px;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 12px;
 }
 
 .content {
   display: flex;
   justify-content: space-between;
-  align-items: start;
-  gap: 16px;
+  align-items: stretch;
+  gap: 24px;
 }
 
 .left {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 12px;
+  font-size: 1rem;
+  color: var(--text-secondary);
+
+  strong {
+    color: var(--text-primary);
+    font-weight: 600;
+  }
 }
 
 .right {
   min-width: 250px;
   text-align: center;
+  background: #f8fafc;
+  padding: 16px;
+  border-radius: var(--border-radius-md);
 
   img {
     max-width: 100%;
     height: auto;
-    border: 1px solid #ccc;
+    border-radius: var(--border-radius-sm);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid #e2e8f0;
   }
 }
 
 .container-edit {
-  margin-top: 20px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid #f1f5f9;
 }
 
 .copy-btn {
-  background: transparent;
+  background: #f1f5f9;
   border: none;
-  padding: 4px;
-  border-radius: 8px;
+  padding: 6px;
+  border-radius: 50%;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
   display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  margin-left: 16px;
+  margin-left: 12px;
 
   &:hover {
-    background: #e3f2fd;
-    transform: scale(1.05);
+    background: #e2e8f0;
+    color: var(--primary-color);
   }
-
-  &:active {
-    transform: scale(0.95);
-    background: #bbdefb;
-  }
-}
-
-.copy-icon {
-  color: #7f8c8d;
-  transition: all 0.3s ease;
-  flex-shrink: 0;
 }
 
 @media screen and (max-width: 600px) {
+  .container {
+    padding: 16px;
+    margin: 0 auto;
+    max-width: unset;
+  }
+
   .content {
-    flex-direction: column;
-    align-items: center;
+    flex-direction: column-reverse;
+    gap: 16px;
   }
 
-  .left, .right {
+  .right {
+    min-width: unset;
     width: 100%;
+    padding: 12px;
   }
 
-  h3 {
-    font-size: 15px;
-    margin-bottom: 12px;
+  .left {
+    gap: 8px;
+    font-size: 0.9rem;
   }
 }
