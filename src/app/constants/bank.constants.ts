@@ -2,6 +2,20 @@ import { BankItem } from "../models/bank.model";
 
 export const BANKS: BankItem[] = [
   {
+    name: 'Viettel Money',
+    code: 'VTLMONEY',
+    bin: '970422',
+    short_name: 'ViettelMoney',
+    supported: true,
+  },
+  {
+    name: 'VNPT Money',
+    code: 'VNPTMONEY',
+    bin: '971011',
+    short_name: 'VNPTMoney',
+    supported: true,
+  },
+  {
     name: 'TMCP Công thương Việt Nam',
     code: 'ICB',
     bin: '970415',
