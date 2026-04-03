@@ -3,19 +3,11 @@
     <mat-card-content>
       <mat-form-field appearance="outline" class="w-full">
         <mat-label>Tên hóa đơn</mat-label>
-        <input
-          matInput
-          [formControl]="nameCtrl"
-          placeholder="Tên hóa đơn, cửa hàng, quán ăn..."
-          [readonly]="!isEditable"
-        />
+        <input matInput [formControl]="nameCtrl" placeholder="Tên hóa đơn, cửa hàng, quán ăn..."
+          [readonly]="!isEditable" />
       </mat-form-field>
       @if (isEditable) {
-      <mat-tab-group
-        #tabGroup
-        mat-stretch-tabs="false"
-        mat-align-tabs="start"
-      >
+      <mat-tab-group #tabGroup mat-stretch-tabs="false" mat-align-tabs="start">
         <mat-tab>
           <ng-template mat-tab-label>
             <h2 class="mat-tab-label">
@@ -51,42 +43,23 @@
         </mat-tab>
       </mat-tab-group>
       }
-      <app-image-upload
-        [maxFiles]="5"
-        [maxFileSize]="5*1024*1024"
-        [imageUrls]="oldImages"
-        (imagesChanged)="onImagesChanged($event)"
-      >
+      <app-image-upload [maxFiles]="5" [maxFileSize]="5*1024*1024" [imageUrls]="oldImages"
+        (imagesChanged)="onImagesChanged($event)">
       </app-image-upload>
     </mat-card-content>
   </mat-card>
   <app-result-display></app-result-display>
   <app-bank></app-bank>
-  <div class="buttons flex flex-col items-end gap-4 fixed bottom-7 right-7">
+  <div class="buttons flex flex-col items-end gap-4 fixed bottom-[100px] right-7">
     <!-- Sticky Share Button -->
-    <button
-      mat-fab
-      color="primary"
-      class="share-button"
-      aria-label="Button share"
-      [ngClass]="{'share-button__syncing': (isSaving$ | async)}"
-      [disabled]="(isSaving$ | async)"
-      (click)="save(true)"
-    >
+    <button mat-fab color="primary" class="share-button" aria-label="Button share"
+      [ngClass]="{'share-button__syncing': (isSaving$ | async)}" [disabled]="(isSaving$ | async)" (click)="save(true)">
       <mat-icon>{{(isSaving$ | async) ? 'sync' : 'share'}}</mat-icon>
     </button>
     <!-- Sticky Auto Save Button -->
     @if(isEditable) {
-    <button
-      mat-fab
-      color="primary"
-      class="auto-save-button"
-      aria-label="Button save"
-      (click)="save()"
-    >
-      <mat-icon
-        >{{(isChange$ | async) ? 'cloud_upload' : 'cloud_done'}}</mat-icon
-      >
+    <button mat-fab color="primary" class="auto-save-button" aria-label="Button save" (click)="save()">
+      <mat-icon>{{(isChange$ | async) ? 'cloud_upload' : 'cloud_done'}}</mat-icon>
     </button>
     }
   </div>
