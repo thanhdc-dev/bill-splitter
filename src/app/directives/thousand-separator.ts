@@ -1,62 +1,108 @@
-import { Directive, HostListener, ElementRef, inject } from '@angular/core';
+import {
+  Directive,
+  HostListener,
+  ElementRef,
+  inject,
+  forwardRef,
+  Input,
+} from '@angular/core';
+import { NG_VALUE_ACCESSOR } from '@angular/forms';
+import { MAT_INPUT_VALUE_ACCESSOR } from '@angular/material/input';
 
 @Directive({
-  selector: '[appThousandSeparator]',
+  selector: 'input[appThousandSeparator]',
+  providers: [
+    {
+      provide: MAT_INPUT_VALUE_ACCESSOR,
+      useExisting: ThousandSeparatorDirective,
+    },
+    {
+      provide: NG_VALUE_ACCESSOR,
+      useExisting: forwardRef(() => ThousandSeparatorDirective),
+      multi: true,
+    },
+  ],
 })
 export class ThousandSeparatorDirective {
-  private el = inject<ElementRef<HTMLInputElement>>(ElementRef);
+  private _value: string | null = null;
+  private _onTouched: () => void = () => {};
+  private readonly elementRef = inject(ElementRef<HTMLInputElement>);
 
-  private previousValue = '';
+  @Input()
+  get value(): string | null {
+    return this._value;
+  }
 
-  @HostListener('paste', ['$event'])
-  onPaste(event: ClipboardEvent) {
-    const pastedText = event.clipboardData?.getData('text') || '';
-    if (!/^\d+$/.test(pastedText.replace(/\s/g, ''))) {
-      event.preventDefault();
+  set value(value: string | null) {
+    this._value = value;
+    this.formatValue(value);
+  }
+
+  private formatValue(value: string | null) {
+    if (value !== null && value !== undefined && value !== '') {
+      if (value === '-') {
+        this.elementRef.nativeElement.value = '';
+      } else {
+        this.elementRef.nativeElement.value = this.numberWithCommas(value);
+      }
+    } else {
+      this.elementRef.nativeElement.value = '';
     }
   }
 
-  // CHẶN PHÍM KHÔNG PHẢI SỐ
-  @HostListener('keydown', ['$event'])
-  onKeyDown(event: KeyboardEvent) {
-    const allowedKeys = [
-      'Backspace',
-      'ArrowLeft',
-      'ArrowRight',
-      'Tab',
-      'Delete',
-      'Home',
-      'End',
-    ];
-
-    // Cho phép các phím điều hướng và xóa
-    if (allowedKeys.includes(event.key)) {
-      return;
-    }
-
-    // Cho phép các số 0–9
-    if (/^[0-9]$/.test(event.key)) {
-      return;
-    }
-
-    // Nếu không thuộc danh sách cho phép => chặn
-    event.preventDefault();
+  private sanitizeNumber(value: string): string {
+    return value
+      .replaceAll(/[^\d.-]/g, '')
+      .replaceAll(/(?!^)-/g, '')
+      .replaceAll(/(\.(\d*))\./g, '.$2');
   }
 
-  @HostListener('input')
-  onInput() {
-    const input = this.el.nativeElement;
-    const value = input.value.replace(/\D/g, ''); // Loại bỏ mọi ký tự không phải số
-
-    if (value !== this.previousValue) {
-      const formatted = this.formatNumberWithSpaces(value);
-      input.value = formatted;
-      this.previousValue = value;
+  private unFormatValue() {
+    const value = this.elementRef.nativeElement.value;
+    this._value = this.sanitizeNumber(value);
+    if (value) {
+      this.elementRef.nativeElement.value = this._value;
+    } else {
+      this.elementRef.nativeElement.value = '';
     }
   }
 
-  private formatNumberWithSpaces(value: string): string {
-    // Tách phần nguyên và format từ phải sang trái (nhóm 3 chữ số)
-    return value.replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+  @HostListener('input', ['$event'])
+  onInput(event: Event) {
+    const inputElement = event.target as HTMLInputElement;
+    this._value = this.sanitizeNumber(inputElement.value);
+    this._onChange(this._value); // here to notify Angular Validators
+  }
+
+  @HostListener('blur')
+  _onBlur() {
+    this.formatValue(this._value);
+    this._onTouched();
+  }
+
+  @HostListener('focus')
+  onFocus() {
+    this.unFormatValue();
+  }
+
+  private _onChange(_value: unknown): void {
+    // No-op for default implementation
+  }
+
+  writeValue(value: unknown) {
+    this._value = value as string | null;
+    this.formatValue(this._value); // format Value
+  }
+
+  registerOnChange(fn: (value: unknown) => void) {
+    this._onChange = fn;
+  }
+
+  registerOnTouched(fn: () => void) {
+    this._onTouched = fn;
+  }
+
+  numberWithCommas(x: string | number): string {
+    return x.toString().replaceAll(/\B(?=(\d{3})+(?!\d))/g, ',');
   }
 }
