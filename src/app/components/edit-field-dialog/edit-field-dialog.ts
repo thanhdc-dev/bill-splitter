@@ -15,6 +15,7 @@ import {
 } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { ThousandSeparatorDirective } from '../../directives/thousand-separator';
 
 interface EditFieldDialogData {
   label: string;
@@ -32,6 +33,7 @@ interface EditFieldDialogData {
     MatFormFieldModule,
     MatInputModule,
     FormsModule,
+    ThousandSeparatorDirective,
   ],
   templateUrl: './edit-field-dialog.html',
   styleUrl: './edit-field-dialog.scss',
