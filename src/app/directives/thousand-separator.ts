@@ -43,7 +43,7 @@ export class ThousandSeparatorDirective {
       if (value === '-') {
         this.elementRef.nativeElement.value = '';
       } else {
-        this.elementRef.nativeElement.value = this.numberWithCommas(value);
+        this.elementRef.nativeElement.value = this.formatNumberWithDots(value);
       }
     } else {
       this.elementRef.nativeElement.value = '';
@@ -52,9 +52,8 @@ export class ThousandSeparatorDirective {
 
   private sanitizeNumber(value: string): string {
     return value
-      .replaceAll(/[^\d.-]/g, '')
-      .replaceAll(/(?!^)-/g, '')
-      .replaceAll(/(\.(\d*))\./g, '.$2');
+      .replaceAll(/[^\d-]/g, '')
+      .replaceAll(/(?!^)-/g, '');
   }
 
   private unFormatValue() {
@@ -102,7 +101,7 @@ export class ThousandSeparatorDirective {
     this._onTouched = fn;
   }
 
-  numberWithCommas(x: string | number): string {
-    return x.toString().replaceAll(/\B(?=(\d{3})+(?!\d))/g, ',');
+  formatNumberWithDots(x: string | number): string {
+    return x.toString().replaceAll(/\B(?=(\d{3})+(?!\d))/g, '.');
   }
 }
