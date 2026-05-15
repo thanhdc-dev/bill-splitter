@@ -19,6 +19,7 @@ export class ImageUploadComponent {
   private readonly snackBar = inject(MatSnackBar);
   previewIndex: number | null = null;
 
+  @Input() isEditable = true;
   @Input() maxFiles = 5;
   @Input() maxFileSize = this.maxFiles * 1024 * 1024; // 5MB
   @Input() acceptedTypes: string[] = ['image/jpeg', 'image/png', 'image/webp'];

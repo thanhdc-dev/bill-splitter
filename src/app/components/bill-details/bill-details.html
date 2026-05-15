@@ -1,11 +1,16 @@
 <div class="bill-splitter-container">
   <mat-card>
     <mat-card-content>
+      @if (isEditable) {
       <mat-form-field appearance="outline" class="w-full">
         <mat-label>Tên hóa đơn</mat-label>
-        <input matInput [formControl]="nameCtrl" placeholder="Tên hóa đơn, cửa hàng, quán ăn..."
-          [readonly]="!isEditable" />
+        <input matInput [formControl]="nameCtrl" placeholder="Tên hóa đơn, cửa hàng, quán ăn..."/>
       </mat-form-field>
+      } @else {
+      <div class="text-2xl font-bold mb-4">
+        {{nameCtrl.value}}
+      </div>
+      }
       @if (isEditable) {
       <mat-tab-group #tabGroup mat-stretch-tabs="false" mat-align-tabs="start">
         <mat-tab>
@@ -43,7 +48,7 @@
         </mat-tab>
       </mat-tab-group>
       }
-      <app-image-upload [maxFiles]="5" [maxFileSize]="5*1024*1024" [imageUrls]="oldImages"
+      <app-image-upload [maxFiles]="5" [maxFileSize]="5*1024*1024" [imageUrls]="oldImages" [isEditable]="isEditable"
         (imagesChanged)="onImagesChanged($event)">
       </app-image-upload>
     </mat-card-content>

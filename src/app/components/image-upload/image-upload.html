@@ -1,5 +1,6 @@
 <div class="image-upload-container">
   <!-- Upload Area -->
+  @if(isEditable) {
   <div
     class="upload-area"
     [class.drag-over]="dragOver"
@@ -42,15 +43,18 @@
       </p>
     </div>
   </div>
+  }
 
   <!-- Image Previews -->
   <div class="preview-container" *ngIf="images.length > 0">
+    @if(isEditable) {
     <div class="preview-header">
       <h3>Ảnh đã chọn ({{ images.length }})</h3>
       <button class="clear-all-btn" (click)="clearAll()" type="button">
         Xóa tất cả
       </button>
     </div>
+    }
 
     <div class="preview-grid">
       <div
