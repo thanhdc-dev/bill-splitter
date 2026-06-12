@@ -37,12 +37,7 @@ import { BillTabControlService } from '../bill-details/bill-tab-control.service'
 import { BANKS } from '../../constants';
 import { SettingsData } from '../../interfaces';
 import { BankInfoItem } from '../../models';
-import { ImageUploadComponent } from '../image-upload/image-upload';
-
-interface ImagePreview {
-  file: File;
-  url: string;
-}
+import { ImageUploadComponent, ImagePreview } from '../image-upload/image-upload';
 
 @Component({
   selector: 'app-create-bill',
@@ -157,7 +152,7 @@ export class CreateBill implements OnInit, AfterViewInit {
   }
 
   onImagesChanged(images: ImagePreview[]) {
-    this.files = images.map((img) => img.file);
+    this.files = images.map((img) => img.file).filter((f): f is File => !!f);
   }
 
   private patchValueNameCtrl() {

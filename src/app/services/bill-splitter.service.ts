@@ -425,7 +425,7 @@ export class BillSplitterService {
     return this.fileIds();
   }
 
-  async uploadImages(files: File[]): Promise<{ id: number; url: string }[]> {
+  async uploadImages(files: File[]): Promise<{ id: number; storagePath: string }[]> {
     const URL = `${environment.apiUrl}/${this.endPoint}/upload-images`;
     const formData = new FormData();
 
@@ -434,7 +434,7 @@ export class BillSplitterService {
     });
 
     return firstValueFrom(this.http.post(URL, formData)) as Promise<
-      { id: number; url: string }[]
+      { id: number; storagePath: string }[]
     >;
   }
 }

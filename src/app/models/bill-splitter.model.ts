@@ -54,8 +54,9 @@ export interface BillFindOne {
   createdAt: string;
   files: {
     id: number;
-    url: string;
+    storagePath: string; // path trên R2, ví dụ: "bills/123/photo.jpg"
   }[];
+
 }
 
 export interface BillFindAll {

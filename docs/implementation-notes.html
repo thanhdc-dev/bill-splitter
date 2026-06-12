@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Implementation Notes – CDN Integration</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; line-height: 1.6; color: #1e293b; }
+    h1 { color: #0f172a; border-bottom: 2px solid #6366f1; padding-bottom: .5rem; }
+    h2 { color: #334155; margin-top: 2rem; }
+    h3 { color: #475569; }
+    code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-size: .9em; }
+    pre { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem; overflow-x: auto; }
+    .decision { background: #eff6ff; border-left: 4px solid #3b82f6; padding: .75rem 1rem; margin: 1rem 0; border-radius: 0 6px 6px 0; }
+    .tradeoff { background: #fefce8; border-left: 4px solid #eab308; padding: .75rem 1rem; margin: 1rem 0; border-radius: 0 6px 6px 0; }
+    .warning { background: #fef2f2; border-left: 4px solid #ef4444; padding: .75rem 1rem; margin: 1rem 0; border-radius: 0 6px 6px 0; }
+    .change { background: #f0fdf4; border-left: 4px solid #22c55e; padding: .75rem 1rem; margin: 1rem 0; border-radius: 0 6px 6px 0; }
+    table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+    th, td { padding: .5rem .75rem; border: 1px solid #e2e8f0; text-align: left; }
+    th { background: #f8fafc; font-weight: 600; }
+    .tag { display: inline-block; padding: 2px 8px; border-radius: 9999px; font-size: .75em; font-weight: 600; }
+    .tag-new { background: #dcfce7; color: #166534; }
+    .tag-modified { background: #dbeafe; color: #1e40af; }
+    .tag-breaking { background: #fee2e2; color: #991b1b; }
+  </style>
+</head>
+<body>
+  <h1>🏗️ Implementation Notes – CDN Integration</h1>
+  <p><strong>Ngày:</strong> 2026-06-11 &nbsp;|&nbsp; <strong>Feature:</strong> Tích hợp image-resize Worker CDN vào Angular</p>
+
+  <h2>📁 Files thay đổi</h2>
+  <table>
+    <tr><th>File</th><th>Loại</th><th>Mô tả ngắn</th></tr>
+    <tr><td><code>environments/environment.ts</code></td><td><span class="tag tag-modified">MODIFIED</span></td><td>Thêm <code>cdnBase</code></td></tr>
+    <tr><td><code>environments/environment.development.ts</code></td><td><span class="tag tag-modified">MODIFIED</span></td><td>Thêm <code>cdnBase</code> (cùng Worker URL với prod)</td></tr>
+    <tr><td><code>core/cdn/image-cdn.types.ts</code></td><td><span class="tag tag-new">NEW</span></td><td>Types: <code>ImageFit</code>, <code>ImageResizeOptions</code></td></tr>
+    <tr><td><code>core/cdn/image-cdn-url.service.ts</code></td><td><span class="tag tag-new">NEW</span></td><td>Service build CDN URL từ <code>storagePath</code></td></tr>
+    <tr><td><code>core/cdn/image-cdn-url.pipe.ts</code></td><td><span class="tag tag-new">NEW</span></td><td>Pipe <code>imageCdn</code> cho template</td></tr>
+    <tr><td><code>core/cdn/index.ts</code></td><td><span class="tag tag-new">NEW</span></td><td>Barrel export</td></tr>
+    <tr><td><code>models/bill-splitter.model.ts</code></td><td><span class="tag tag-breaking">BREAKING</span></td><td>Đổi <code>files[].url</code> → <code>files[].storagePath</code></td></tr>
+    <tr><td><code>services/bill-splitter.service.ts</code></td><td><span class="tag tag-modified">MODIFIED</span></td><td>Return type <code>uploadImages()</code>: <code>url</code> → <code>storagePath</code></td></tr>
+    <tr><td><code>components/image-upload/image-upload.ts</code></td><td><span class="tag tag-modified">MODIFIED</span></td><td>Refactor toàn bộ: <code>imageUrls</code> → <code>imageStoragePaths</code>, dùng CDN, public CDN service cho template</td></tr>
+    <tr><td><code>components/image-upload/image-upload.html</code></td><td><span class="tag tag-modified">MODIFIED</span></td><td>Dùng <code>previewUrl</code>, <code>getLightboxUrl()</code>; tối ưu responsive bằng <code>srcset</code> và <code>sizes</code></td></tr>
+    <tr><td><code>components/bill-details/bill-details.ts</code></td><td><span class="tag tag-modified">MODIFIED</span></td><td>Dùng <code>storagePath</code>, cập nhật <code>oldImages</code> type</td></tr>
+    <tr><td><code>components/bill-details/bill-details.html</code></td><td><span class="tag tag-modified">MODIFIED</span></td><td>Đổi <code>[imageUrls]</code> → <code>[imageStoragePaths]</code></td></tr>
+  </table>
+
+  <h2>🔑 Quyết định quan trọng</h2>
+
+  <h3>1. Đặt CDN module ở <code>core/cdn/</code> thay vì <code>services/</code></h3>
+  <div class="decision">
+    Spec gợi ý <code>app/core/cdn/</code>. Codebase hiện tại không có thư mục <code>core/</code>, nhưng quyết định tạo mới vì đây là infrastructure-level code (không phải feature service). Tách biệt khỏi <code>services/</code> giúp rõ ràng ranh giới: <code>services/</code> cho business logic, <code>core/</code> cho infrastructure.
+  </div>
+
+  <h3>2. Dev environment vẫn trỏ Worker đã deploy</h3>
+  <div class="decision">
+    <code>wrangler dev</code> không hỗ trợ <code>cf.image</code> (Cloudflare Image Resizing chỉ hoạt động ở edge production). Quyết định: dev environment cũng dùng URL Worker đã deploy (<code>https://image-resize.d-c-thanh1997.workers.dev</code>). Cần có internet khi dev, nhưng tránh confusion khi ảnh không resize được trong <code>wrangler dev</code>.
+  </div>
+
+  <h3>3. Đổi tên <code>url</code> → <code>storagePath</code> trong model và Input</h3>
+  <div class="decision">
+    Backend thực tế trả về field <code>storagePath</code> (R2 path), không phải URL đầy đủ. Model cũ dùng <code>url</code> là sai về semantic. Quyết định đổi tên để nhất quán với backend và tránh nhầm lẫn giữa CDN URL (build bởi frontend) và storage path (từ backend).
+  </div>
+
+  <h3>4. <code>ImagePreview.file</code> trở thành optional</h3>
+  <div class="decision">
+    Trước đây <code>file</code> luôn required, nhưng ảnh từ server không có <code>File</code> object — chỉ có <code>storagePath</code>. Đổi thành <code>file?: File</code> và <code>storagePath?: string</code>. Ảnh mới upload có <code>file</code>; ảnh từ server có <code>storagePath</code>. Dùng <code>previewUrl</code> làm trường chung cho template.
+  </div>
+
+  <h3>5. Tối ưu Responsive Images bằng `srcset` và `sizes`</h3>
+  <div class="decision">
+    Để Grid image-upload hiển thị tối ưu trên nhiều kích cỡ màn hình, chúng ta chuyển sang dùng <code>srcset</code> kết hợp <code>sizes</code> đối với ảnh lấy từ CDN thay vì hardcode <code>width=800</code>. <br/>
+    Các mốc <code>srcset</code>: <code>[200, 400, 600, 800]</code>.<br/>
+    Giá trị <code>sizes</code>: <code>(max-width: 767px) 50vw, (min-width: 768px) 300px, 100vw</code> (dựa theo layout CSS Grid của preview items).<br/>
+    Đối với ảnh mới chọn ở local (chưa lưu R2), ta vẫn hiển thị thông qua Blob URL gốc để giảm thiểu latency xử lý ở client.
+  </div>
+
+  <h2>⚖️ Tradeoffs</h2>
+
+  <h3>Bỏ logic <code>fetch(url)</code> trong <code>imageUrls</code> setter</h3>
+  <div class="tradeoff">
+    <strong>Trước:</strong> Component fetch blob từ URL về client để tạo <code>File</code> object → tốn bandwidth, chậm, và tạo <code>File</code> để làm gì?<br/>
+    <strong>Sau:</strong> Ảnh từ server hiển thị thẳng qua CDN URL resize (width=800, quality=85). Chỉ fetch/create <code>File</code> khi user chọn ảnh mới từ local.<br/>
+    <strong>Mất gì:</strong> Không còn <code>File</code> object cho ảnh cũ → không thể re-upload ảnh cũ như một "new file". Nhưng không cần thiết vì ảnh cũ đã có <code>id</code> → gửi <code>fileIds</code> lên server là đủ.
+  </div>
+
+  <h3>Blob URL vs Data URL cho ảnh mới</h3>
+  <div class="tradeoff">
+    <strong>Trước:</strong> Dùng <code>FileReader.readAsDataURL()</code> → Data URL (base64) lưu trong memory cho cả vòng đời component.<br/>
+    <strong>Sau:</strong> Dùng <code>URL.createObjectURL()</code> → Blob URL nhẹ hơn nhiều, và được <code>revokeObjectURL()</code> khi remove/clear để tránh memory leak.<br/>
+    <strong>Bonus:</strong> Không cần async callback (<code>FileReader.onload</code>) nữa → logic đơn giản hơn, không cần đếm index để emit.
+  </div>
+
+  <h3>Params sorted trong <code>buildQuery()</code></h3>
+  <div class="tradeoff">
+    Gọi <code>params.sort()</code> trước khi stringify để đảm bảo query string luôn có thứ tự cố định (ví dụ: <code>?quality=75&width=300</code>). Điều này giúp CDN cache hit rate cao hơn vì cùng tham số nhưng thứ tự khác nhau sẽ được normalize về cùng 1 key.
+  </div>
+
+  <h2>⚠️ Lưu ý khi deploy</h2>
+  <div class="warning">
+    <strong>Breaking change:</strong> Nếu backend vẫn đang trả về field tên <code>url</code> trong response của <code>GET /bills/:code</code>, cần backend đổi tên thành <code>storagePath</code> (hoặc thêm alias). Frontend đã cập nhật TypeScript type để expect <code>storagePath</code>.
+  </div>
+  <div class="warning">
+    <strong>Breaking change:</strong> Bất kỳ component nào khác dùng <code>[imageUrls]</code> binding của <code>ImageUploadComponent</code> cần đổi sang <code>[imageStoragePaths]</code> và truyền <code>{ id?, storagePath }[]</code> thay vì <code>{ id?, url }[]</code>.
+  </div>
+
+  <h2>🚀 Những gì chưa làm / future work</h2>
+  <ul>
+    <li>Unit test cho <code>ImageCdnUrlService</code> (đặc biệt: <code>buildQuery()</code> sort, <code>normalizeKey()</code> encoding)</li>
+    <li>Nếu có component <code>bills</code> (list) hiển thị thumbnail ảnh, nên thêm <code>imageCdn</code> pipe với <code>width: 150</code></li>
+    <li>Cân nhắc lazy-load lightbox — hiện tại load ảnh full khi mở modal</li>
+  </ul>
+
+  <h2>📋 Checklist tích hợp hoàn chỉnh</h2>
+  <ul>
+    <li>✅ <code>environment.cdnBase</code> trỏ Worker đã deploy</li>
+    <li>✅ <code>ImageCdnUrlService</code> tạo đúng URL theo contract</li>
+    <li>✅ <code>ImageCdnUrlPipe</code> có thể dùng trong bất kỳ template nào</li>
+    <li>✅ Model <code>BillFindOne.files</code> dùng <code>storagePath</code></li>
+    <li>✅ <code>ImageUploadComponent</code> không fetch blob cho ảnh từ server</li>
+    <li>✅ Lightbox dùng <code>fullSize()</code> — không có query resize</li>
+    <li>✅ Blob URL được revoke khi remove/clear</li>
+    <li>⬜ Backend confirm trả <code>storagePath</code> field (cần verify)</li>
+    <li>⬜ Test thực tế resize trên deployed Worker</li>
+  </ul>
+</body>
+</html>

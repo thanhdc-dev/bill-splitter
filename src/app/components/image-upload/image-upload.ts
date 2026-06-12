@@ -1,11 +1,21 @@
 import { Component, EventEmitter, inject, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { ImageCdnUrlService } from '../../core/cdn/image-cdn-url.service';
 
-interface ImagePreview {
+/**
+ * Đại diện cho một ảnh trong component.
+ * - Ảnh mới upload: `file` có giá trị, `storagePath` là undefined.
+ * - Ảnh đã lưu từ server: `storagePath` có giá trị, `file` là undefined.
+ *   Preview hiển thị qua CDN URL (không fetch blob về client).
+ */
+export interface ImagePreview {
   id?: number;
-  file: File;
-  url: string;
+  file?: File;
+  /** R2 object key, ví dụ: "bills/123/photo.jpg" */
+  storagePath?: string;
+  /** URL preview local (blob URL cho ảnh mới upload) hoặc CDN URL */
+  previewUrl: string;
 }
 
 @Component({
@@ -16,53 +26,30 @@ interface ImagePreview {
   styleUrls: ['./image-upload.scss'],
 })
 export class ImageUploadComponent {
-  private readonly snackBar = inject(MatSnackBar);
+  public readonly snackBar = inject(MatSnackBar);
+  public readonly cdn = inject(ImageCdnUrlService);
+
   previewIndex: number | null = null;
 
   @Input() isEditable = true;
   @Input() maxFiles = 5;
-  @Input() maxFileSize = this.maxFiles * 1024 * 1024; // 5MB
+  @Input() maxFileSize = this.maxFiles * 1024 * 1024; // 5MB mỗi file
   @Input() acceptedTypes: string[] = ['image/jpeg', 'image/png', 'image/webp'];
-  @Input() set imageUrls(images: { id?: number; url: string }[]) {
-    if (!images?.length) return;
-    this.images = [];
-    const imageUrlsSet = new Set(this.images.map((img) => img.url));
-    let imageIndex = 1;
-    images.forEach(async ({ id, url }) => {
-      if (!imageUrlsSet.has(url)) {
-        try {
-          const file = await this.urlToFile(url);
-          this.images.push({ id, file, url });
-          if (imageIndex === images.length) {
-            this.emitImages();
-          }
-          imageIndex++;
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        } catch (e) {
-          // Nếu fetch lỗi, vẫn push url để hiển thị ảnh
-          // this.images.push({ file: null, url });
-          this.snackBar.open('Không thể tải ảnh', 'Đóng', {
-            duration: 2000,
-          });
-        }
-      }
-    });
-  }
 
   /**
-   * Tải ảnh từ url và tạo File tương tự như upload local
+   * Ảnh đã lưu từ server — nhận storagePath (R2 key).
+   * Không cần fetch blob; hiển thị thẳng qua CDN URL resize.
    */
-  private async urlToFile(url: string): Promise<File> {
-    const response = await fetch(url, { mode: 'cors' });
-    const blob = await response.blob();
-    // Lấy tên file từ url hoặc tạo tên ngẫu nhiên
-    const name = url.split('/').pop() || `image_${Date.now()}`;
-    // Nếu blob.type không hợp lệ, fallback sang acceptedTypes[0]
-    const type = this.acceptedTypes.includes(blob.type)
-      ? blob.type
-      : this.acceptedTypes[0];
-    return new File([blob], name, { type });
+  @Input() set imageStoragePaths(images: { id?: number; storagePath: string }[]) {
+    if (!images?.length) return;
+    this.images = images.map(({ id, storagePath }) => ({
+      id,
+      storagePath,
+      previewUrl: this.cdn.url(storagePath, { width: 800, quality: 85 }),
+    }));
+    this.emitImages();
   }
+
   @Output() imagesChanged = new EventEmitter<ImagePreview[]>();
 
   images: ImagePreview[] = [];
@@ -101,38 +88,37 @@ export class ImageUploadComponent {
     const validFiles = files.filter((file) => this.validateFile(file));
 
     if (this.images.length + validFiles.length > this.maxFiles) {
-      alert(`Chỉ có thể tải lên tối đa ${this.maxFiles} ảnh`);
+      this.snackBar.open(`Chỉ có thể tải lên tối đa ${this.maxFiles} ảnh`, 'Đóng', {
+        duration: 2000,
+      });
       return;
     }
 
-    let imageIndex = 1;
     validFiles.forEach((file) => {
-      const reader = new FileReader();
-      reader.onload = (e: ProgressEvent<FileReader>) => {
-        this.images.push({
-          file: file,
-          url: e.target?.result as string,
-        });
-        if (imageIndex === validFiles.length) {
-          this.emitImages();
-        }
-        imageIndex++;
-      };
-      reader.readAsDataURL(file);
+      const previewUrl = URL.createObjectURL(file);
+      this.images.push({ file, previewUrl });
     });
+
+    if (validFiles.length) {
+      this.emitImages();
+    }
   }
 
   private validateFile(file: File): boolean {
     if (!this.acceptedTypes.includes(file.type)) {
-      alert(
+      this.snackBar.open(
         `Định dạng file không hợp lệ. Chỉ chấp nhận: ${this.acceptedTypes.join(', ')}`,
+        'Đóng',
+        { duration: 2000 },
       );
       return false;
     }
 
     if (file.size > this.maxFileSize) {
-      alert(
+      this.snackBar.open(
         `Kích thước file quá lớn. Tối đa: ${this.maxFileSize / (1024 * 1024)}MB`,
+        'Đóng',
+        { duration: 2000 },
       );
       return false;
     }
@@ -141,11 +127,21 @@ export class ImageUploadComponent {
   }
 
   removeImage(index: number): void {
+    const removed = this.images[index];
+    // Giải phóng blob URL nếu là ảnh mới upload (tránh memory leak)
+    if (removed.file && removed.previewUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(removed.previewUrl);
+    }
     this.images.splice(index, 1);
     this.emitImages();
   }
 
   clearAll(): void {
+    this.images.forEach((img) => {
+      if (img.file && img.previewUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(img.previewUrl);
+      }
+    });
     this.images = [];
     this.emitImages();
   }
@@ -165,5 +161,13 @@ export class ImageUploadComponent {
 
   closePreview(): void {
     this.previewIndex = null;
+  }
+
+  /** URL chất lượng cao cho lightbox preview */
+  getLightboxUrl(image: ImagePreview): string {
+    if (image.storagePath) {
+      return this.cdn.fullSize(image.storagePath);
+    }
+    return image.previewUrl;
   }
 }

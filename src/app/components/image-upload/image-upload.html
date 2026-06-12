@@ -63,7 +63,23 @@
         (click)="openPreview(i)"
         (keydown)="openPreview(i)"
       >
-        <img [src]="image.url" [alt]="'preview-item-' + i" />
+        <img 
+          *ngIf="image.storagePath"
+          [src]="image.previewUrl"
+          [attr.srcset]="cdn.srcset(image.storagePath, [200, 400, 600, 800])"
+          sizes="(max-width: 767px) 50vw, (min-width: 768px) 300px, 100vw"
+          [alt]="'preview-item-' + i" 
+          loading="lazy"
+          decoding="async" 
+        />
+        <img 
+          *ngIf="!image.storagePath"
+          [src]="image.previewUrl" 
+          [alt]="'preview-item-' + i" 
+          loading="lazy" 
+          decoding="async"
+        />
+
         <button
           class="remove-btn"
           (click)="removeImage(i); $event.stopPropagation();"
@@ -84,13 +100,14 @@
           </svg>
         </button>
         <div class="image-info">
-          <span class="image-name">{{ image.file.name }}</span>
           @if (image.file) {
-          <span class="image-size"
-            >{{ (image.file.size / 1024).toFixed(1) }} KB</span
-          >
+          <span class="image-name">{{ image.file.name }}</span>
+          <span class="image-size">{{ (image.file.size / 1024).toFixed(1) }} KB</span>
+          } @else {
+          <span class="image-name">{{ image.storagePath }}</span>
           }
         </div>
+
       </div>
     </div>
 
@@ -107,10 +124,11 @@
         (keydown)="$event.stopPropagation()"
       >
         <img
-          [src]="images[previewIndex]?.url"
+          [src]="getLightboxUrl(images[previewIndex])"
           class="image-modal-img"
           [alt]="'img-full-' + previewIndex"
         />
+
         <button class="close-modal-btn" (click)="closePreview()" type="button">
           &times;
         </button>

@@ -41,13 +41,8 @@ import { formatAmount } from '../../shared/helpers';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog';
 import { LoginDialogComponent } from '../login-dialog/login-dialog';
 import { BillTabControlService } from './bill-tab-control.service';
-import { ImageUploadComponent } from '../image-upload/image-upload';
+import { ImageUploadComponent, ImagePreview } from '../image-upload/image-upload';
 
-interface ImagePreview {
-  id?: number;
-  file: File;
-  url: string;
-}
 
 @Component({
   selector: 'app-bill-details',
@@ -91,8 +86,9 @@ export class BillDetails implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('tabGroup') tabGroup!: MatTabGroup;
   sub!: Subscription;
   isEditable = false;
-  oldImages: { id: number; url: string }[] = [];
+  oldImages: { id: number; storagePath: string }[] = [];
   images: ImagePreview[] = [];
+
 
   constructor() {
     this.expenses$ = this.billSplitterService.expenses$;
@@ -149,9 +145,10 @@ export class BillDetails implements OnInit, OnDestroy, AfterViewInit {
     this.nameCtrl.patchValue(bill.name, { emitEvent: false });
 
     if (bill.files) {
-      this.oldImages = bill.files.map(({ id, url }) => ({ id, url }));
+      this.oldImages = bill.files.map(({ id, storagePath }) => ({ id, storagePath }));
       this.billSplitterService.setFileIds(bill.files.map(({ id }) => id));
     }
+
 
     this.seoService.generateTags({
       title: `Hóa đơn ${bill.name}`,
@@ -204,7 +201,7 @@ export class BillDetails implements OnInit, OnDestroy, AfterViewInit {
     if (isChange) {
       if (this.images.length) {
         const oldFileIds = this.billSplitterService.getFileIds();
-        const newImages = this.images.filter(({ id }) => !id).map(img => img.file);
+        const newImages = this.images.filter(({ id }) => !id).map(img => img.file!).filter(Boolean);
         if (newImages.length) {
           const newFiles = await this.billSplitterService.uploadImages(newImages);
           const newFileIds = newFiles.map((file) => file.id);
