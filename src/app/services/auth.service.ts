@@ -75,21 +75,26 @@ export class AuthService {
     return localStorage.getItem('refreshToken');
   }
 
-  // Lấy Google OAuth URL từ backend
+  // Lấy OAuth login URL từ backend (V2)
   async getAuthUrl(provider: string) {
     const res = await firstValueFrom(
       this.http.get<{ authUrl: string }>(
-        `${this.API_URL}/${this.endPoint}/${provider}`
+        `${this.API_URL}/${this.endPoint}/${provider}/login-url`,
+        {
+          params: {
+            app: environment.appKey,
+          },
+        }
       )
     );
     return res.authUrl;
   }
 
-  // Verify authorization code với backend
-  async verifyCode(provider: string, code: string, state: string) {
+  // Verify authorization code với backend (V2)
+  async verifyCode(code: string, state: string) {
     return await firstValueFrom(
       this.http.get<{ user: AuthUser; tokens: AuthTokens }>(
-        `${this.API_URL}/${this.endPoint}/${provider}/callback`,
+        `${this.API_URL}/${this.endPoint}/callback`,
         {
           params: {
             code,

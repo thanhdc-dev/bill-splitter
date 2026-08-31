@@ -9,7 +9,7 @@ import { Setting } from './components/setting/setting';
 export const routes: Routes = [
   { path: 'setting', component: Setting, canActivate: [authGuard] },
   { path: 'bills', component: Bills, canActivate: [authGuard] },
-  { path: 'auth/:provider/callback', component: OauthCallback },
+  { path: 'auth/callback', component: OauthCallback },
   { path: '', component: CreateBill },
   { path: ':code', component: BillDetails },
 ];

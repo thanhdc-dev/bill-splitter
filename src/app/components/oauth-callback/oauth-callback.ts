@@ -18,11 +18,6 @@ export class OauthCallback implements OnInit {
   private readonly snackBar = inject(MatSnackBar);
   private readonly billSplitterService = inject(BillSplitterService);
 
-  provider: string;
-  constructor() {
-    this.provider = this.route.snapshot.paramMap.get('provider') as string;
-  }
-
   ngOnInit(): void {
     this.route.queryParams.subscribe((params) => {
       const code = params['code'];
@@ -53,11 +48,7 @@ export class OauthCallback implements OnInit {
   private async handleCallback(code: string, state: string): Promise<void> {
     try {
       // 4. Gửi code về backend để verify và tạo user
-      const response = await this.authService.verifyCode(
-        this.provider,
-        code,
-        state
-      );
+      const response = await this.authService.verifyCode(code, state);
 
       if (response) {
         // 5. Lưu tokens và user info
