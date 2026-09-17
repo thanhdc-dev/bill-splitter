@@ -4,3 +4,4 @@ export * from './bill-splitter.service';
 export * from './qr.service';
 export * from './user.service';
 export * from './bill-auto-save.service';
+export * from './passkey.service';

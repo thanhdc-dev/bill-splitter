@@ -21,6 +21,11 @@ import { MatButtonModule } from '@angular/material/button';
 import { UserService } from '../../services';
 import { SettingsData } from '../../interfaces';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { ActivatedRoute } from '@angular/router';
+import { PasskeyManager } from '../passkey-manager/passkey-manager';
+
+/** Vị trí tab "Bảo mật" trong mat-tab-group của màn hình cài đặt */
+const SECURITY_TAB_INDEX = 2;
 
 interface BankItemLabel extends BankItem {
   label: string;
@@ -40,6 +45,7 @@ interface BankItemLabel extends BankItem {
     MatTabsModule,
     MatCardModule,
     MatButtonModule,
+    PasskeyManager,
   ],
   templateUrl: './setting.html',
   styleUrl: './setting.scss',
@@ -48,6 +54,7 @@ export class Setting implements OnInit {
   private readonly snackBar = inject(MatSnackBar);
   private readonly fb = inject(FormBuilder);
   private readonly userService = inject(UserService);
+  private readonly route = inject(ActivatedRoute);
 
   settingsForm!: FormGroup;
   banks: BankItemLabel[] = BANKS.map((bank) => {
@@ -59,6 +66,15 @@ export class Setting implements OnInit {
   });
   itemFilterCtrl = new FormControl();
   filteredItems: Observable<BankItemLabel[]>;
+  selectedTabIndex = 0;
+
+  get isSecurityTab(): boolean {
+    return this.selectedTabIndex === SECURITY_TAB_INDEX;
+  }
+
+  get pageTitle(): string {
+    return this.isSecurityTab ? 'Bảo Mật' : 'Thông Tin Thanh Toán';
+  }
 
   constructor() {
     this.filteredItems = this.itemFilterCtrl.valueChanges.pipe(
@@ -68,6 +84,11 @@ export class Setting implements OnInit {
   }
 
   ngOnInit(): void {
+    // Snackbar gợi ý passkey sau khi đăng nhập điều hướng tới đây kèm tab=security
+    if (this.route.snapshot.queryParamMap.get('tab') === 'security') {
+      this.selectedTabIndex = SECURITY_TAB_INDEX;
+    }
+
     this.settingsForm = this.fb.group({
       bankAccount: this.fb.group({
         bankBin: [''],

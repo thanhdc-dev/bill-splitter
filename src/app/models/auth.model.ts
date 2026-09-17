@@ -2,7 +2,7 @@ export interface AuthUser {
   id: number;
   fullname: string;
   email: string;
-  picture: string;
+  picture?: string;
 }
 
 export interface LoginResponse {

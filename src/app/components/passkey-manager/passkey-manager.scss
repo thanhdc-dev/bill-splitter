@@ -1,0 +1,82 @@
+.passkey-card {
+  margin-top: 16px;
+  padding: 16px;
+}
+
+.passkey-intro {
+  margin: 0 0 16px;
+  font-size: 0.875rem;
+  opacity: 0.75;
+}
+
+.passkey-loading {
+  display: flex;
+  justify-content: center;
+  padding: 24px 0;
+}
+
+.passkey-empty {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 0;
+  opacity: 0.7;
+
+  p {
+    margin: 0;
+    font-size: 0.875rem;
+  }
+}
+
+.passkey-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.passkey-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+
+  & + .passkey-item {
+    border-top: 1px solid rgba(128, 128, 128, 0.2);
+  }
+}
+
+.passkey-item-icon {
+  flex: none;
+  opacity: 0.6;
+}
+
+.passkey-item-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.passkey-item-name {
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.passkey-item-meta {
+  font-size: 0.75rem;
+  opacity: 0.65;
+}
+
+.passkey-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+.passkey-warning {
+  margin: 12px 0 0;
+  font-size: 0.8125rem;
+  color: #c62828;
+}

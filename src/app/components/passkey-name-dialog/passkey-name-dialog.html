@@ -1,0 +1,28 @@
+<h2 mat-dialog-title>Đặt tên thiết bị</h2>
+
+<mat-dialog-content>
+  <p class="hint">
+    Tên này giúp bạn nhận ra passkey trong danh sách khi dùng nhiều thiết bị.
+  </p>
+
+  <mat-form-field appearance="outline" class="w-full">
+    <mat-label>Tên thiết bị</mat-label>
+    <input
+      matInput
+      type="text"
+      [formControl]="nameCtrl"
+      [maxlength]="maxLength"
+      autocomplete="off"
+    />
+    <mat-hint align="end">
+      {{ nameCtrl.value.length }} / {{ maxLength }}
+    </mat-hint>
+  </mat-form-field>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()">Hủy</button>
+  <button mat-raised-button color="primary" (click)="onConfirm()">
+    Tiếp tục
+  </button>
+</mat-dialog-actions>

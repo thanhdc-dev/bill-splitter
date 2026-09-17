@@ -1,0 +1,75 @@
+<mat-card class="passkey-card">
+  @if (!isSupported) {
+  <div class="passkey-empty">
+    <mat-icon>info</mat-icon>
+    <p>
+      Trình duyệt hoặc thiết bị này không hỗ trợ passkey. Hãy thử trên Chrome,
+      Safari hoặc Edge phiên bản mới.
+    </p>
+  </div>
+  } @else {
+  <p class="passkey-intro">
+    Passkey cho phép đăng nhập bằng vân tay, FaceID hoặc mã PIN của thiết bị,
+    không cần mật khẩu. Mỗi thiết bị đăng ký một passkey riêng.
+  </p>
+
+  @if (isLoading) {
+  <div class="passkey-loading">
+    <mat-spinner diameter="32"></mat-spinner>
+  </div>
+  } @else if (!credentials.length) {
+  <div class="passkey-empty">
+    <mat-icon>fingerprint</mat-icon>
+    <p>Bạn chưa có passkey nào.</p>
+  </div>
+  } @else {
+  <ul class="passkey-list">
+    @for (credential of credentials; track credential.id) {
+    <li class="passkey-item">
+      <mat-icon class="passkey-item-icon">fingerprint</mat-icon>
+
+      <div class="passkey-item-info">
+        <span class="passkey-item-name">{{ getDisplayName(credential) }}</span>
+        <span class="passkey-item-meta">
+          Tạo ngày {{ credential.createdAt | date : 'dd/MM/yyyy' }} ·
+          @if (credential.lastUsedAt) { Dùng lần cuối
+          {{ credential.lastUsedAt | date : 'dd/MM/yyyy HH:mm' }}
+          } @else { Chưa dùng lần nào }
+        </span>
+      </div>
+
+      <button
+        mat-icon-button
+        color="warn"
+        aria-label="delete passkey"
+        matTooltip="Xoá passkey"
+        [disabled]="isProcessing"
+        (click)="removePasskey(credential)"
+      >
+        <mat-icon>delete_outline</mat-icon>
+      </button>
+    </li>
+    }
+  </ul>
+  }
+
+  <div class="passkey-actions">
+    <button
+      mat-raised-button
+      color="primary"
+      [disabled]="isProcessing || isLoading || isLimitReached"
+      (click)="addPasskey()"
+    >
+      <mat-icon>add</mat-icon>
+      <span>Thêm passkey cho thiết bị này</span>
+    </button>
+  </div>
+
+  @if (isLimitReached) {
+  <p class="passkey-warning">
+    Bạn đã đạt tối đa {{ maxCredentials }} passkey. Hãy xoá bớt passkey cũ
+    trước khi thêm mới.
+  </p>
+  }
+  }
+</mat-card>

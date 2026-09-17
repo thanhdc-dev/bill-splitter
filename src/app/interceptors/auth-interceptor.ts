@@ -19,6 +19,17 @@ import {
 let isRefreshing = false;
 const tokenRefreshedSubject = new BehaviorSubject<string | null>(null);
 
+/**
+ * Các endpoint public tự dùng 401 làm mã lỗi nghiệp vụ (chữ ký passkey sai,
+ * passkey bị thu hồi). Không được nuốt chúng bằng luồng refresh token, nếu
+ * không component sẽ mất mã lỗi gốc để hiển thị cảnh báo cho user.
+ */
+const SKIP_REFRESH_URLS = ['/auth/refresh', '/auth/passkey/login/'];
+
+function shouldSkipRefresh(url: string): boolean {
+  return SKIP_REFRESH_URLS.some((path) => url.includes(path));
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<any>, next: HttpHandlerFn) => {
   const authService = inject(AuthService);
@@ -36,7 +47,7 @@ export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<any>, next: 
       if (
         error instanceof HttpErrorResponse &&
         error.status === 401 &&
-        !req.url.includes('/auth/refresh')
+        !shouldSkipRefresh(req.url)
       ) {
         return handle401Error(authReq, next, authService);
       }
