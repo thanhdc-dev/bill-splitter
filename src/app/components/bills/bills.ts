@@ -37,8 +37,9 @@ export class Bills implements OnInit {
   private readonly billSplitterService = inject(BillSplitterService);
 
   bills: Bill[] = [];
-  /** Tách "đang tải" khỏi "không có hóa đơn nào" để không hiện nhầm empty state. */
+  /** Tách "đang tải" / "lỗi" / "không có hóa đơn nào" để không hiện nhầm empty state. */
   isLoading = true;
+  hasError = false;
 
   ngOnInit() {
     this.loadData();
@@ -46,8 +47,14 @@ export class Bills implements OnInit {
 
   async loadData() {
     this.isLoading = true;
+    this.hasError = false;
     try {
       this.bills = await this.billSplitterService.getBills();
+    } catch (err) {
+      // Không có dữ liệu vì lỗi mạng là chuyện khác hẳn với "chưa có hóa đơn nào".
+      console.error('Lỗi khi tải danh sách hóa đơn:', err);
+      this.bills = [];
+      this.hasError = true;
     } finally {
       this.isLoading = false;
     }

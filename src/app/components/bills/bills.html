@@ -8,6 +8,19 @@
   </div>
   }
 
+  @else if (hasError) {
+  <app-empty-state
+    icon="cloud_off"
+    title="Không tải được danh sách"
+    description="Có lỗi khi kết nối tới máy chủ. Kiểm tra kết nối mạng rồi thử lại."
+  >
+    <button mat-raised-button color="primary" (click)="loadData()">
+      <mat-icon>refresh</mat-icon>
+      Thử lại
+    </button>
+  </app-empty-state>
+  }
+
   @else if (!bills.length) {
   <app-empty-state
     icon="receipt_long"

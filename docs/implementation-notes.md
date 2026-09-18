@@ -263,6 +263,48 @@ lưu đúng sau khi đổi sang `app-bank-select`.
 
 ---
 
+---
+
+## 2026-09-18 (đợt 3b — hồi quy phát hiện khi rà soát)
+
+### Decision
+
+Hai lỗi do chính đợt 3 gây ra, sửa ngay:
+
+1. `color="warn"` mất tác dụng sau khi đổi sang Material 3 → map thủ công sang `--mat-sys-error`.
+2. `bills.loadData()` nuốt lỗi → tách trạng thái lỗi khỏi trạng thái rỗng.
+
+### Before
+
+- M2 sinh các class palette `.mat-warn` / `.mat-primary`; `mat.theme()` của M3 **không sinh**
+  chúng (kiểm chứng: `grep -c "\.mat-warn"` trên CSS bundle = 0). 24 chỗ dùng `color="..."`
+  trong template im lặng mất tác dụng — đáng kể nhất là 4 nút xóa `color="warn"` không còn màu đỏ,
+  tức là nút phá hủy mất hẳn tín hiệu cảnh báo mà không có lỗi build nào báo.
+- `loadData()` ở đợt 2 dùng `try/finally` không có `catch`: khi API hỏng, `bills` vẫn là `[]` nên
+  empty state khẳng định "Chưa có hóa đơn nào được chia sẻ" trong khi thực tế là lỗi mạng.
+
+### After
+
+- `styles.scss` map `[color="warn"]` trên icon-button / button / raised-button sang
+  `--mat-sys-error`.
+- `bills` có cờ `hasError` riêng và một empty state "Không tải được danh sách" kèm nút Thử lại.
+
+### Reason
+
+- Đây là **hạn chế của việc chuyển M2 → M3**, không phải lựa chọn thiết kế: `color` input vẫn
+  được template chấp nhận nên không có cảnh báo nào, nhưng không còn CSS đứng sau nó.
+- Nói với người dùng "bạn chưa có hóa đơn nào" khi thật ra máy chủ hỏng là sai lệch thông tin,
+  và còn khiến họ tưởng dữ liệu đã mất.
+
+### Alternatives Considered
+
+- **Thay hết `color="warn"` bằng class riêng trong template**: sạch hơn về lâu dài (không dựa vào
+  một API đã ngừng hoạt động), nhưng phải sửa 24 chỗ. Giữ lại cho đợt dọn sau.
+- **Dùng `mat.icon-button-overrides()`**: đúng chuẩn M3 hơn nhưng override toàn cục cho mọi
+  icon-button, trong khi ở đây chỉ cần các nút mang thuộc tính `color="warn"`.
+
+---
+
 ## Còn tồn đọng (cập nhật 2026-09-18, sau đợt 3)
 
 1. **UX chưa làm**: progress khi upload ảnh; snackbar "Hoàn tác" thay cho xóa khoản mục/thành viên
