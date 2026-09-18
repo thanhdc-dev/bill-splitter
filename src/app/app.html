@@ -1,4 +1,4 @@
-<div class="app-container">
+<div class="app-container" (keydown.escape)="closeSidebar()">
   <header class="header">
     <h1 class="pointer" routerLink="/" aria-label="Home page">
       <img src="/logo.png" width="48px" height="48px" alt="logo" />
@@ -13,6 +13,7 @@
         aria-label="settings"
         (click)="toggleSidebar()"
         [class.active]="sidebarOpen"
+        [attr.aria-expanded]="sidebarOpen"
       >
         <mat-icon>settings</mat-icon>
       </button>
@@ -41,23 +42,28 @@
     (click)="closeSidebar()"
   ></div>
 
-  <aside class="sidebar" [class.open]="sidebarOpen">
-    <div class="sidebar-content">
+  <aside
+    class="sidebar"
+    [class.open]="sidebarOpen"
+    [attr.aria-hidden]="!sidebarOpen"
+    [attr.inert]="sidebarOpen ? null : ''"
+  >
+    <nav class="sidebar-content" aria-label="Menu tài khoản">
       <div class="sidebar-actions">
-        <div class="sidebar-action" (click)="redirectToList()">
+        <button type="button" class="sidebar-action" (click)="redirectToList()">
           <mat-icon>receipt_long</mat-icon>
           <span class="action__text">Danh sách đã chia sẻ</span>
-        </div>
-        <div class="sidebar-action" (click)="redirectToSetting()">
+        </button>
+        <button type="button" class="sidebar-action" (click)="redirectToSetting()">
           <mat-icon>settings</mat-icon>
           <span class="action__text">Cài đặt</span>
-        </div>
-        <div class="sidebar-action" (click)="logout()">
+        </button>
+        <button type="button" class="sidebar-action" (click)="logout()">
           <mat-icon>logout</mat-icon>
           <span class="action__text">Đăng xuất</span>
-        </div>
+        </button>
       </div>
-    </div>
+    </nav>
   </aside>
 
   <app-pwa-install-prompt></app-pwa-install-prompt>

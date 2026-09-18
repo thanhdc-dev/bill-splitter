@@ -1,2 +1,6 @@
 @import "tailwindcss/theme.css";
 @import "tailwindcss/utilities.css";
+
+/* Tailwind v4 defaults `dark:` to prefers-color-scheme. Bind it to the `.dark`
+   class that ThemeService toggles on <html> so the app theme drives it. */
+@custom-variant dark (&:where(.dark, .dark *));

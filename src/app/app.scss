@@ -2,13 +2,14 @@
   min-height: 100vh;
 }
 
+/* Header */
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 1rem;
-  background-color: #f5f5f5;
-  border-bottom: 1px solid #ddd;
+  background-color: var(--surface-color);
+  border-bottom: 1px solid var(--border-color);
   position: relative;
   z-index: 100;
 
@@ -16,9 +17,13 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    min-width: 0;
 
     .user-name {
       padding-right: 10px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
   }
 
@@ -27,44 +32,18 @@
   }
 }
 
-.avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-}
-
-//  =========
-/* Header Styles */
-
-.header-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.header-actions {
-  display: flex;
-  align-items: center;
-}
-
 .settings-btn {
   padding: 0.5rem;
   border-radius: 50%;
-  transition: all 0.3s ease;
+  transition: transform 0.3s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-}
 
-.settings-btn:hover {
-  transform: rotate(90deg);
-}
-
-.settings-btn.active {
-  transform: rotate(90deg);
+  &:hover,
+  &.active {
+    transform: rotate(90deg);
+  }
 }
 
 /* Main Content */
@@ -72,16 +51,7 @@
   padding: 2rem;
 }
 
-.content-wrapper {
-  max-width: 1200px;
-  margin: 0 auto;
-  background: white;
-  padding: 2rem;
-  border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
-
-/* Sidebar Styles */
+/* Sidebar */
 .sidebar-overlay {
   position: fixed;
   top: 0;
@@ -98,7 +68,7 @@
   right: -300px;
   width: 300px;
   height: 100vh;
-  background: white;
+  background: var(--surface-color);
   box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
   transition: right 0.3s ease;
   z-index: 300;
@@ -120,14 +90,27 @@
 }
 
 .sidebar-action {
-  flex: 1;
+  /* Reset the native button so it keeps looking like a menu row */
+  width: 100%;
+  background: none;
+  border: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  border-radius: var(--border-radius-sm);
+
   display: flex;
   align-items: center;
   cursor: pointer;
   padding: 10px;
 
   &:hover {
-    background-color: #ddd;
+    background-color: #f1f5f9;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
   }
 
   .action__text {
@@ -137,10 +120,6 @@
 
 /* Responsive */
 @media (max-width: 600px) {
-  .header-content {
-    padding: 1rem;
-  }
-
   .sidebar {
     width: 280px;
     right: -280px;
@@ -154,7 +133,7 @@
     padding: 1rem;
   }
 
-  .content-wrapper {
-    padding: 1rem;
+  .header .header__right .user-name {
+    max-width: 40vw;
   }
 }
