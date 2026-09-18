@@ -127,6 +127,18 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: var(--border-radius-sm) !important;
 }
 
+/* Dialog panel cho ImageLightboxComponent: ảnh cần đứng tự do trên overlay
+   tối, không phải trong khung card trắng mặc định của MatDialog. */
+.image-lightbox-panel .mat-mdc-dialog-container .mdc-dialog__surface {
+  background: transparent;
+  box-shadow: none;
+  overflow: visible;
+}
+
+.image-lightbox-panel .mat-mdc-dialog-container {
+  --mdc-dialog-container-color: transparent;
+}
+
 /* Material 3 không còn sinh class .mat-warn / .mat-primary như M2, nên
    `color="warn"` mất tác dụng. Nút phá hủy vẫn cần tín hiệu đỏ. */
 .mat-mdc-icon-button[color="warn"],

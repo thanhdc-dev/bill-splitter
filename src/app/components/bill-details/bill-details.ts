@@ -1,4 +1,5 @@
 import { CommonModule } from '@angular/common';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   AfterViewInit,
   Component,
@@ -15,6 +16,8 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatTabGroup, MatTabsModule } from '@angular/material/tabs';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { ExpenseFormComponent } from '../expense-form/expense-form';
 import { MemberTableComponent } from '../member-table/member-table';
 import { ResultDisplayComponent } from '../result-display/result-display';
@@ -62,6 +65,8 @@ import { ImageUploadComponent, ImagePreview } from '../image-upload/image-upload
     BankComponent,
     PaymentComponent,
     ImageUploadComponent,
+    MatProgressSpinnerModule,
+    MatTooltipModule,
   ],
   templateUrl: './bill-details.html',
   styleUrl: './bill-details.scss',
@@ -88,6 +93,8 @@ export class BillDetails implements OnInit, OnDestroy, AfterViewInit {
   isEditable = false;
   oldImages: { id: number; storagePath: string }[] = [];
   images: ImagePreview[] = [];
+  /** null = không đang upload; 0-100 = % tiến trình của batch upload ảnh hiện tại. */
+  uploadProgress: number | null = null;
 
 
   constructor() {
@@ -102,6 +109,7 @@ export class BillDetails implements OnInit, OnDestroy, AfterViewInit {
         debounceTime(300), // tránh spam khi người dùng gõ liên tục
         distinctUntilChanged(),
         filter((value) => value !== null && value !== undefined),
+        takeUntilDestroyed(),
       )
       .subscribe((name) => {
         this.billSplitterService.updateName(name);
@@ -110,6 +118,7 @@ export class BillDetails implements OnInit, OnDestroy, AfterViewInit {
     this.counter$.pipe(
         distinctUntilChanged(),
         filter((value) => value !== null && value !== undefined),
+        takeUntilDestroyed(),
       ).subscribe((counter) => {
       if (counter === 0) {
         const isChange = this.billSplitterService.getIsChange();
@@ -203,9 +212,17 @@ export class BillDetails implements OnInit, OnDestroy, AfterViewInit {
         const oldFileIds = this.billSplitterService.getFileIds();
         const newImages = this.images.filter(({ id }) => !id).map(img => img.file!).filter(Boolean);
         if (newImages.length) {
-          const newFiles = await this.billSplitterService.uploadImages(newImages);
-          const newFileIds = newFiles.map((file) => file.id);
-          this.billSplitterService.setFileIds([...oldFileIds, ...newFileIds]);
+          this.uploadProgress = 0;
+          try {
+            const newFiles = await this.billSplitterService.uploadImages(
+              newImages,
+              (percent) => (this.uploadProgress = percent)
+            );
+            const newFileIds = newFiles.map((file) => file.id);
+            this.billSplitterService.setFileIds([...oldFileIds, ...newFileIds]);
+          } finally {
+            this.uploadProgress = null;
+          }
         }
       }
       this.billSplitterService

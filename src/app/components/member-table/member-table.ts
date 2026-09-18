@@ -105,7 +105,18 @@ export class MemberTableComponent {
   }
 
   removeMember(memberId: string): void {
+    const index = this.members.findIndex((m) => m.id === memberId);
+    if (index === -1) return;
+    const removed = this.members[index];
+
     this.billSplitterService.removeMember(memberId);
+
+    this.snackBar
+      .open(`Đã xoá "${removed.name}"`, 'Hoàn tác', { duration: 5000 })
+      .onAction()
+      .subscribe(() => {
+        this.billSplitterService.restoreMember(removed, index);
+      });
   }
 
   updateParticipation(

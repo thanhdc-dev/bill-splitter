@@ -1,7 +1,9 @@
 import { CommonModule } from '@angular/common';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   AfterViewInit,
   Component,
+  DestroyRef,
   OnInit,
   ViewChild,
   inject,
@@ -11,6 +13,8 @@ import { MatCardModule } from '@angular/material/card';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTabGroup, MatTabsModule } from '@angular/material/tabs';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { ExpenseFormComponent } from '../expense-form/expense-form';
 import { MemberTableComponent } from '../member-table/member-table';
 import { ResultDisplayComponent } from '../result-display/result-display';
@@ -26,7 +30,6 @@ import {
   filter,
   firstValueFrom,
   Observable,
-  Subscription,
 } from 'rxjs';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { AuthService, BillSplitterService, UserService } from '../../services';
@@ -57,6 +60,8 @@ import { ImageUploadComponent, ImagePreview } from '../image-upload/image-upload
     BankComponent,
     PaymentComponent,
     ImageUploadComponent,
+    MatProgressSpinnerModule,
+    MatTooltipModule,
   ],
   templateUrl: './create-bill.html',
   styleUrl: './create-bill.scss',
@@ -70,14 +75,16 @@ export class CreateBill implements OnInit, AfterViewInit {
   private readonly authService = inject(AuthService);
   private readonly billTabControlService = inject(BillTabControlService);
   private readonly userService = inject(UserService);
+  private readonly destroyRef = inject(DestroyRef);
   @ViewChild('tabGroup') tabGroup!: MatTabGroup;
-  sub!: Subscription;
 
   nameCtrl = new FormControl();
   expenses$: Observable<ExpenseItem[]>;
   members$: Observable<Member[]>;
   isSaving$: Observable<boolean>;
   files: File[] = [];
+  /** null = không đang upload; 0-100 = % tiến trình của batch upload ảnh hiện tại. */
+  uploadProgress: number | null = null;
 
   constructor() {
     this.expenses$ = this.billSplitterService.expenses$;
@@ -88,7 +95,7 @@ export class CreateBill implements OnInit, AfterViewInit {
 
   ngOnInit() {
     this.billSplitterService.fetchBillFromStorage();
-    this.route.queryParams.subscribe((params) => {
+    this.route.queryParams.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
       if (params['save'] && params['save'] === 'true') {
         this.save();
       } else {
@@ -101,6 +108,7 @@ export class CreateBill implements OnInit, AfterViewInit {
         debounceTime(300), // tránh spam khi người dùng gõ liên tục
         distinctUntilChanged(),
         filter((value) => value),
+        takeUntilDestroyed(this.destroyRef),
       )
       .subscribe((name) => {
         this.billSplitterService.updateName(name);
@@ -108,9 +116,11 @@ export class CreateBill implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit() {
-    this.sub = this.billTabControlService.tabChange$.subscribe((index) => {
-      this.tabGroup.selectedIndex = index;
-    });
+    this.billTabControlService.tabChange$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((index) => {
+        this.tabGroup.selectedIndex = index;
+      });
   }
 
   async save(isShare?: boolean) {
@@ -129,8 +139,7 @@ export class CreateBill implements OnInit, AfterViewInit {
       );
       if (!confirmLogin) return;
       if (this.files.length) {
-        const files = await this.billSplitterService.uploadImages(this.files);
-        const fileIds = files.map((file) => file.id);
+        const fileIds = await this.uploadImagesWithProgress();
         this.billSplitterService.setFileIds(fileIds);
       }
       this.billSplitterService.saveBillToStorage();
@@ -139,8 +148,7 @@ export class CreateBill implements OnInit, AfterViewInit {
       );
       if (!loginResult) return;
     } else if (this.files.length) {
-      const files = await this.billSplitterService.uploadImages(this.files);
-      const fileIds = files.map((file) => file.id);
+      const fileIds = await this.uploadImagesWithProgress();
       this.billSplitterService.setFileIds(fileIds);
     }
     const code = await this.billSplitterService.createBill();
@@ -149,6 +157,19 @@ export class CreateBill implements OnInit, AfterViewInit {
       await this.copyUrlToClipboard(code);
     }
     await this.router.navigate(['/', code]);
+  }
+
+  private async uploadImagesWithProgress(): Promise<number[]> {
+    this.uploadProgress = 0;
+    try {
+      const files = await this.billSplitterService.uploadImages(
+        this.files,
+        (percent) => (this.uploadProgress = percent)
+      );
+      return files.map((file) => file.id);
+    } finally {
+      this.uploadProgress = null;
+    }
   }
 
   onImagesChanged(images: ImagePreview[]) {

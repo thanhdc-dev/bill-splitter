@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatCardModule } from '@angular/material/card';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { debounceTime, distinctUntilChanged, filter, Observable } from 'rxjs';
@@ -35,7 +36,8 @@ export class BankComponent implements OnInit {
       .pipe(
         debounceTime(1000),
         distinctUntilChanged(),
-        filter((value) => !!value)
+        filter((value) => !!value),
+        takeUntilDestroyed()
       )
       .subscribe((bankInfo) => {
         if (bankInfo) {

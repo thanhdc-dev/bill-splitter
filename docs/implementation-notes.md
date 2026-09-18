@@ -305,17 +305,121 @@ Hai lỗi do chính đợt 3 gây ra, sửa ngay:
 
 ---
 
-## Còn tồn đọng (cập nhật 2026-09-18, sau đợt 3)
+---
 
-1. **UX chưa làm**: progress khi upload ảnh; snackbar "Hoàn tác" thay cho xóa khoản mục/thành viên
-   tức thì (hiện xóa bill thì có confirm, xóa khoản mục thì không — không nhất quán); gộp 2 FAB
-   chồng nhau ở `create-bill` / `bill-details`; skeleton thay spinner cho `bills`.
-2. Lightbox ảnh tự chế trong `image-upload` nên thay bằng `MatDialog` (hiện không focus trap,
-   `(keydown)` bắt mọi phím để đóng).
-3. `setting.html` có `Validators.pattern` cho số điện thoại Momo nhưng **không có `<mat-error>`**
-   nào để hiện lỗi — người dùng nhập sai không biết vì sao không lưu được.
-4. `styles.scss` còn dùng `@import './tailwind.css'` (Sass đã deprecate `@import`). Chưa đổi vì
-   `@use` không nhận file CSS và pipeline Tailwind v4 đang phụ thuộc vào cách import này.
+## 2026-09-18 (đợt 4)
+
+### Decision
+
+Xử lý phần backlog còn lại đã ghi ở cuối đợt 3: rò rỉ subscription (mục B), thiếu phản hồi lỗi
+form và lightbox không tiếp cận được (mục D), xoá không có hoàn tác và thiếu tiến trình upload
+(mục C, một phần). Không gộp 2 FAB thành một nút — xem Alternatives.
+
+### Before
+
+- **Rò rỉ subscription**: `result-display.ts`, `create-bill.ts`, `payment.ts`, `bank.ts`,
+  `oauth-callback.ts`, `bill-details.ts` gọi `.subscribe()` trực tiếp trên observable của
+  service (số liệu kiểm: 4/3/2/1/1/2 lần `.subscribe()`, 0 cơ chế huỷ ở hầu hết). Người dùng
+  đi lại giữa `/` và `/:code` liên tục sẽ chồng thêm subscription lên cùng signal của
+  `BillSplitterService` mỗi lần vào lại trang.
+  - `result-display.ts` còn có 2 field chết (`expenses`, `members`): gán trong subscribe nhưng
+    không đọc ở đâu — template dùng `expenses$ | async` riêng, gán 2 lần cho cùng dữ liệu.
+- **Lightbox ảnh tự chế** ([image-upload.html] cũ): `<div (click)="closePreview()" (keydown)="closePreview()">`
+  — không `role="dialog"`, không focus trap, bấm **phím bất kỳ** là đóng (không riêng Esc).
+- **`setting.html`**: `Validators.pattern` cho số điện thoại Momo nhưng không `<mat-error>`;
+  nút Lưu chỉ `[disabled]="settingsForm.invalid"` — người dùng nhập sai không biết vì sao
+  không bấm được.
+- **Xoá không hoàn tác**: `removeExpense()`/`removeMember()` xoá ngay, trong khi xoá bill
+  ở `bills.ts` có confirm dialog — không nhất quán.
+- **Upload ảnh không có tiến trình**: `uploadImages()` dùng `firstValueFrom(this.http.post(...))`,
+  không `reportProgress`. Người dùng upload 5 ảnh × 5MB trên mạng chậm chỉ thấy icon xoay của
+  FAB, không biết còn bao lâu.
+
+### After
+
+- Toàn bộ subscribe còn thiếu cleanup đã thêm `takeUntilDestroyed()`:
+  - Trong `constructor()` (injection context): không cần truyền `DestroyRef`.
+  - Trong `ngOnInit()`/`ngAfterViewInit()` (không phải injection context):
+    `inject(DestroyRef)` ở field rồi truyền `takeUntilDestroyed(this.destroyRef)`.
+  - `result-display.ts`: xoá field `expenses`/`members` chết, bỏ 2 subscribe không cần thiết
+    (chỉ giữ `billName$`/`bankInfo$` — 2 cái có side-effect thật ngoài template).
+  - `pwa-update.service.ts` **không đổi**: service `providedIn: 'root'` sống suốt đời app,
+    subscribe ở đó không phải rò rỉ.
+- `image-upload/` (bỏ) → `image-lightbox/` (NEW): `ImageLightboxComponent` mở qua `MatDialog`,
+  có điều hướng ảnh trước/sau khi có nhiều ảnh, `cdkFocusInitial` trên nút đóng. Panel style
+  riêng (`.image-lightbox-panel`) để ảnh đứng tự do trên overlay tối thay vì trong card trắng
+  mặc định của `MatDialog`. Grid ảnh giờ `role="button" tabindex="0"` với `keydown.enter`/`space`
+  thay cho `(keydown)` bắt mọi phím.
+- `setting.html`: thêm `<mat-error>` cho số điện thoại Momo; bỏ `[disabled]`, nút Lưu luôn bấm
+  được — `onSubmit()` đã có sẵn `markAllAsTouched()` ở nhánh invalid, giờ thêm dòng gợi ý
+  "Vui lòng kiểm tra lại các trường có lỗi ở trên" xuất hiện đúng lúc đó.
+- `BillSplitterService`: thêm `restoreExpense(expense, index)` / `restoreMember(member, index)`
+  chèn lại đúng vị trí cũ. `expense-form.ts`/`member-table.ts`: xoá xong mở snackbar
+  `Hoàn tác` (5s) gọi restore khi được bấm.
+- `uploadImages(files, onProgress?)`: tham số thứ 2 optional, không phá vỡ 2 lời gọi cũ không
+  truyền nó. Khi có, chuyển sang `reportProgress: true, observe: 'events'`, lọc
+  `HttpEventType.UploadProgress` để báo % và `HttpEventType.Response` để resolve. `create-bill.ts`
+  và `bill-details.ts` hiện `mat-progress-spinner` xác định (0-100%) phía trên cụm FAB khi đang
+  upload.
+- Cả 2 FAB (share/save) có `matTooltip` + `aria-label` mô tả rõ hành động — xem Alternatives
+  về việc không gộp thành một nút.
+
+Kiểm chứng: `npx tsc --noEmit` sạch, `npm run lint` chỉ còn 2 lỗi có sẵn từ trước, `npm run build:prod`
+pass, `ng serve` khởi động sạch (HTTP 200).
+
+### Reason
+
+- **`takeUntilDestroyed()` cần injection context**: gọi trong `ngOnInit`/`ngAfterViewInit` không
+  có `ComponentRef` ngầm định như constructor, nên phải tự `inject(DestroyRef)` rồi truyền tay —
+  bỏ qua bước này sẽ throw `NG0203` ngay khi component khởi tạo, không phải lỗi âm thầm.
+- **Xoá field chết ở `result-display.ts` thay vì thêm `takeUntilDestroyed` cho chúng**: sửa cho
+  đúng gốc thay vì sửa cho hết cảnh báo — 2 subscribe đó không có tác dụng gì để mà giữ lại.
+- **`MatDialog` cho lightbox thay vì tự quản lý focus**: CDK overlay đã giải quyết đúng vấn đề
+  (focus trap, Esc, `aria-modal`) mà `<div (click)>` không thể tự làm đúng mà không viết lại
+  gần như toàn bộ logic của Dialog.
+- **Bỏ `[disabled]` ở nút Lưu, không chỉ thêm `mat-error`**: một nút bị khoá im lặng và một nút
+  luôn bấm được nhưng báo lỗi rõ khi bấm là hai UX khác hẳn nhau — cách sau cho người dùng biết
+  *tại sao* không lưu được thay vì chỉ thấy nút không phản ứng.
+- **`restoreExpense`/`restoreMember` chèn theo `index`** chứ không `push` vào cuối: thứ tự trong
+  bảng phản ánh thứ tự nhập, hoàn tác mà đổi thứ tự sẽ gây khó chịu hơn là giúp ích.
+- **`uploadImages` progress là optional param, không đổi return type**: 3 lời gọi cũ
+  (`create-bill.ts` ×2, `bill-details.ts` ×1) tiếp tục chạy đúng như trước nếu không cần progress;
+  chỉ nơi cần mới trả thêm chi phí.
+
+### Alternatives Considered
+
+- **Gộp 2 FAB (share/save) thành một nút**: được ghi trong backlog đợt 3 nhưng **không làm** ở
+  đợt này. Hai hành động không hoàn toàn giống nhau (share = lưu + copy link + điều hướng; save =
+  chỉ lưu + điều hướng) và gộp sẽ phải quyết định hành vi mới cho nút duy nhất — đó là lựa chọn
+  sản phẩm cần xác nhận, không phải rewrite kỹ thuật đơn thuần. Việc thêm `matTooltip` rõ nghĩa
+  cho từng nút là phần an toàn có thể làm ngay; phần gộp để lại cho người dùng quyết định.
+- **Tiến trình per-file thay vì per-batch**: cả `maxFiles` ảnh đi trong một multipart request,
+  nên `HttpEventType.UploadProgress` chỉ cho % của toàn bộ payload, không tách được file nào
+  xong trước. Tách thành N request riêng (1 file/request) sẽ cho progress chính xác hơn nhưng
+  đổi hẳn giao thức với backend (`upload-images` hiện nhận nhiều file trong 1 request) — ngoài
+  phạm vi một lần polish UI.
+- **Đưa lightbox vào component riêng nhưng vẫn không dùng `MatDialog`** (ví dụng CDK Overlay
+  trực tiếp): cho toàn quyền tuỳ biến hơn, nhưng phải tự viết lại chính xác thứ `MatDialog` đã
+  làm sẵn (focus trap, backdrop click, Esc, scroll lock) — không có lý do để không dùng nó.
+
+---
+
+## Còn tồn đọng (cập nhật 2026-09-18, sau đợt 4)
+
+1. **Chưa xem bằng mắt trên trình duyệt thật** (không có công cụ điều khiển browser trong session
+   này). Cần một lượt kiểm tra tay:
+   - Tương phản chế độ Tối — đặc biệt QR code và logo ngân hàng (ảnh `.webp` nền trắng) trên
+     surface tối.
+   - Form Thanh toán / Cài đặt vẫn lưu đúng sau khi đổi sang `app-bank-select` (đợt 3).
+   - Lightbox ảnh mới (`ImageLightboxComponent`), tiến trình upload, snackbar hoàn tác — cả ba
+     đều mới viết ở đợt 4, chỉ mới qua compile + build, chưa chạy tay.
+2. **Gộp 2 FAB (share/save)**: cân nhắc nhưng chưa làm — xem "Alternatives Considered" ở đợt 4.
+   Cần người dùng quyết định hành vi mong muốn khi gộp trước khi động vào.
+3. `skeleton` thay `mat-spinner` cho danh sách `bills` — chưa làm, mức độ ưu tiên thấp.
+4. `styles.scss` còn dùng `@import './tailwind.css'` (Sass deprecate). Chưa đổi vì `@use` không
+   nhận file CSS và pipeline Tailwind v4 đang phụ thuộc cách import này.
 5. 2 lỗi lint `no-empty-function` có sẵn ở `thousand-separator.ts:28` và
    `bill-splitter.service.ts:54` — chưa đụng vì ngoài phạm vi UI.
-6. Kiểm tra tương phản chế độ Tối và kiểm thử tay form Thanh toán / Cài đặt (xem Kiểm chứng đợt 3).
+6. **0 file test** trong toàn dự án (`*.spec.ts`), dù Karma/Jasmine đã cấu hình sẵn trong
+   `angular.json`. Không có cách nào chạy test tự động để bảo vệ các thay đổi qua 4 đợt —
+   toàn bộ xác nhận đến từ `tsc --noEmit`, `ng lint`, `ng build` và đọc code, không phải test.

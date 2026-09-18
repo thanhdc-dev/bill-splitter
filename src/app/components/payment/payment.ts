@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, DestroyRef, OnInit, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatButtonModule } from '@angular/material/button';
@@ -37,6 +38,7 @@ import { BankSelectComponent } from '../bank-select/bank-select';
 export class PaymentComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly billSplitterService = inject(BillSplitterService);
+  private readonly destroyRef = inject(DestroyRef);
 
   bankInfo$: Observable<BankInfoItem>;
   bankForm: FormGroup;
@@ -55,13 +57,13 @@ export class PaymentComponent implements OnInit {
       phoneNumberMomo: [''],
     });
 
-    this.bankForm.valueChanges.subscribe((_) => {
+    this.bankForm.valueChanges.pipe(takeUntilDestroyed()).subscribe((_) => {
       this.handleFormChanges();
     });
   }
 
   ngOnInit(): void {
-    this.bankInfo$.subscribe((bankInfo) => {
+    this.bankInfo$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((bankInfo) => {
       if (bankInfo) {
         this.bankInfo = bankInfo;
         this.bankForm.patchValue({ ...bankInfo }, { emitEvent: false });

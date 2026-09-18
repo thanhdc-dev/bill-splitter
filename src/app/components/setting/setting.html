@@ -42,7 +42,10 @@
 
           <mat-form-field appearance="outline" class="phone-number-momo">
             <mat-label>Số điện thoại</mat-label>
-            <input matInput type="text" formControlName="phoneNumber" />
+            <input matInput type="text" formControlName="phoneNumber" placeholder="0912345678" />
+            <mat-error *ngIf="momoWalletForm.get('phoneNumber')?.hasError('pattern')">
+              Số điện thoại không hợp lệ
+            </mat-error>
           </mat-form-field>
 
           <mat-form-field appearance="outline" class="account-number-momo">
@@ -53,13 +56,15 @@
       </mat-tab>
     </mat-tab-group>
 
-    <div class="button-group flex justify-end">
+    <div class="button-group flex flex-col items-end gap-2">
+      @if (settingsForm.invalid && settingsForm.touched) {
+      <p class="form-error-hint">Vui lòng kiểm tra lại các trường có lỗi ở trên</p>
+      }
       <button
         mat-raised-button
         color="primary"
         class="save-button"
         type="submit"
-        [disabled]="settingsForm.invalid"
       >
         Lưu
       </button>

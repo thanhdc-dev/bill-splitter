@@ -1,4 +1,5 @@
 import { Component, OnInit, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AsyncPipe, CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatTableModule } from '@angular/material/table';
@@ -39,9 +40,7 @@ export class ResultDisplayComponent implements OnInit {
 
   billName$: Observable<string>;
   billName = '';
-  expenses: ExpenseItem[] = [];
   expenses$: Observable<ExpenseItem[]>;
-  members: Member[] = [];
   members$: Observable<Member[]>;
   displayedColumns: string[] = ['name', 'amount', 'participants', 'perPerson'];
   bankInfo$: Observable<BankInfoItem>;
@@ -51,19 +50,17 @@ export class ResultDisplayComponent implements OnInit {
 
   constructor() {
     this.billName$ = this.billSplitterService.name$;
-    this.billName$.subscribe((billName) => {
+    // `billName` chỉ dùng trong showQRPopup/showMomoQRPopup (không qua template),
+    // nên vẫn cần subscribe thủ công ở đây - huỷ theo lifecycle component.
+    this.billName$.pipe(takeUntilDestroyed()).subscribe((billName) => {
       this.billName = billName;
     });
+    // expenses$/members$ chỉ được đọc qua `| async` trong template.
     this.expenses$ = this.billSplitterService.expenses$;
-    this.expenses$.subscribe((expenses) => {
-      this.expenses = expenses;
-    });
     this.members$ = this.billSplitterService.members$;
-    this.members$.subscribe((members) => {
-      this.members = members;
-    });
+
     this.bankInfo$ = this.billSplitterService.bankInfo$;
-    this.bankInfo$.subscribe((bankInfo) => {
+    this.bankInfo$.pipe(takeUntilDestroyed()).subscribe((bankInfo) => {
       if (bankInfo) {
         this.bankInfo = bankInfo;
         this.fetchIsShowBankInfo();

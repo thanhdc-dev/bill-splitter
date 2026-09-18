@@ -16,6 +16,7 @@ import { ExpenseItem } from '../../models/bill-splitter.model';
 import { MatTableModule } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { EditFieldDialogComponent } from '../edit-field-dialog/edit-field-dialog';
 import { EmptyStateComponent } from '../empty-state/empty-state';
 
@@ -40,6 +41,7 @@ export class ExpenseFormComponent {
   private readonly dialog = inject(MatDialog);
   private readonly fb = inject(FormBuilder);
   private readonly billSplitterService = inject(BillSplitterService);
+  private readonly snackBar = inject(MatSnackBar);
 
   displayedColumns: string[] = ['name', 'amount', 'actions'];
   expenseForm: FormGroup;
@@ -55,7 +57,19 @@ export class ExpenseFormComponent {
   }
 
   removeExpense(expenseId: string) {
+    const expenses = this.billSplitterService.getExpenses();
+    const index = expenses.findIndex((e) => e.id === expenseId);
+    if (index === -1) return;
+    const removed = expenses[index];
+
     this.billSplitterService.removeExpense(expenseId);
+
+    this.snackBar
+      .open(`Đã xoá "${removed.name}"`, 'Hoàn tác', { duration: 5000 })
+      .onAction()
+      .subscribe(() => {
+        this.billSplitterService.restoreExpense(removed, index);
+      });
   }
 
   updateExpenseName(expense: ExpenseItem) {

@@ -35,3 +35,8 @@
   background-color: var(--surface-muted);
   box-shadow: var(--shadow-md);
 }
+.form-error-hint {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--mat-sys-error);
+}

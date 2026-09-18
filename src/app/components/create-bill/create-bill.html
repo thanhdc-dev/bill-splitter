@@ -47,14 +47,23 @@
   </mat-card>
   <app-result-display></app-result-display>
   <app-bank></app-bank>
+  @if (uploadProgress !== null) {
+  <div class="upload-progress fixed bottom-[170px] right-7" role="status" aria-live="polite">
+    <mat-progress-spinner mode="determinate" [value]="uploadProgress" diameter="40"></mat-progress-spinner>
+    <span class="upload-progress__label">{{ uploadProgress }}%</span>
+  </div>
+  }
+
   <div class="buttons flex flex-col gap-4 fixed bottom-[100px] right-7">
     <!-- Sticky Share Button -->
-    <button mat-fab color="primary" class="share-button" aria-label="Button share"
+    <button mat-fab color="primary" class="share-button" aria-label="Lưu và sao chép link chia sẻ"
+      matTooltip="Lưu và sao chép link chia sẻ" matTooltipPosition="left"
       [ngClass]="{'share-button__syncing': (isSaving$ | async)}" [disabled]="(isSaving$ | async)" (click)="save(true)">
       <mat-icon>{{(isSaving$ | async) ? 'sync' : 'share'}}</mat-icon>
     </button>
     <!-- Sticky Auto Save Button -->
-    <button mat-fab color="primary" class="auto-save-button" aria-label="Button save" (click)="save()">
+    <button mat-fab color="primary" class="auto-save-button" aria-label="Lưu hóa đơn"
+      matTooltip="Lưu hóa đơn" matTooltipPosition="left" (click)="save()">
       <mat-icon>cloud_upload</mat-icon>
     </button>
   </div>
