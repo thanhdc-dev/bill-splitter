@@ -1,10 +1,12 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { BillSplitterService } from '../../services/bill-splitter.service';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatButtonModule } from '@angular/material/button';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { EmptyStateComponent } from '../empty-state/empty-state';
 import { MatDialog } from '@angular/material/dialog';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog';
 import { firstValueFrom } from 'rxjs';
@@ -17,7 +19,14 @@ interface Bill {
 
 @Component({
   selector: 'app-bills',
-  imports: [CommonModule, MatIconModule, MatButtonModule],
+  imports: [
+    CommonModule,
+    MatIconModule,
+    MatButtonModule,
+    MatProgressSpinnerModule,
+    RouterLink,
+    EmptyStateComponent,
+  ],
   templateUrl: './bills.html',
   styleUrl: './bills.scss',
 })
@@ -28,13 +37,20 @@ export class Bills implements OnInit {
   private readonly billSplitterService = inject(BillSplitterService);
 
   bills: Bill[] = [];
+  /** Tách "đang tải" khỏi "không có hóa đơn nào" để không hiện nhầm empty state. */
+  isLoading = true;
 
   ngOnInit() {
     this.loadData();
   }
 
   async loadData() {
-    this.bills = await this.billSplitterService.getBills();
+    this.isLoading = true;
+    try {
+      this.bills = await this.billSplitterService.getBills();
+    } finally {
+      this.isLoading = false;
+    }
   }
 
   onItemClick(code: string): void {

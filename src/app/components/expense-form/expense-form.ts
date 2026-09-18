@@ -17,6 +17,7 @@ import { MatTableModule } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialog } from '@angular/material/dialog';
 import { EditFieldDialogComponent } from '../edit-field-dialog/edit-field-dialog';
+import { EmptyStateComponent } from '../empty-state/empty-state';
 
 @Component({
   selector: 'app-expense-form',
@@ -30,6 +31,7 @@ import { EditFieldDialogComponent } from '../edit-field-dialog/edit-field-dialog
     ThousandSeparatorDirective,
     MatTableModule,
     MatIconModule,
+    EmptyStateComponent,
   ],
   templateUrl: './expense-form.html',
   styleUrls: ['./expense-form.scss'],

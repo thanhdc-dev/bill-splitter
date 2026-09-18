@@ -1,6 +1,27 @@
 <div class="list-container">
   <h2 class="list-title">Danh sách</h2>
 
+  @if (isLoading) {
+  <div class="list-loading" role="status" aria-live="polite">
+    <mat-spinner diameter="40"></mat-spinner>
+    <p>Đang tải danh sách hóa đơn...</p>
+  </div>
+  }
+
+  @else if (!bills.length) {
+  <app-empty-state
+    icon="receipt_long"
+    title="Chưa có hóa đơn nào được chia sẻ"
+    description="Những hóa đơn bạn lưu và chia sẻ sẽ xuất hiện ở đây để mở lại hoặc gửi cho bạn bè."
+  >
+    <button mat-raised-button color="primary" routerLink="/">
+      <mat-icon>add</mat-icon>
+      Tạo hóa đơn mới
+    </button>
+  </app-empty-state>
+  }
+
+  @else {
   <div class="bill-wrapper">
     <div
       *ngFor="let item of bills"
@@ -42,4 +63,5 @@
       </div>
     </div>
   </div>
+  }
 </div>

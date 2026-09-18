@@ -12,6 +12,20 @@
   text-align: center;
 }
 
+.list-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 48px 16px;
+  color: var(--text-secondary);
+
+  p {
+    margin: 0;
+    font-size: 0.9rem;
+  }
+}
+
 .bill-wrapper {
   display: flex;
   flex-direction: column;

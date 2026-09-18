@@ -1,0 +1,12 @@
+<div class="empty-state" [class.empty-state--compact]="compact">
+  <div class="empty-state__icon" aria-hidden="true">
+    <mat-icon>{{ icon }}</mat-icon>
+  </div>
+  <p class="empty-state__title">{{ title }}</p>
+  @if (description) {
+  <p class="empty-state__description">{{ description }}</p>
+  }
+  <div class="empty-state__action">
+    <ng-content></ng-content>
+  </div>
+</div>

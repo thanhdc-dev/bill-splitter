@@ -78,17 +78,103 @@ token `--primary-color` khai báo đúng 1 lần). `npm run lint` còn **2 lỗi
   vào sidebar khi đóng — phần lớn giá trị với chi phí thấp.
 - **Gỡ luôn `ThemeService` + mục dark mode trong README**: bị loại vì người dùng chọn làm dark mode thật.
 
-### Còn tồn đọng (đã thống nhất, làm ở giai đoạn sau)
+---
 
-1. **Nhóm 2 — UX**: sticky cột tên thành viên + chuyển `member-table` sang card layout ở mobile
-   (hiện `min-width: 600px` + cột động → cuộn ngang mất ngữ cảnh); empty state / skeleton cho
-   `bills` và các tab rỗng; progress khi upload ảnh; snackbar "Hoàn tác" thay cho xoá tức thì;
-   gộp 2 FAB chồng nhau ở `create-bill` / `bill-details`.
-2. **Nhóm 3 — nền tảng**: chuẩn hoá token màu/spacing (còn 13 chỗ hardcode màu, `bills.scss`
-   còn tự đặt `font-family: 'Segoe UI'`); rút component dùng chung (form "thêm nhanh" lặp 3 lần,
-   `.table-scroll` lặp 2 lần, form ngân hàng/Momo ở `payment` và `setting` gần như trùng hoàn toàn);
-   **sau đó** mới bật dark mode thật (toggle + inject `ThemeService`).
+## 2026-09-18 (đợt 2)
+
+### Decision
+
+Xử lý nhóm UX: bảng ma trận thành viên × khoản mục trên mobile, và trạng thái rỗng
+trên toàn bộ các màn hình danh sách.
+
+1. Cột "Tên thành viên" của `member-table` bám trái (`sticky`) khi cuộn ngang.
+2. Dưới 768px, `member-table` **không** cuộn ngang nữa mà đổi hẳn sang layout một card
+   cho mỗi thành viên, chọn bằng `BreakpointObserver` của CDK.
+3. Thêm component dùng chung `app-empty-state` và áp dụng cho `bills`, `expense-form`,
+   `member-table`, `result-display`.
+
+### Before
+
+- `member-table.scss` đặt `min-width: 600px`; mỗi khoản mục thêm một cột ~120px chứa
+  `quantity-selector`. Với 5 khoản mục + 4 cột cố định, bảng rộng ~1000px trên màn hình 375px:
+  người dùng cuộn ngang thì mất luôn cột tên, không biết đang chỉnh cho ai.
+- `getDisplayedColumns()` được gọi từ template và **gán lại state** (`this.displayedColumns`)
+  bên trong, chạy lại mỗi chu kỳ change detection.
+- Hai `subscribe()` trong constructor `member-table` không hủy.
+- `expense-form.html` dùng `*ngIf="expenses$ | async as expenses"`: mảng rỗng là truthy nên
+  nhánh này **không bao giờ** bắt được trạng thái rỗng — bảng hiện ra chỉ có mỗi header.
+- `bills.html` không phân biệt "đang tải" với "chưa có hóa đơn nào": cả hai đều là trang trắng
+  chỉ có chữ "Danh sách".
+- `result-display` hiện bảng "Chi tiết chia tiền" rỗng (chỉ header + dòng "Tổng cộng" bằng 0)
+  khi người dùng chưa nhập gì.
+
+### After
+
+- `empty-state/` (NEW): `icon` + `title` + `description` + `<ng-content>` cho nút hành động,
+  có biến thể `[compact]` khi đặt trong tab/card đã có padding.
+- `member-table.html` chia 3 nhánh: rỗng → `app-empty-state`; mobile → `.member-cards`;
+  còn lại → bảng cũ với `<ng-container matColumnDef="name" sticky>`.
+- Card mobile gồm: tên + nút xóa (header), danh sách khoản mục kèm `quantity-selector` (body),
+  checkbox "Đã thanh toán" + tổng tiền (footer).
+- `member-table.ts`: `displayedColumns` tính sẵn trong subscribe thay vì trong template;
+  cả 3 subscribe dùng `takeUntilDestroyed()`; thêm `getParticipation()`; xóa
+  `validateAndUpdateQuantity()` (dead code, không nơi nào gọi) và `expensesColumns`.
+- `bills.ts`: thêm cờ `isLoading` (set trong `try/finally`), template chia 3 nhánh
+  loading / empty / list; empty state có CTA "Tạo hóa đơn mới".
+- `expense-form` và `result-display`: kiểm tra `.length` thay vì truthiness, có empty state
+  hướng dẫn bước tiếp theo.
+- Bỏ `class="mat-elevation-z8"` trên các bảng — SCSS vốn đã override shadow nên nó không có tác dụng.
+- `add-member-form` thêm `mat-hint` nói rõ có thể nhập nhiều tên cách nhau bởi dấu phẩy
+  (tính năng đã có trong `onSubmit()` nhưng không ai biết).
+
+### Reason
+
+- **Sticky + card layout** giải quyết vấn đề UX nặng nhất: thao tác chính của app là điền
+  số phần cho từng người ở từng món, mà trên điện thoại thao tác đó đang phải làm mù.
+- **Card thay vì chỉ sticky** ở mobile: với 5+ khoản mục, sticky chỉ giảm nhẹ chứ không xóa
+  được việc cuộn ngang. Card bỏ hẳn trục ngang, đổi lại là trang dài hơn — chấp nhận được
+  vì số thành viên thường nhỏ.
+- **`BreakpointObserver` thay vì chỉ ẩn/hiện bằng CSS**: nếu render cả hai rồi ẩn bằng
+  `display: none`, DOM sẽ có gấp đôi số `quantity-selector` và mat-table vẫn dựng cột cho
+  toàn bộ khoản mục — lãng phí, và hai bản sao dễ lệch nhau khi sửa sau này.
+- **`displayedColumns` tính sẵn**: gán state từ trong template là nguồn lỗi change detection
+  kinh điển, và đằng nào cũng phải chạm vào hàm này khi thêm nhánh card.
+- **Cờ `isLoading`**: không có nó thì empty state sẽ nhấp nháy sai mỗi lần vào trang,
+  tức là empty state gây hiểu nhầm nhiều hơn là giúp ích.
+
+### Alternatives Considered
+
+- **Đảo trục bảng** (chọn khoản mục → tick thành viên tham gia): gọn hơn khi số khoản mục
+  lớn hơn số thành viên, nhưng đổi hẳn mô hình thao tác người dùng đang quen. Để ngỏ, không làm.
+- **`cdk-virtual-scroll` cho danh sách card**: chưa cần, số thành viên thực tế hiếm khi quá vài chục.
+- **Chỉ làm sticky, bỏ card layout**: rẻ hơn nhưng không giải quyết được gốc vấn đề (xem trên).
+- **Skeleton loader cho `bills`** thay vì spinner: đẹp hơn nhưng cần dựng thêm khung giả lập;
+  spinner đủ cho danh sách ngắn, để lại cho đợt polish.
+
+### Kiểm chứng
+
+`npm run build:prod` pass; `npx ng serve` khởi động sạch, HTTP 200. `npm run lint` vẫn chỉ còn
+2 lỗi `no-empty-function` có sẵn từ trước. **Chưa kiểm tra bằng mắt trên trình duyệt thật**
+(môi trường hiện không có công cụ điều khiển trình duyệt) — phần hiển thị breakpoint 767px
+và sticky column cần một lượt xem tay trước khi merge.
+
+---
+
+## Còn tồn đọng (cập nhật 2026-09-18, sau đợt 2)
+
+1. **Nhóm 2 — phần chưa làm**: progress khi upload ảnh; snackbar "Hoàn tác" thay cho xóa
+   khoản mục/thành viên tức thì (hiện xóa bill thì có confirm, xóa khoản mục thì không —
+   không nhất quán); gộp 2 FAB chồng nhau ở `create-bill` / `bill-details`; skeleton thay
+   spinner cho `bills`.
+2. **Nhóm 3 — nền tảng**: chuẩn hóa token màu/spacing (còn nhiều chỗ hardcode `#f8fafc`,
+   `#2c3e50`, `#1976d2`...; `bills.scss` còn tự đặt `font-family: 'Segoe UI'`); rút component
+   dùng chung (form "thêm nhanh" lặp 3 lần, `.table-scroll` lặp 2 lần, form ngân hàng/Momo ở
+   `payment` và `setting` gần như trùng hoàn toàn); **sau đó** mới bật dark mode thật
+   (thêm toggle + inject `ThemeService`, vốn đang tồn tại nhưng chưa nơi nào dùng).
 3. Lightbox ảnh tự chế trong `image-upload` nên thay bằng `MatDialog` (hiện không focus trap,
    `(keydown)` bắt mọi phím để đóng).
-4. `.mat-mdc-form-field-subscript-wrapper { display: none }` ở 3 nơi đang ẩn luôn chỗ hiện `mat-error`
-   → form Thanh toán / Cài đặt không có phản hồi lỗi.
+4. `.mat-mdc-form-field-subscript-wrapper { display: none }` ở `expense-form` và `payment`
+   đang ẩn luôn chỗ hiện `mat-error` → form Thanh toán / Cài đặt không có phản hồi lỗi.
+   (`member-table` đã bỏ để hiện `mat-hint`.)
+5. 2 lỗi lint `no-empty-function` có sẵn ở `thousand-separator.ts:28` và
+   `bill-splitter.service.ts:54` — chưa đụng vì ngoài phạm vi UI.

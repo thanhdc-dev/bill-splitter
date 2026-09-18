@@ -24,8 +24,17 @@
   </button>
 </form>
 
-<div class="table-scroll" *ngIf="expenses$ | async as expenses">
-  <table mat-table [dataSource]="expenses$">
+@if (expenses$ | async; as expenses) {
+  @if (!expenses.length) {
+  <app-empty-state
+    icon="receipt_long"
+    title="Chưa có khoản mục nào"
+    description="Thêm từng món trong hóa đơn ở ô phía trên, sau đó chọn ai tham gia món nào ở tab Thành viên."
+    [compact]="true"
+  ></app-empty-state>
+  } @else {
+  <div class="table-scroll">
+  <table mat-table [dataSource]="expenses">
     <!-- Name Column -->
     <ng-container matColumnDef="name">
       <th mat-header-cell *matHeaderCellDef scope="col">Tên khoản mục</th>
@@ -67,4 +76,6 @@
     <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
     <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
   </table>
-</div>
+  </div>
+  }
+}

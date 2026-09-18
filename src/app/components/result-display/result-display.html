@@ -14,8 +14,15 @@
   <mat-card-content>
     <ng-container *ngIf="(expenses$ | async) as expenses">
       <ng-container *ngIf="(members$ | async) as members">
+        @if (!expenses.length) {
+        <app-empty-state
+          icon="calculate"
+          title="Chưa có gì để chia"
+          description="Thêm khoản mục và thành viên ở phía trên, phần chia tiền sẽ tự động hiện ra ở đây."
+        ></app-empty-state>
+        } @else {
         <div class="table-container">
-          <table mat-table [dataSource]="expenses" class="mat-elevation-z8">
+          <table mat-table [dataSource]="expenses">
             <!-- Name Column -->
             <ng-container matColumnDef="name">
               <th mat-header-cell *matHeaderCellDef scope="col">Khoản mục</th>
@@ -66,6 +73,7 @@
             <tr mat-footer-row *matFooterRowDef="displayedColumns; sticky: true"></tr>
           </table>
         </div>
+        }
 
         @if (members.length) {
         <div class="member-summary">

@@ -1,5 +1,7 @@
 import { Component, inject } from '@angular/core';
-import { AsyncPipe, CommonModule } from '@angular/common';
+import { CommonModule } from '@angular/common';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { BreakpointObserver } from '@angular/cdk/layout';
 import {
   FormBuilder,
   FormGroup,
@@ -14,25 +16,27 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { BillSplitterService } from '../../services/bill-splitter.service';
 import { ExpenseItem, Member } from '../../models/bill-splitter.model';
-import { Observable } from 'rxjs';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { QuantitySelector } from '../quantity-selector/quantity-selector';
+import { EmptyStateComponent } from '../empty-state/empty-state';
+
+/** Dưới ngưỡng này bảng ma trận thành viên × khoản mục đổi sang layout card. */
+const MOBILE_BREAKPOINT = '(max-width: 767px)';
 
 @Component({
   selector: 'app-member-table',
   standalone: true,
   imports: [
     CommonModule,
-    AsyncPipe,
     ReactiveFormsModule,
     MatFormFieldModule,
     MatTableModule,
     MatCheckboxModule,
     MatButtonModule,
     MatIconModule,
-    MatFormFieldModule,
     MatInputModule,
     QuantitySelector,
+    EmptyStateComponent,
   ],
   templateUrl: './member-table.html',
   styleUrls: ['./member-table.scss'],
@@ -41,27 +45,45 @@ export class MemberTableComponent {
   private readonly snackBar = inject(MatSnackBar);
   private readonly fb = inject(FormBuilder);
   private readonly billSplitterService = inject(BillSplitterService);
+  private readonly breakpointObserver = inject(BreakpointObserver);
 
-  expenses$: Observable<ExpenseItem[]>;
-  members$: Observable<Member[]>;
-  memberNames: string[] = [];
+  expenses: ExpenseItem[] = [];
+  members: Member[] = [];
   memberForm: FormGroup;
-  displayedColumns: string[] = ['name'];
-  expensesColumns: string[] = [];
+  /** Cột của mat-table, tính lại mỗi khi danh sách khoản mục đổi. */
+  displayedColumns: string[] = [];
+  isMobile = false;
 
   constructor() {
     this.memberForm = this.fb.group({
       name: ['', [Validators.required]],
     });
-    this.expenses$ = this.billSplitterService.expenses$;
-    this.members$ = this.billSplitterService.members$;
 
-    this.expenses$.subscribe((expenses) => {
-      this.expensesColumns = [...expenses.map((e) => e.id)];
-    });
-    this.members$.subscribe((members) => {
-      this.memberNames = [...members.map((e) => e.name)];
-    });
+    this.billSplitterService.expenses$
+      .pipe(takeUntilDestroyed())
+      .subscribe((expenses) => {
+        this.expenses = expenses;
+        this.displayedColumns = [
+          'name',
+          ...expenses.map((expense) => expense.id),
+          'isPaid',
+          'totalAmount',
+          'actions',
+        ];
+      });
+
+    this.billSplitterService.members$
+      .pipe(takeUntilDestroyed())
+      .subscribe((members) => {
+        this.members = members;
+      });
+
+    this.breakpointObserver
+      .observe(MOBILE_BREAKPOINT)
+      .pipe(takeUntilDestroyed())
+      .subscribe(({ matches }) => {
+        this.isMobile = matches;
+      });
   }
 
   onSubmit(): void {
@@ -99,33 +121,17 @@ export class MemberTableComponent {
     );
   }
 
-  getDisplayedColumns(): string[] {
-    this.displayedColumns = [
-      'name',
-      ...this.expensesColumns,
-      'isPaid',
-      'totalAmount',
-      'actions',
-    ];
-    return this.displayedColumns;
-  }
-
   updateIsPaid(memberId: string, isPaid: boolean) {
     this.billSplitterService.updatePaid(memberId, isPaid);
   }
 
-  validateAndUpdateQuantity(event: Event, memberId: string, expenseId: string): void {
-    const input = event.target as HTMLInputElement;
-    let value = parseFloat(input.value) || 0;
-
-    // Validate và làm tròn đến 1 chữ số thập phân
-    value = Math.max(0, Math.min(99, Math.round(value * 10) / 10));
-
-    input.value = value.toString();
-    this.updateParticipation(memberId, expenseId, value);
+  getParticipation(member: Member, expenseId: string): number {
+    return member.participations.get(expenseId) || 0;
   }
 
   private filterNameExists(names: string[]) {
-    return names.filter((name) => this.memberNames.includes(name));
+    return names.filter((name) =>
+      this.members.some((member) => member.name === name)
+    );
   }
 }

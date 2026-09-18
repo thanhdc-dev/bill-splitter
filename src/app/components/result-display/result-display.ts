@@ -13,6 +13,7 @@ import { BankInfoItem } from '../../models/bank.model';
 import { BillTabControlService } from '../bill-details/bill-tab-control.service';
 import { MatButtonModule } from '@angular/material/button';
 import { QRService } from '../../services';
+import { EmptyStateComponent } from '../empty-state/empty-state';
 
 @Component({
   selector: 'app-result-display',
@@ -25,6 +26,7 @@ import { QRService } from '../../services';
     MatIconModule,
     MatDialogModule,
     MatButtonModule,
+    EmptyStateComponent,
   ],
   templateUrl: './result-display.html',
   styleUrls: ['./result-display.scss'],
