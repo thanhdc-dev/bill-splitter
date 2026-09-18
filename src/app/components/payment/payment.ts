@@ -1,30 +1,19 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
-import {
-  FormBuilder,
-  FormControl,
-  FormGroup,
-  ReactiveFormsModule,
-} from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { map, Observable, startWith } from 'rxjs';
-import { NgxMatSelectSearchModule } from 'ngx-mat-select-search';
-import { BankInfoItem, BankItem } from '../../models/bank.model';
+import { Observable } from 'rxjs';
+import { BankInfoItem } from '../../models/bank.model';
 import { BillSplitterService } from '../../services/bill-splitter.service';
 import { BANKS } from '../../constants';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatCardModule } from '@angular/material/card';
-
-interface BankItemLabel extends BankItem {
-  label: string;
-  logo: string;
-}
+import { BankSelectComponent } from '../bank-select/bank-select';
 
 @Component({
   selector: 'app-payment',
@@ -35,9 +24,8 @@ interface BankItemLabel extends BankItem {
     MatButtonModule,
     MatFormFieldModule,
     MatInputModule,
-    MatSelectModule,
     ReactiveFormsModule,
-    NgxMatSelectSearchModule,
+    BankSelectComponent,
     MatDividerModule,
     MatIconModule,
     MatTabsModule,
@@ -52,17 +40,7 @@ export class PaymentComponent implements OnInit {
 
   bankInfo$: Observable<BankInfoItem>;
   bankForm: FormGroup;
-  banks: BankItemLabel[] = BANKS.map((bank) => {
-    return {
-      ...bank,
-      label: `${bank.short_name} - ${bank.name}`,
-      logo: `/images/bank-logo/${bank.code}.webp`,
-    };
-  });
   bankInfo!: BankInfoItem;
-
-  itemFilterCtrl = new FormControl();
-  filteredItems: Observable<BankItemLabel[]>;
   selectedTab: 'bank' | 'momo' = 'bank';
 
   constructor() {
@@ -80,11 +58,6 @@ export class PaymentComponent implements OnInit {
     this.bankForm.valueChanges.subscribe((_) => {
       this.handleFormChanges();
     });
-
-    this.filteredItems = this.itemFilterCtrl.valueChanges.pipe(
-      startWith(''),
-      map((value) => this._filterItems(value))
-    );
   }
 
   ngOnInit(): void {
@@ -92,22 +65,14 @@ export class PaymentComponent implements OnInit {
       if (bankInfo) {
         this.bankInfo = bankInfo;
         this.bankForm.patchValue({ ...bankInfo }, { emitEvent: false });
-        this.itemFilterCtrl.patchValue(`${bankInfo.short_name} - ${bankInfo.name}`)
       }
     });
-  }
-
-  private _filterItems(value: string): BankItemLabel[] {
-    const filterValue = value.toLowerCase();
-    return this.banks.filter((item) =>
-      item.label.toLowerCase().includes(filterValue)
-    );
   }
 
   handleFormChanges() {
     if (this.bankForm.valid) {
       const formValue = this.bankForm.value;
-      const bank = this.banks.find(({ code }) => code == formValue.bank);
+      const bank = BANKS.find(({ code }) => code == formValue.bank);
       if (bank) {
         const data: BankInfoItem = {
           name: bank?.name,

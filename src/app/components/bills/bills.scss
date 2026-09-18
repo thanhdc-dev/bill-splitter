@@ -1,11 +1,10 @@
 .list-container {
   max-width: 800px;
   margin: 0 auto;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .list-title {
-  color: #2c3e50;
+  color: var(--text-primary);
   margin-bottom: 24px;
   font-size: 28px;
   font-weight: 600;
@@ -33,31 +32,31 @@
 }
 
 .bill {
-  background: #ffffff;
-  border: 1px solid #e1e8ed;
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 20px;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--shadow-sm);
 
   &:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-    border-color: #3498db;
-    background: #f8fafc;
+    box-shadow: var(--shadow-lg);
+    border-color: var(--primary-color);
+    background: var(--surface-muted);
 
     .copy-icon {
-      color: #3498db;
+      color: var(--primary-color);
     }
 
     .copy-btn {
-      background: #e3f2fd;
+      background: var(--accent-soft-bg);
       transform: scale(1.05);
     }
 
     .bill-name {
-      color: #2980b9;
+      color: var(--primary-color);
     }
   }
 
@@ -93,8 +92,8 @@
 }
 
 .bill-code {
-  background: #e3f2fd;
-  color: #1565c0;
+  background: var(--accent-soft-bg);
+  color: var(--accent-soft-fg);
   padding: 4px 12px;
   border-radius: 16px;
   font-size: 12px;
@@ -104,13 +103,13 @@
 }
 
 .bill-date {
-  color: #666;
+  color: var(--text-secondary);
   font-size: 14px;
   font-weight: 400;
 }
 
 .bill-name {
-  color: #2c3e50;
+  color: var(--text-primary);
   font-size: 18px;
   font-weight: 500;
   margin: 0;
@@ -136,18 +135,18 @@
   justify-content: center;
 
   &:hover {
-    background: #e3f2fd;
+    background: var(--accent-soft-bg);
     transform: scale(1.05);
   }
 
   &:active {
     transform: scale(0.95);
-    background: #bbdefb;
+    background: var(--accent-soft-bg);
   }
 }
 
 .copy-icon {
-  color: #7f8c8d;
+  color: var(--text-secondary);
   transition: all 0.3s ease;
   flex-shrink: 0;
 }

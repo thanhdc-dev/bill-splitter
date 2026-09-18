@@ -160,21 +160,120 @@ và sticky column cần một lượt xem tay trước khi merge.
 
 ---
 
-## Còn tồn đọng (cập nhật 2026-09-18, sau đợt 2)
+---
 
-1. **Nhóm 2 — phần chưa làm**: progress khi upload ảnh; snackbar "Hoàn tác" thay cho xóa
-   khoản mục/thành viên tức thì (hiện xóa bill thì có confirm, xóa khoản mục thì không —
-   không nhất quán); gộp 2 FAB chồng nhau ở `create-bill` / `bill-details`; skeleton thay
-   spinner cho `bills`.
-2. **Nhóm 3 — nền tảng**: chuẩn hóa token màu/spacing (còn nhiều chỗ hardcode `#f8fafc`,
-   `#2c3e50`, `#1976d2`...; `bills.scss` còn tự đặt `font-family: 'Segoe UI'`); rút component
-   dùng chung (form "thêm nhanh" lặp 3 lần, `.table-scroll` lặp 2 lần, form ngân hàng/Momo ở
-   `payment` và `setting` gần như trùng hoàn toàn); **sau đó** mới bật dark mode thật
-   (thêm toggle + inject `ThemeService`, vốn đang tồn tại nhưng chưa nơi nào dùng).
-3. Lightbox ảnh tự chế trong `image-upload` nên thay bằng `MatDialog` (hiện không focus trap,
+## 2026-09-18 (đợt 3)
+
+### Decision
+
+Chuẩn hóa nền tảng và bật dark mode thật.
+
+1. Thay theme **Material 2 `indigo-pink`** bằng theme **Material 3** dựng từ
+   `mat.theme()` với `mat.$azure-palette`.
+2. Định nghĩa lại token màu của app **dựa trên `--mat-sys-*`** thay vì hardcode.
+3. Rút phần lặp thành dùng chung: class `.inline-add-form` / `.data-table-scroll` ở
+   global, và component `app-bank-select` (ControlValueAccessor).
+4. `ThemeService` chuyển sang 3 trạng thái **Sáng / Tối / Theo hệ thống**, có toggle
+   trên thanh tiêu đề.
+
+Các lựa chọn 1, 3, 4 đã được người dùng xác nhận trước khi triển khai.
+
+### Before
+
+- `angular.json` nạp `@angular/material/prebuilt-themes/indigo-pink.css` (M2, 96KB,
+  **không có dark mode**). Không thể bật dark chỉ bằng CSS của app vì button, form-field,
+  tab, dialog, table đều lấy màu từ theme này.
+- ~95 chỗ hardcode màu trong SCSS component (`#f8fafc`, `#2c3e50`, `#3498db`, `#1976d2`,
+  `#e60076`, `#dcfce7`...). `bills.scss` còn tự đặt `font-family: 'Segoe UI'`.
+- `pwa-install-prompt.scss` có sẵn một block `@media (prefers-color-scheme: dark)`.
+- Khối CSS "form thêm nhanh" lặp 3 lần (expense-form, member-table, payment) và
+  `.table-scroll` lặp 2 lần, mỗi bản lệch nhau vài dòng.
+- `payment.ts` và `setting.ts` trùng nguyên khối: `interface BankItemLabel`, mảng `banks`,
+  `itemFilterCtrl`, `filteredItems`, `_filterItems()` — chỉ khác ở chỗ payment lưu
+  `bank.code` còn setting lưu `bank.bin`.
+- `ThemeService` tồn tại nhưng **không nơi nào inject**; không có UI bật/tắt.
+
+### After
+
+- `styles.scss` dùng `@use '@angular/material' as mat;` + `mat.theme((color: mat.$azure-palette, ...))`.
+  Vì config truyền vào là một palette, `theme-type` mặc định là `color-scheme` nên mọi token
+  được emit dưới dạng `light-dark()` — cả thư viện đổi màu chỉ bằng thuộc tính `color-scheme`.
+  `html { color-scheme: light }`, `html.dark { color-scheme: dark }`.
+- Token app map thẳng sang token hệ thống: `--surface-color: var(--mat-sys-surface)`,
+  `--text-primary: var(--mat-sys-on-surface)`, `--border-color: var(--mat-sys-outline-variant)`,
+  `--primary-color: var(--mat-sys-primary)`... nên **CSS tự viết cũng đổi theme miễn phí**.
+  Chỉ 3 giá trị phải override riêng cho dark: `--success-*` (xanh lá cần sáng hơn trên nền tối),
+  `--momo-color` (màu thương hiệu), và bộ `--shadow-*` (bóng phải đậm hơn khi nền tối).
+- Toàn bộ hardcode màu đã thay bằng token; `'Segoe UI'` và block `prefers-color-scheme`
+  trong PWA prompt đã bỏ.
+- `.inline-add-form` và `.data-table-scroll` nằm ở `styles.scss`; 3 component chỉ còn giữ
+  phần đặc thù (độ rộng cột, sticky, card mobile).
+- `bank-select/` (NEW): ControlValueAccessor nên dùng được trực tiếp với `formControlName`,
+  kể cả trong `formGroupName` lồng nhau của trang Cài đặt. `valueField` chọn `code` hay `bin`.
+- `ThemeService`: `mode` signal (`light | dark | system`), `isDark` computed, `effect()` bật/tắt
+  class `.dark` trên `<html>`. Thêm script đồng bộ trong `<head>` của `index.html` để áp dụng
+  theme **trước khi Angular bootstrap**, tránh nháy trắng.
+- Toggle đặt ở header, **ngoài nhánh `*ngIf` đăng nhập**, nên người chưa đăng nhập cũng dùng được
+  (sidebar cũ chỉ hiện khi đã đăng nhập).
+- README sửa lại mô tả dark mode cho khớp thực tế.
+
+Kết quả đo: CSS bundle **98.27 kB → 17.22 kB** (transfer 8.88 kB → 3.23 kB).
+
+### Reason
+
+- **M3 thay vì tự viết dark override cho M2**: M2 không có dark, tự viết sẽ phải override
+  ~15 nhóm class Material và vỡ mỗi lần nâng version. M3 cho dark mode đúng trên mọi component
+  với chi phí gần bằng 0.
+- **Token app derive từ `--mat-sys-*`**: nếu định nghĩa hai bảng màu riêng (light và dark) thì
+  mỗi lần thêm màu phải nhớ thêm ở cả hai nơi. Derive thì chỉ có một nguồn sự thật.
+- **`bank-select` là CVA thay vì nhận `[formControl]`**: trang Cài đặt bọc field trong
+  `formGroupName="bankAccount"`; CVA cho phép giữ nguyên `formControlName` ở cả hai nơi thay vì
+  phải lấy control ra bằng getter.
+- **Toggle ở header, không phải sidebar**: sidebar chỉ tồn tại khi đã đăng nhập, mà đây là app
+  dùng được không cần tài khoản.
+- **Script chống nháy trong index.html**: theme áp dụng trong `effect()` chỉ chạy sau bootstrap,
+  người chọn giao diện Tối sẽ thấy một nhịp màu trắng. Đây là giải pháp chuẩn cho vấn đề này,
+  đổi lại là một đoạn logic bị lặp ở hai nơi (đã ghi chú chéo trong cả hai file).
+
+### Alternatives Considered
+
+- **M3 palette sinh từ chính `#3f51b5`** (chạy schematic `@angular/material:theme-color`):
+  giữ đúng màu indigo hiện tại. Người dùng chọn `azure-blue` dựng sẵn cho gọn, chấp nhận màu
+  chủ đạo đổi từ indigo sang xanh azure.
+- **Giữ M2 + tự viết dark**: bị loại, xem Reason.
+- **Rút `.inline-add-form` thành component thay vì class global**: component sẽ phải nhận
+  content projection cho form field lẫn nút, phức tạp hơn mà không thêm giá trị — đây thuần
+  túy là vấn đề layout.
+- **Đưa hành vi `itemFilterCtrl.patchValue(label)` vào `bank-select`**: cả payment và setting
+  trước đây set ô tìm kiếm bằng label của ngân hàng đã chọn, khiến mở dropdown ra thì danh sách
+  đã bị lọc còn đúng 1 dòng. Đã bỏ hẳn — mở dropdown giờ thấy đủ danh sách.
+- **Bỏ `::ng-deep .mat-mdc-form-field-subscript-wrapper { display: none }`** ở `payment.scss`:
+  đã bỏ luôn trong đợt này vì nó ẩn mất chỗ hiện `mat-error`. Đổi lại mỗi field cao thêm ~20px.
+
+### Kiểm chứng
+
+`npm run build:prod` pass. `npx ng serve` khởi động sạch, HTTP 200. `npm run lint` vẫn chỉ còn
+2 lỗi `no-empty-function` có sẵn. Kiểm tra CSS output: `html.dark{color-scheme:dark}` có mặt,
+49 token `light-dark()`, `--momo-color` có cả bản light và dark, script chống nháy nằm trong
+`dist/browser/index.html`.
+
+**Chưa kiểm tra bằng mắt trên trình duyệt thật.** Cần một lượt xem tay: độ tương phản ở chế độ
+Tối (nhất là bảng, QR trên nền tối, logo ngân hàng nền trắng), và form Thanh toán / Cài đặt vẫn
+lưu đúng sau khi đổi sang `app-bank-select`.
+
+---
+
+## Còn tồn đọng (cập nhật 2026-09-18, sau đợt 3)
+
+1. **UX chưa làm**: progress khi upload ảnh; snackbar "Hoàn tác" thay cho xóa khoản mục/thành viên
+   tức thì (hiện xóa bill thì có confirm, xóa khoản mục thì không — không nhất quán); gộp 2 FAB
+   chồng nhau ở `create-bill` / `bill-details`; skeleton thay spinner cho `bills`.
+2. Lightbox ảnh tự chế trong `image-upload` nên thay bằng `MatDialog` (hiện không focus trap,
    `(keydown)` bắt mọi phím để đóng).
-4. `.mat-mdc-form-field-subscript-wrapper { display: none }` ở `expense-form` và `payment`
-   đang ẩn luôn chỗ hiện `mat-error` → form Thanh toán / Cài đặt không có phản hồi lỗi.
-   (`member-table` đã bỏ để hiện `mat-hint`.)
+3. `setting.html` có `Validators.pattern` cho số điện thoại Momo nhưng **không có `<mat-error>`**
+   nào để hiện lỗi — người dùng nhập sai không biết vì sao không lưu được.
+4. `styles.scss` còn dùng `@import './tailwind.css'` (Sass đã deprecate `@import`). Chưa đổi vì
+   `@use` không nhận file CSS và pipeline Tailwind v4 đang phụ thuộc vào cách import này.
 5. 2 lỗi lint `no-empty-function` có sẵn ở `thousand-separator.ts:28` và
    `bill-splitter.service.ts:54` — chưa đụng vì ngoài phạm vi UI.
+6. Kiểm tra tương phản chế độ Tối và kiểm thử tay form Thanh toán / Cài đặt (xem Kiểm chứng đợt 3).

@@ -13,13 +13,13 @@
 * **Xác Thực Nhanh Chóng:** Quy trình đăng nhập an toàn, tiện dụng, hỗ trợ OAuth qua **Google** và **Zalo**.
 * **Tải Lên Ảnh Biên Lai:** Cho phép đính kèm hình ảnh hóa đơn/biên lai trực tiếp vào hóa đơn được tạo để đảm bảo sự minh bạch.
 * **Hỗ Trợ PWA:** Có thể cài đặt trực tiếp như một Progressive Web App (PWA) trên các thiết bị iOS và Android để đem lại trải nghiệm mượt mà như ứng dụng gốc.
-* **Giao Diện Sáng/Tối:** Hệ thống hỗ trợ chuyển đổi giao diện nền Sáng/Tối (Dark/Light theme) tích hợp sẵn phù hợp với tùy chọn của riêng bạn.
+* **Giao Diện Sáng/Tối:** Chọn giao diện Sáng, Tối hoặc Theo hệ thống ngay trên thanh tiêu đề. Lựa chọn được ghi nhớ giữa các lần truy cập.
 * **Tối Ưu Hóa SEO:** Đảm bảo các liên kết chia sẻ hóa đơn có khả năng hiển thị trước (preview) đầy đủ, nổi bật trên các mạng xã hội.
 
 ## Nền Tảng Công Nghệ
 
 * **Framework Frontend:** Angular 20
-* **Thiết Kế Giao Diện:** Tailwind CSS 4, Angular Material, và SCSS
+* **Thiết Kế Giao Diện:** Tailwind CSS 4, Angular Material (Material 3 theming), và SCSS
 * **PWA:** Angular Service Worker
 * **Thư Viện Khác:** RxJS, `ngx-mat-select-search`
 

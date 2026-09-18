@@ -1,23 +1,89 @@
-/* Inter + Material Icons are loaded via <link> in index.html (non render-blocking).
-   The Material prebuilt theme is registered once in angular.json > styles. */
+@use '@angular/material' as mat;
+
+/* Plain CSS @import must stay the first emitted rule, so it sits above mat.theme(). */
 @import './tailwind.css';
 
+/* Material 3 theme. `theme-type: color-scheme` (the default for a palette) emits every
+   token as light-dark(), so the whole component library follows the `color-scheme`
+   property below — no separate dark stylesheet needed. */
+html {
+  @include mat.theme((color: mat.$azure-palette,
+      typography: (brand: 'Inter, "Helvetica Neue", sans-serif',
+        plain: 'Inter, "Helvetica Neue", sans-serif',
+      ),
+      density: 0,
+    ));
+
+  color-scheme: light;
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
+/* ---------------------------------------------------------------------------
+   App tokens.
+
+   These are derived from the Material system tokens instead of being hardcoded,
+   so every custom-styled surface in the app flips with the theme for free.
+   --------------------------------------------------------------------------- */
 :root {
-  --primary-color: #3f51b5;
-  --bg-color: #f8fafc; /* Rất nhạt, gần trắng */
-  --surface-color: #ffffff;
-  --text-primary: #0f172a;
-  --text-secondary: #64748b;
+  /* Surfaces */
+  --bg-color: var(--mat-sys-background);
+  --surface-color: var(--mat-sys-surface);
+  /* Muted backgrounds: table headers, inline form wells, card footers */
+  --surface-muted: var(--mat-sys-surface-container-low);
+  --surface-strong: var(--mat-sys-surface-container);
+
+  /* Text */
+  --text-primary: var(--mat-sys-on-surface);
+  --text-secondary: var(--mat-sys-on-surface-variant);
+
+  /* Accents */
+  --primary-color: var(--mat-sys-primary);
+  --on-primary-color: var(--mat-sys-on-primary);
+  --accent-soft-bg: var(--mat-sys-primary-container);
+  --accent-soft-fg: var(--mat-sys-on-primary-container);
+  --danger-color: var(--mat-sys-error);
+  /* Momo brand pink - kept as a literal because it is a brand colour, not a theme role */
+  --momo-color: #d81b60;
+
+  /* Status: "đã thanh toán" */
+  --success-bg: #dcfce7;
+  --success-fg: #16a34a;
+
+  /* Lines */
+  --border-color: var(--mat-sys-outline-variant);
+  --border-subtle: color-mix(in srgb, var(--mat-sys-outline-variant) 55%, transparent);
+
+  --overlay-color: rgb(0 0 0 / 50%);
+  --scrollbar-thumb: var(--mat-sys-outline-variant);
+  --scrollbar-thumb-hover: var(--mat-sys-outline);
+
   --border-radius-lg: 16px;
   --border-radius-md: 12px;
   --border-radius-sm: 8px;
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
-  --border-color: #e2e8f0;
 }
 
-html, body {
+html.dark {
+  --momo-color: #f472b6;
+
+  /* Green on a dark surface needs to be lighter to stay readable, and shadows
+     have to be heavier because there is less contrast against the background. */
+  --success-bg: #14532d;
+  --success-fg: #86efac;
+
+  --overlay-color: rgb(0 0 0 / 65%);
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.45), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.35);
+}
+
+html,
+body {
   height: 100%;
   margin: 0;
   background-color: var(--bg-color);
@@ -27,7 +93,8 @@ html, body {
 }
 
 /* Typography Overrides */
-.mat-typography, h1, h2, h3, h4, h5, h6 {
+.mat-typography,
+h1, h2, h3, h4, h5, h6 {
   font-family: 'Inter', "Helvetica Neue", sans-serif !important;
 }
 
@@ -69,11 +136,11 @@ html, body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: var(--scrollbar-thumb);
   border-radius: 10px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: var(--scrollbar-thumb-hover);
 }
 
 .pointer {
@@ -84,7 +151,66 @@ html, body {
   width: 100%;
 }
 
-// Media queries for mobile
+/* ---------------------------------------------------------------------------
+   Shared layout primitives.
+
+   Global (not component-scoped) so expense-form / member-table / payment can all
+   use them instead of each keeping its own copy of the same 40 lines.
+   --------------------------------------------------------------------------- */
+
+/* The "add something quickly" well above a table */
+.inline-add-form {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+  padding: 16px;
+  background-color: var(--surface-muted);
+  border-radius: var(--border-radius-md);
+  border: 1px solid var(--border-color);
+
+  .mat-mdc-form-field {
+    flex: 1;
+    min-width: 180px;
+  }
+
+  > button {
+    height: 56px;
+    padding: 0 24px !important;
+    border-radius: var(--border-radius-sm) !important;
+    font-weight: 600;
+  }
+}
+
+/* Horizontally scrollable data table wrapper */
+.data-table-scroll {
+  width: calc(100% - 2px);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: var(--border-radius-md);
+  border: 1px solid var(--border-color);
+  background: var(--surface-color);
+
+  table {
+    width: 100%;
+  }
+
+  th.mat-header-cell {
+    background-color: var(--surface-muted);
+    color: var(--text-secondary);
+    font-weight: 600;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  td.mat-cell {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-subtle);
+    color: var(--text-primary);
+  }
+}
+
 @media screen and (max-width: 600px) {
   .mat-mdc-form-field {
     width: 100%;
@@ -101,5 +227,23 @@ html, body {
 
   .mat-mdc-card-content {
     padding: 0 !important;
+  }
+
+  .inline-add-form {
+    padding: 12px;
+
+    .mat-mdc-form-field {
+      width: 100%;
+      min-width: unset;
+    }
+
+    > button {
+      width: 100%;
+      height: 48px;
+    }
+  }
+
+  .data-table-scroll {
+    border-radius: var(--border-radius-sm);
   }
 }

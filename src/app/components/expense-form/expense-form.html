@@ -1,4 +1,4 @@
-<form [formGroup]="expenseForm" (ngSubmit)="onSubmit()" class="expense-form">
+<form [formGroup]="expenseForm" (ngSubmit)="onSubmit()" class="inline-add-form">
   <mat-form-field appearance="outline">
     <mat-label>Tên khoản mục</mat-label>
     <input matInput formControlName="name" placeholder="Nhập tên khoản mục" (keydown.enter)="onSubmit()" />
@@ -33,7 +33,7 @@
     [compact]="true"
   ></app-empty-state>
   } @else {
-  <div class="table-scroll">
+  <div class="data-table-scroll expense-table">
   <table mat-table [dataSource]="expenses">
     <!-- Name Column -->
     <ng-container matColumnDef="name">

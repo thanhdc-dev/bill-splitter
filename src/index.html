@@ -40,6 +40,22 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Bill Splitter">
   <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+
+  <!-- Áp dụng giao diện Sáng/Tối trước khi Angular bootstrap để tránh nháy màu.
+       Giữ đồng bộ với ThemeService (khóa localStorage 'theme'). -->
+  <script>
+    (function () {
+      try {
+        var mode = localStorage.getItem('theme');
+        var isDark = mode === 'dark' ||
+          ((!mode || mode === 'system') &&
+            window.matchMedia('(prefers-color-scheme: dark)').matches);
+        if (isDark) {
+          document.documentElement.classList.add('dark');
+        }
+      } catch (e) { /* localStorage bị chặn: dùng giao diện sáng mặc định */ }
+    })();
+  </script>
 </head>
 <body class="mat-typography">
   <app-root></app-root>

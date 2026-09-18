@@ -1,3 +1,4 @@
+/* Layout shell (.inline-add-form) lives in styles.scss. */
 :host ::ng-deep .mat-mdc-tab {
   .mdc-tab__text-label {
     color: var(--text-secondary);
@@ -9,47 +10,18 @@
   }
 
   &.mdc-tab--active.momo .mdc-tab__text-label {
-    color: #d81b60 !important;
-    /* Soft Momo Pink */
+    color: var(--momo-color) !important;
   }
 }
 
 .payment-form {
-  display: flex;
   gap: 16px;
-  align-items: center;
-  flex-wrap: wrap;
   padding: 20px;
-  background-color: #f8fafc;
-  border-radius: var(--border-radius-md);
-  border: 1px solid var(--border-color);
-
-  .select-bank {
-    flex: 2;
-    min-width: 300px;
-  }
 
   .account-number,
   .account-name {
     flex: 1;
     min-width: 200px;
-  }
-
-  ::ng-deep .mat-mdc-form-field-subscript-wrapper {
-    display: none;
-  }
-}
-
-.bank-info {
-  display: flex;
-  align-items: center;
-  padding: 8px 0;
-
-  .bank-name {
-    flex: 1;
-    padding-left: 12px;
-    font-weight: 500;
-    color: var(--text-primary);
   }
 }
 
@@ -58,7 +30,6 @@
     padding: 12px;
     gap: 12px;
 
-    .select-bank,
     .account-number,
     .account-name {
       width: 100%;

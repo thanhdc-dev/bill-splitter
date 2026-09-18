@@ -5,30 +5,59 @@
       <span class="hidden">Logo</span>
     </h1>
 
-    <div class="header__right" *ngIf="user$ | async as user; else loginSection">
-      <span class="user-name">Xin chào, {{ user.fullname }}!</span>
+    <div class="header__right">
+      <!-- Ngoài nhánh đăng nhập để người chưa đăng nhập cũng đổi được giao diện -->
       <button
         mat-icon-button
-        class="settings-btn"
-        aria-label="settings"
-        (click)="toggleSidebar()"
-        [class.active]="sidebarOpen"
-        [attr.aria-expanded]="sidebarOpen"
+        [matMenuTriggerFor]="themeMenu"
+        aria-label="Chọn giao diện sáng tối"
+        matTooltip="Giao diện"
       >
-        <mat-icon>settings</mat-icon>
+        <mat-icon>{{ themeIcon() }}</mat-icon>
       </button>
-    </div>
+      <mat-menu #themeMenu="matMenu">
+        <button mat-menu-item (click)="setTheme('light')">
+          <mat-icon>light_mode</mat-icon>
+          <span>Sáng</span>
+          @if (themeMode() === 'light') { <mat-icon class="theme-check">check</mat-icon> }
+        </button>
+        <button mat-menu-item (click)="setTheme('dark')">
+          <mat-icon>dark_mode</mat-icon>
+          <span>Tối</span>
+          @if (themeMode() === 'dark') { <mat-icon class="theme-check">check</mat-icon> }
+        </button>
+        <button mat-menu-item (click)="setTheme('system')">
+          <mat-icon>brightness_auto</mat-icon>
+          <span>Theo hệ thống</span>
+          @if (themeMode() === 'system') { <mat-icon class="theme-check">check</mat-icon> }
+        </button>
+      </mat-menu>
 
-    <ng-template #loginSection>
-      <button
-        mat-icon-button
-        color="primary"
-        aria-label="login"
-        (click)="openLoginPopup()"
-      >
-        <mat-icon>login</mat-icon>
-      </button>
-    </ng-template>
+      <ng-container *ngIf="user$ | async as user; else loginSection">
+        <span class="user-name">Xin chào, {{ user.fullname }}!</span>
+        <button
+          mat-icon-button
+          class="settings-btn"
+          aria-label="settings"
+          (click)="toggleSidebar()"
+          [class.active]="sidebarOpen"
+          [attr.aria-expanded]="sidebarOpen"
+        >
+          <mat-icon>settings</mat-icon>
+        </button>
+      </ng-container>
+
+      <ng-template #loginSection>
+        <button
+          mat-icon-button
+          color="primary"
+          aria-label="login"
+          (click)="openLoginPopup()"
+        >
+          <mat-icon>login</mat-icon>
+        </button>
+      </ng-template>
+    </div>
   </header>
 
   <main class="main-content">

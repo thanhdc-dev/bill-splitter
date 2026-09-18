@@ -10,28 +10,11 @@
         </ng-template>
 
         <mat-card>
-          <mat-form-field class="select-bank mt-4">
-            <mat-label>Chọn ngân hàng</mat-label>
-            <mat-select formControlName="bankBin">
-              <mat-option>
-                <ngx-mat-select-search
-                  [formControl]="itemFilterCtrl"
-                  [placeholderLabel]="'Nhập mã hoặc tên để tìm kiếm'"
-                ></ngx-mat-select-search>
-              </mat-option>
-              <mat-option
-                *ngFor="let item of filteredItems | async"
-                [value]="item.bin"
-              >
-                <div class="bank-info">
-                  <div>
-                    <img [src]="item.logo" width="70" alt="logo" />
-                  </div>
-                  <div class="bank-name">{{ item.label }}</div>
-                </div>
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
+          <app-bank-select
+            class="select-bank mt-4"
+            formControlName="bankBin"
+            valueField="bin"
+          ></app-bank-select>
 
           <mat-form-field appearance="outline" class="account-name">
             <mat-label>Họ & Tên</mat-label>

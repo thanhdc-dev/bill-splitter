@@ -1,17 +1,17 @@
 :host ::ng-deep .mat-mdc-tab {
   .mdc-tab__text-label {
     // Inactive tab label color
-    color: #555;
+    color: var(--text-secondary);
   }
 
   &.mdc-tab--active .mdc-tab__text-label {
     // Active tab label color
-    color: #1976d2 !important;
+    color: var(--primary-color) !important;
   }
 
   &.mdc-tab--active.momo .mdc-tab__text-label {
     // Active tab label color
-    color: #e60076 !important;
+    color: var(--momo-color) !important;
   }
 }
 
@@ -21,7 +21,7 @@
 }
 
 .settings-title {
-  color: #2c3e50;
+  color: var(--text-primary);
   margin-bottom: 24px;
   font-size: 28px;
   font-weight: 600;
@@ -30,8 +30,8 @@
 
 .settings-wrapper {
   padding: 20px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-color);
   border-radius: 8px;
-  background-color: #f9f9f9;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+  background-color: var(--surface-muted);
+  box-shadow: var(--shadow-md);
 }

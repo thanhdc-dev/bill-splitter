@@ -14,7 +14,7 @@
 
 .image-modal-content {
   position: relative;
-  background: #fff;
+  background: var(--surface-color);
   border-radius: 8px;
   padding: 16px;
   box-shadow: 0 2px 16px rgba(0, 0, 0, 0.2);
@@ -30,7 +30,7 @@
   max-height: 70vh;
   border-radius: 4px;
   object-fit: contain;
-  background: #f8f8f8;
+  background: var(--surface-muted);
 }
 
 .close-modal-btn {
@@ -40,35 +40,35 @@
   background: transparent;
   border: none;
   font-size: 2rem;
-  color: #333;
+  color: var(--text-primary);
   cursor: pointer;
   z-index: 1;
   transition: color 0.2s;
 }
 .close-modal-btn:hover {
-  color: #e53935;
+  color: var(--danger-color);
 }
 .image-upload-container {
   width: 100%;
 
   .upload-area {
-    border: 2px dashed #cbd5e0;
+    border: 2px dashed var(--border-color);
     border-radius: 8px;
     padding: 2rem;
     text-align: center;
     cursor: pointer;
     transition: all 0.3s ease;
-    background-color: #f7fafc;
+    background-color: var(--surface-muted);
     position: relative;
 
     &:hover {
-      border-color: #4299e1;
-      background-color: #ebf8ff;
+      border-color: var(--primary-color);
+      background-color: var(--accent-soft-bg);
     }
 
     &.drag-over {
-      border-color: #4299e1;
-      background-color: #ebf8ff;
+      border-color: var(--primary-color);
+      background-color: var(--accent-soft-bg);
       transform: scale(1.02);
     }
 
@@ -80,7 +80,7 @@
       width: 64px;
       height: 64px;
       margin: 0 auto 1rem;
-      color: #a0aec0;
+      color: var(--text-secondary);
 
       svg {
         width: 100%;
@@ -92,13 +92,13 @@
       .primary-text {
         font-size: 1rem;
         font-weight: 500;
-        color: #2d3748;
+        color: var(--text-primary);
         margin-bottom: 0.5rem;
       }
 
       .secondary-text {
         font-size: 0.875rem;
-        color: #718096;
+        color: var(--text-secondary);
       }
     }
   }
@@ -115,13 +115,13 @@
       h3 {
         font-size: 1.125rem;
         font-weight: 600;
-        color: #2d3748;
+        color: var(--text-primary);
         margin: 0;
       }
 
       .clear-all-btn {
         padding: 0.5rem 1rem;
-        background-color: #fc8181;
+        background-color: var(--danger-color);
         color: white;
         border: none;
         border-radius: 6px;
@@ -130,7 +130,7 @@
         transition: background-color 0.2s;
 
         &:hover {
-          background-color: #f56565;
+          background-color: var(--danger-color);
         }
       }
     }
@@ -203,7 +203,7 @@
           }
 
           &:hover {
-            background-color: #e53e3e;
+            background-color: var(--danger-color);
             transform: scale(1.1);
           }
         }
@@ -230,7 +230,7 @@
 
           .image-size {
             display: block;
-            color: #e2e8f0;
+            color: var(--border-color);
             font-size: 0.625rem;
           }
         }

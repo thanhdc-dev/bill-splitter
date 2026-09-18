@@ -30,7 +30,7 @@
       width: 100%;
 
       th.mat-header-cell {
-        background-color: #f8fafc;
+        background-color: var(--surface-muted);
         color: var(--text-secondary);
         font-weight: 600;
         font-size: 0.875rem;
@@ -55,14 +55,14 @@
       td.mat-cell {
         color: var(--text-primary);
         font-size: 0.95rem;
-        border-bottom: 1px solid #f1f5f9;
+        border-bottom: 1px solid var(--border-subtle);
       }
 
       td.mat-footer-cell {
-        background-color: #f8fafc;
+        background-color: var(--surface-muted);
         border-top: 2px solid var(--border-color);
         font-size: 1rem;
-        color: #0f172a;
+        color: var(--text-primary);
       }
 
       .mat-column-name {
@@ -118,7 +118,7 @@
         &:hover {
           transform: translateY(-2px);
           box-shadow: var(--shadow-md);
-          border-color: #cbd5e1;
+          border-color: var(--border-color);
         }
 
         .member-name {
@@ -145,12 +145,12 @@
             height: 36px;
             width: 36px;
             border-radius: 50%;
-            background: #f1f5f9;
+            background: var(--surface-muted);
             color: var(--text-secondary);
 
             &.paid {
-              background: #dcfce7;
-              color: #16a34a;
+              background: var(--success-bg);
+              color: var(--success-fg);
             }
 
             button {
