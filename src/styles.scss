@@ -5,7 +5,15 @@
 
 /* Material 3 theme. `theme-type: color-scheme` (the default for a palette) emits every
    token as light-dark(), so the whole component library follows the `color-scheme`
-   property below — no separate dark stylesheet needed. */
+   property below — no separate dark stylesheet needed.
+
+   Angular Material's public Sass API only ships a fixed set of pre-generated M3 palettes
+   (azure, violet, rose...) — it does not expose a function to build a new palette from an
+   arbitrary hex at build time. `mat.theme()` is kept with `$azure-palette` purely so every
+   other M3 "sys" token (elevation, shape, motion, state, typography) gets generated
+   correctly; right after it we override just the *primary* role tokens that this app's
+   components actually consume via `color="primary"` (button, fab, tab, select, checkbox...)
+   with the app's own teal, so azure never actually renders anywhere. */
 html {
   @include mat.theme((color: mat.$azure-palette,
       typography: (brand: 'Inter, "Helvetica Neue", sans-serif',
@@ -15,50 +23,91 @@ html {
     ));
 
   color-scheme: light;
+
+  --mat-sys-primary: #1B6B72;
+  --mat-sys-on-primary: #FFFFFF;
+  --mat-sys-primary-container: #E3EFEE;
+  --mat-sys-on-primary-container: #123F44;
 }
 
 html.dark {
   color-scheme: dark;
+
+  /* M3 dark scheme lightens the "primary" tone and darkens "on-primary" (inverted from
+     light mode) so text/icons drawn straight in primary color stay readable on dark bg. */
+  --mat-sys-primary: #6FBFC4;
+  --mat-sys-on-primary: #00363A;
+  --mat-sys-primary-container: #1B3A3D;
+  --mat-sys-on-primary-container: #9FDEE2;
 }
 
 /* ---------------------------------------------------------------------------
    App tokens.
 
-   These are derived from the Material system tokens instead of being hardcoded,
-   so every custom-styled surface in the app flips with the theme for free.
+   Hai lớp:
+   - "raw": giá trị hex literal — nguồn sự thật của bảng màu mới (lấy cảm hứng từ tiền Việt
+     Nam: teal như tờ 500k, vàng đồng như tờ 10-20k), không suy ra từ --mat-sys-* nữa vì màu
+     giờ là tuỳ chọn riêng, không phải palette M3 có sẵn.
+   - "role": giữ nguyên tên biến cũ (--primary-color, --bg-color...) trỏ sang raw mới, để mọi
+     component đang dùng var(--primary-color) v.v. tự động đổi màu mà không cần sửa từng file.
    --------------------------------------------------------------------------- */
 :root {
-  /* Surfaces */
-  --bg-color: var(--mat-sys-background);
-  --surface-color: var(--mat-sys-surface);
+  /* Raw */
+  --ink: #1C1B1A;
+  --ink-soft: #6E6862;
+  --paper: #F7F3EC;
+  --surface-raw: #FFFFFF;
+  --surface-muted-raw: #F1ECE1;
+  --surface-strong-raw: #EAE3D5;
+  --border-raw: rgba(28, 27, 26, 0.16);
+  --border-subtle-raw: rgba(28, 27, 26, 0.08);
+
+  --teal: #1B6B72;
+  --teal-dark: #123F44;
+  --teal-soft: #E3EFEE;
+  --gold: #B8722E;
+  --gold-dark: #7A4A1D;
+  --gold-soft: #F5E6D3;
+  --green: #2F7D4F;
+  --green-soft: #E1F0E5;
+
+  /* Chỉ dùng cho số tiền/số lượng (xem .mono-amount ở phần override Material bên dưới) */
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+
+  /* Role */
+  --bg-color: var(--paper);
+  --surface-color: var(--surface-raw);
   /* Muted backgrounds: table headers, inline form wells, card footers */
-  --surface-muted: var(--mat-sys-surface-container-low);
-  --surface-strong: var(--mat-sys-surface-container);
+  --surface-muted: var(--surface-muted-raw);
+  --surface-strong: var(--surface-strong-raw);
 
-  /* Text */
-  --text-primary: var(--mat-sys-on-surface);
-  --text-secondary: var(--mat-sys-on-surface-variant);
+  --text-primary: var(--ink);
+  --text-secondary: var(--ink-soft);
 
-  /* Accents */
-  --primary-color: var(--mat-sys-primary);
-  --on-primary-color: var(--mat-sys-on-primary);
-  --accent-soft-bg: var(--mat-sys-primary-container);
-  --accent-soft-fg: var(--mat-sys-on-primary-container);
+  --primary-color: var(--teal);
+  --on-primary-color: #FFFFFF;
+  /* Soft "container" của primary — KHÔNG đổi thành gold để tránh side-effect ngầm ở những
+     nơi đang dùng biến này (badge, hover dropzone...). Gold có biến riêng --gold-soft-*,
+     chỉ dành cho CTA chính (xem Pha 1/3). */
+  --accent-soft-bg: var(--teal-soft);
+  --accent-soft-fg: var(--teal-dark);
+  --gold-soft-bg: var(--gold-soft);
+  --gold-soft-fg: var(--gold-dark);
   --danger-color: var(--mat-sys-error);
   /* Momo brand pink - kept as a literal because it is a brand colour, not a theme role */
   --momo-color: #d81b60;
 
   /* Status: "đã thanh toán" */
-  --success-bg: #dcfce7;
-  --success-fg: #16a34a;
+  --success-bg: var(--green-soft);
+  --success-fg: var(--green);
 
   /* Lines */
-  --border-color: var(--mat-sys-outline-variant);
-  --border-subtle: color-mix(in srgb, var(--mat-sys-outline-variant) 55%, transparent);
+  --border-color: var(--border-raw);
+  --border-subtle: var(--border-subtle-raw);
 
   --overlay-color: rgb(0 0 0 / 50%);
-  --scrollbar-thumb: var(--mat-sys-outline-variant);
-  --scrollbar-thumb-hover: var(--mat-sys-outline);
+  --scrollbar-thumb: var(--border-raw);
+  --scrollbar-thumb-hover: var(--ink-soft);
 
   --border-radius-lg: 16px;
   --border-radius-md: 12px;
@@ -69,13 +118,30 @@ html.dark {
 }
 
 html.dark {
+  /* "Giấy" tối thay vì đen thuần — giữ tinh thần ấm của bản sáng thay vì xám lạnh mặc định. */
+  --ink: #F3F0EA;
+  --ink-soft: #B8B2A9;
+  --paper: #17140F;
+  --surface-raw: #211D17;
+  --surface-muted-raw: #2A2419;
+  --surface-strong-raw: #332C1F;
+  --border-raw: rgba(243, 240, 234, 0.16);
+  --border-subtle-raw: rgba(243, 240, 234, 0.08);
+
+  /* --teal giữ nguyên (nền fill: FAB, ticket-stub với chữ trắng — không phụ thuộc theme).
+     --teal-dark/--teal-soft đổi vì đây là màu dùng làm CHỮ/NỀN NHẠT, cần đảo tông để đọc
+     được trên nền tối. Tương tự cho gold/green. */
+  --teal-dark: #9FDEE2;
+  --teal-soft: #1B3A3D;
+  --gold: #C98A42;
+  --gold-dark: #F0C99A;
+  --gold-soft: #3A2A18;
+  --green: #86efac;
+  --green-soft: #14532d;
+
   --momo-color: #f472b6;
 
-  /* Green on a dark surface needs to be lighter to stay readable, and shadows
-     have to be heavier because there is less contrast against the background. */
-  --success-bg: #14532d;
-  --success-fg: #86efac;
-
+  /* Shadows have to be heavier because there is less contrast against the background. */
   --overlay-color: rgb(0 0 0 / 65%);
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.45), 0 2px 4px -1px rgba(0, 0, 0, 0.3);

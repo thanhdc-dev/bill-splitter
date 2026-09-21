@@ -485,3 +485,89 @@ vector gây ra bug lệch hàng ở dropdown cũ mà không cần vá riêng.
 - **Icon thể hiện trạng thái hiện tại** (đang tối → hiện icon mặt trăng) — đây là lựa chọn được
   gợi ý là "Recommended" vì khớp hành vi nút cũ, nhưng người dùng chọn ngược lại: icon thể hiện
   trạng thái sẽ chuyển tới.
+
+## 2026-09-21 (Pha 0 — redesign "biên nhận giấy": token màu + font)
+
+### Decision
+
+Bắt đầu triển khai kế hoạch làm mới UI đã duyệt (`docs/ui-redesign-plan.md`). Pha 0 thay bảng
+màu Material 3 mặc định (`mat.$azure-palette`) bằng bảng màu riêng của app (teal + vàng đồng,
+lấy cảm hứng từ tiền Việt Nam) và thêm font mono cho số tiền/số lượng — hạ tầng token dùng
+chung cho toàn bộ các pha sau.
+
+Phát hiện trong lúc triển khai: **Angular Material 20 không có API Sass công khai để tạo một
+palette M3 mới từ hex tuỳ ý** — `@angular/material` chỉ export sẵn một số palette dựng trước
+(`$azure-palette`, `$violet-palette`...), hàm `mat.define-theme()`/`define-colors()` chỉ nhận
+*palette đã có*, không có hàm sinh palette từ 1 màu gốc. Do đó không thể "đổi tên palette" như
+kế hoạch ban đầu kỳ vọng.
+
+### Before
+
+- `styles.scss`: `@include mat.theme((color: mat.$azure-palette, ...))` — mọi token
+  `--mat-sys-primary*` (dùng bởi button/fab/tab/select/checkbox màu `color="primary"`) đều là
+  azure Material mặc định.
+- Token app (`--bg-color`, `--primary-color`, `--surface-color`...) được **suy ra** từ
+  `--mat-sys-*` (vd `--primary-color: var(--mat-sys-primary)`), nên phụ thuộc hoàn toàn vào
+  palette Material — không có cách chèn màu tuỳ chỉnh mà không đổi tên biến ở hàng chục file.
+- `index.html`: chỉ nạp font Inter; `theme-color` = `#1976d2` (xanh Material). `manifest.webmanifest`
+  cùng giá trị `#1976d2`/`#fafafa`.
+
+### After
+
+- **Giữ `mat.theme()` với `$azure-palette`** (vẫn cần nó để sinh đúng các token M3 khác: shape,
+  motion, state, typography) nhưng override ngay 4 token màu primary mà component trong app thực
+  sự dùng (`--mat-sys-primary`, `--mat-sys-on-primary`, `--mat-sys-primary-container`,
+  `--mat-sys-on-primary-container`) bằng hex teal literal, đặt trong cùng khối `html {}`/
+  `html.dark {}` (specificity `html.dark` > `html` nên tự thắng khi bật dark mode, không cần
+  `!important`) — nhờ vậy mọi component Material dùng `color="primary"` đổi sang teal mà không
+  phải generate lại palette.
+- Token app tách 2 lớp trong `:root`/`html.dark`: **raw** (hex literal mới: `--ink`, `--paper`,
+  `--teal*`, `--gold*`, `--green*`, `--font-mono`...) và **role** (giữ nguyên tên biến cũ
+  `--primary-color`, `--bg-color`, `--accent-soft-bg`... trỏ sang raw mới) — mọi component đang
+  dùng `var(--primary-color)` tự đổi màu, không phải sửa từng file.
+- `--accent-soft-bg`/`--accent-soft-fg` **giữ nguyên ý nghĩa cũ** (= teal soft, không đổi thành
+  gold) để không phá ngầm các nơi đang dùng 2 biến này cho hover (`bills.scss`,
+  `image-upload.scss`). Gold có cặp biến riêng `--gold-soft-bg`/`--gold-soft-fg`, chỉ dùng cho
+  CTA chính ở các pha sau.
+- Mỗi biến raw có 1 giá trị riêng trong `html.dark {}` (không dùng `light-dark()` cho token app,
+  giữ đúng convention cũ của file là override phẳng trong `html.dark {}`) — `--teal`/`--gold`
+  giữ nguyên giữa 2 theme (dùng làm màu NỀN fill: FAB, ticket-stub, chữ trắng lên trên — không
+  phụ thuộc theme), còn `--teal-dark`/`--teal-soft`/`--gold-dark`/`--gold-soft` đảo tông ở dark
+  mode vì đây là màu dùng làm CHỮ/NỀN NHẠT, phải đảo để đọc được trên nền tối.
+- Thêm `--font-mono: 'IBM Plex Mono', ui-monospace, ...` — nạp font qua `index.html` (gộp vào
+  cùng 1 request Google Fonts với Inter). Font này sẽ được gán cho số tiền/số lượng ở Pha 1+
+  (chưa có class `.mono-amount` ở Pha 0, đó là việc của Pha 1).
+- Đổi luôn `theme-color` trong `index.html` và `theme_color`/`background_color` trong
+  `manifest.webmanifest` từ xanh Material (`#1976d2`/`#fafafa`) sang teal/paper mới
+  (`#1B6B72`/`#F7F3EC`) — không nằm trong kế hoạch gốc nhưng cùng bản chất "hạ tầng token màu",
+  bỏ sót sẽ để lại thanh trạng thái/màu splash PWA xanh Material lạc tông với UI mới.
+- Verify: `ng build --configuration=development` pass (chỉ còn cảnh báo Sass deprecation
+  `@import`/mixed-decls đã có từ trước, không phải lỗi mới); `ng serve` khởi động sạch, không có
+  lỗi runtime trong log. **Chưa xem bằng mắt trên trình duyệt thật** (không có công cụ điều khiển
+  browser trong session này) — cần người dùng tự mở `ng serve` và soát contrast/màu ở cả 2 theme
+  trước khi qua Pha 1.
+
+### Reason
+
+Kế hoạch ban đầu giả định có thể "generate palette M3 mới từ hex" giống cách đổi
+`mat.$azure-palette` sang một palette khác — khảo sát mã nguồn `@angular/material` (bản
+`^20.0.2`) cho thấy API đó không tồn tại ở bản public. Override trực tiếp 4 CSS custom property
+`--mat-sys-primary*` là cách tối thiểu, rủi ro thấp nhất để rebrand đúng màu mà không phải tự
+tính toán lại toàn bộ ~40 token M3 (fixed/dim/container variants) cho 2 palette (primary +
+tertiary) × 2 theme — trong khi component thực tế trong app chỉ dùng 4 token đó qua
+`color="primary"`, không dùng `color="tertiary"` hay các biến thể fixed-tone ở đâu cả.
+
+### Alternatives Considered
+
+- **Tự viết hàm Sass sinh palette M3 từ hex** (dùng thuật toán HCT tone-based như Material Color
+  Utilities) — khả thi về nguyên tắc nhưng tốn công vượt xa lợi ích ở quy mô app này (chỉ 4 token
+  thực sự được dùng), tăng rủi ro sai lệch contrast on-color nếu tính tay không đúng thuật toán
+  gốc. Bỏ qua.
+- **Gọi thêm package `@material/material-color-utilities` (JS, không phải Sass) để build-time
+  generate palette rồi ghi ra file token** — khả thi nhưng thêm 1 bước build riêng ngoài Angular
+  CLI, không tương xứng với lợi ích khi chỉ cần đúng 4 token màu. Bỏ qua, có thể xem lại nếu sau
+  này cần nhiều token M3 hơn (vd dùng `color="tertiary"` thật cho gold thay vì class CSS riêng).
+- **Dùng `light-dark()` cho token app raw mới** (giống cách Material tự sinh token) thay vì
+  override phẳng trong `html.dark {}` — cân nhắc nhưng đổi khác convention hiện có của file
+  (toàn bộ token app cũ, ví dụ `--success-bg`/`--success-fg`, đều dùng pattern `html.dark {}`),
+  giữ nguyên convention để code nhất quán, dễ đọc hơn là trộn 2 kỹ thuật trong cùng file.
