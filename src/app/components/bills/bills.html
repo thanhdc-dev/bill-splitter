@@ -38,20 +38,32 @@
   <div class="bill-wrapper">
     <div
       *ngFor="let item of bills"
-      class="bill"
+      class="bill receipt-ticket"
       role="button"
       tabindex="0"
+      [title]="formatDate(item.createdAt)"
       (click)="onItemClick(item.code)"
       (keydown.enter)="onItemClick(item.code)"
       (keydown.space)="$event.preventDefault(); onItemClick(item.code)"
     >
+      <div class="bill-stub receipt-ticket__stub">
+        <span class="bill-stub__day">{{ getStubDay(item.createdAt) }}</span>
+        <span class="bill-stub__month">{{ getStubMonth(item.createdAt) }}</span>
+      </div>
+
       <div class="bill-content">
         <div class="bill-info">
           <div class="bill-header">
-            <span class="bill-code">{{ item.code }}</span>
-            <span class="bill-date">{{ formatDate(item.createdAt) }}</span>
+            <h3 class="bill-name">{{ item.name }}</h3>
+            <span class="bill-code">#{{ item.code }}</span>
           </div>
-          <h3 class="bill-name">{{ item.name }}</h3>
+
+          <div class="bill-meta">
+            <span class="bill-amount mono-amount">{{ item.data.totalAmount | currency: 'VND': 'symbol' : '1.0-0' : 'vi' }}</span>
+            <span class="bill-member-count">
+              <mat-icon>groups</mat-icon>{{ item.data.members.length }} người
+            </span>
+          </div>
         </div>
 
         <div class="actions">

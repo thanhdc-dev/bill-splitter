@@ -15,6 +15,10 @@ interface Bill {
   code: string;
   name: string;
   createdAt: string;
+  data: {
+    totalAmount: number;
+    members: { id: string }[];
+  };
 }
 
 @Component({
@@ -83,6 +87,16 @@ export class Bills implements OnInit {
   formatDate(dateString: string): string {
     const date = new Date(dateString);
     return date.toLocaleDateString('vi-VN');
+  }
+
+  /** Ngày trong tháng cho "cuống vé" — vd "12". */
+  getStubDay(dateString: string): string {
+    return new Date(dateString).getDate().toString().padStart(2, '0');
+  }
+
+  /** Tháng viết tắt cho "cuống vé" — vd "thg 9". */
+  getStubMonth(dateString: string): string {
+    return `thg ${new Date(dateString).getMonth() + 1}`;
   }
 
   async onDelete(event: Event, billCode: string) {

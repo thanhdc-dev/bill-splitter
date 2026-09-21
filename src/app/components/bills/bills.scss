@@ -31,42 +31,51 @@
   gap: 12px;
 }
 
+/* .receipt-ticket (styles.scss) cấp: display:flex, border, border-radius, overflow, nền.
+   Ở đây chỉ thêm những gì riêng của item hoá đơn: cursor, focus-visible, hover có ý nghĩa
+   trạng thái (đổi màu viền/tên) — KHÔNG dùng hover-lift (translateY) vì đó là hiệu ứng trang
+   trí không truyền tải thông tin gì. */
 .bill {
-  background: var(--surface-color);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  padding: 20px;
   cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: var(--shadow-sm);
+  transition: border-color 0.2s ease, background-color 0.2s ease;
 
   &:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-lg);
-    border-color: var(--primary-color);
+    border-color: var(--teal);
     background: var(--surface-muted);
 
+    .bill-name {
+      color: var(--teal);
+    }
+
     .copy-icon {
-      color: var(--primary-color);
+      color: var(--teal);
     }
 
     .copy-btn {
       background: var(--accent-soft-bg);
-      transform: scale(1.05);
     }
-
-    .bill-name {
-      color: var(--primary-color);
-    }
-  }
-
-  &:active {
-    transform: translateY(0);
   }
 
   &:focus-visible {
-    outline: 2px solid var(--primary-color);
+    outline: 2px solid var(--teal);
     outline-offset: 2px;
+  }
+}
+
+.bill-stub {
+  min-width: 56px;
+  padding: 12px 10px;
+
+  &__day {
+    font-family: var(--font-mono);
+    font-size: 19px;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  &__month {
+    font-size: 11px;
+    opacity: 0.85;
   }
 }
 
@@ -75,37 +84,23 @@
   justify-content: space-between;
   align-items: center;
   width: 100%;
+  padding: 16px 20px;
+  gap: 12px;
 }
 
 .bill-info {
   flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .bill-header {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 4px;
-}
-
-.bill-code {
-  background: var(--accent-soft-bg);
-  color: var(--accent-soft-fg);
-  padding: 4px 12px;
-  border-radius: 16px;
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.bill-date {
-  color: var(--text-secondary);
-  font-size: 14px;
-  font-weight: 400;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
 }
 
 .bill-name {
@@ -113,14 +108,51 @@
   font-size: 18px;
   font-weight: 500;
   margin: 0;
-  transition: color 0.3s ease;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: color 0.2s ease;
   line-height: 1.4;
+}
+
+/* Không còn pill/uppercase — chỉ là mã tham chiếu phụ, không cần nổi bật hơn tên hoá đơn. */
+.bill-code {
+  flex-shrink: 0;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.bill-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.bill-amount {
+  font-size: 14px;
+  color: var(--teal-dark);
+}
+
+.bill-member-count {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--text-secondary);
+
+  mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+  }
 }
 
 .actions {
   display: flex;
   align-items: center;
-  margin-left: 16px;
+  flex-shrink: 0;
 }
 
 .copy-btn {
@@ -157,23 +189,21 @@
     padding: 16px;
   }
 
-  .bill {
-    padding: 16px;
-  }
-
   .bill-content {
-    gap: 12px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 14px 16px;
   }
 
   .actions {
     align-self: flex-end;
-    margin-left: 0;
   }
 
   .bill-header {
     flex-direction: column;
     align-items: flex-start;
-    gap: 4px;
+    gap: 2px;
   }
 
   .bill-name {
@@ -186,8 +216,8 @@
     font-size: 24px;
   }
 
-  .bill {
-    padding: 12px;
+  .bill-content {
+    padding: 12px 14px;
   }
 
   .bill-name {

@@ -630,3 +630,60 @@ chúng — không thể override từ `bank-select.scss` hay `confirm-dialog.scs
   bỏ vì `panelClass` chỉ áp lên container overlay, không "chui" được vào nội dung `<mat-option>`/
   `.mat-mdc-dialog-surface` do chính Material component tự render, global vẫn là cách duy nhất áp
   được màu cho nội dung đó.
+
+## 2026-09-21 (Pha 2 — danh sách hoá đơn)
+
+### Decision
+
+Áp `.receipt-ticket` (Pha 1) vào item danh sách hoá đơn: bỏ badge mã bill dạng pill chữ hoa,
+bỏ hover-lift, thêm hiển thị tổng tiền + số người ngay trên list.
+
+Giả định ban đầu (lúc lập `docs/ui-redesign-plan.md`) là API `GET /bills` chưa trả
+`totalAmount`/số thành viên, dựa trên đọc `BillFindAll` cũ (chỉ có `code, name, createdAt`) — nên
+kế hoạch gốc định làm field optional + ẩn "—" chờ backend. Người dùng xác nhận lại thực tế: API
+đã trả kèm `data: { totalAmount, members, expenses, bankInfo }` cho mỗi item (giống hệt shape của
+`BillFindOne.data`), chỉ là model TypeScript trong repo chưa khai đúng. Sửa lại theo dữ liệu thật
+thay vì theo giả định trong kế hoạch.
+
+### Before
+
+- `bill-splitter.model.ts`: `BillFindAll.data` chỉ có `{ code, name, createdAt }`.
+- `bills.ts`: `interface Bill { code, name, createdAt }` — không có tổng tiền/số người.
+- `bills.html`: mỗi item là `<div class="bill">` phẳng, header có `.bill-code` (pill uppercase,
+  nền `--accent-soft-bg`) + `.bill-date` (ngày đầy đủ qua `formatDate()`), không có tổng tiền/số
+  người.
+- `bills.scss`: `.bill:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }`.
+
+### After
+
+- `bill-splitter.model.ts`: `BillFindAll.data` mỗi item thêm `data: { expenses, members,
+  bankInfo, totalAmount }` — tái dùng đúng `BillFindOneExpense`/`BillFindOneMember` đã khai sẵn
+  trong file, không định nghĩa type trùng lặp.
+- `bills.ts`: `Bill` thêm `data: { totalAmount: number; members: { id: string }[] }` (bắt buộc,
+  không optional — dữ liệu luôn có). Thêm `getStubDay()`/`getStubMonth()` (tách ngày/tháng cho
+  cuống vé).
+- `bills.html`: mỗi item giờ là `.bill.receipt-ticket` (stub teal trái hiện ngày/tháng qua
+  `.bill-stub`), mã bill chuyển xuống thành text nhỏ mono màu `--text-secondary` cạnh tên (không
+  còn pill), thêm `.bill-meta` hiện tổng tiền (`.mono-amount`, từ `item.data.totalAmount`) và số
+  người tham gia (`item.data.members.length`). Vẫn giữ `title="{{formatDate(...)}}"` trên toàn
+  item để có ngày đầy đủ khi hover (cuống vé chỉ hiện ngày/tháng, không có năm).
+- `bills.scss`: bỏ hoàn toàn `transform`/`box-shadow` khi hover, chỉ đổi `border-color`/
+  `background`/màu chữ (đúng nguyên tắc "chỉ giữ hiệu ứng có ý nghĩa trạng thái"). Layout đổi
+  theo cấu trúc `.receipt-ticket` (stub + `.bill-content` thay cho `.bill` phẳng cũ).
+- Verify: `ng build` + `ng lint` pass (0 lỗi mới; 2 lỗi lint pre-existing ở
+  `thousand-separator.ts`/`bill-splitter.service.ts` không liên quan, đã ghi từ đợt trước).
+  **Chưa xem bằng mắt** trên trình duyệt thật (không có công cụ browser trong session).
+
+### Reason
+
+Danh sách hoá đơn trước đó không cho biết tổng tiền/số người mà phải mở từng bill mới biết —
+đây là gap UX được phát hiện khi review giao diện ban đầu. Model cũ trong repo chỉ là chưa khai
+đúng field API đã trả sẵn, không phải hạn chế backend thật — sửa model để khớp thực tế thay vì
+giữ optional/ẩn dữ liệu không cần thiết.
+
+### Alternatives Considered
+
+- **Giữ field optional, ẩn "—" chờ backend** — phương án ban đầu trong kế hoạch, dựa trên giả
+  định sai về API. Bỏ sau khi người dùng xác nhận API đã trả đủ dữ liệu.
+- **Hiện ngày đầy đủ (dd/mm/yyyy) ngay trên cuống vé** thay vì chỉ ngày/tháng — bỏ vì cuống vé
+  quá hẹp (56px) để chứa cả năm mà không vỡ dòng; ngày đầy đủ vẫn xem được qua `title` khi hover.

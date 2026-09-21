@@ -64,5 +64,11 @@ export interface BillFindAll {
     code: string;
     name: string;
     createdAt: string;
+    data: {
+      expenses: BillFindOneExpense[];
+      members: BillFindOneMember[];
+      bankInfo: BankInfoItem;
+      totalAmount: number;
+    };
   }[];
 }
