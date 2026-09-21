@@ -37,8 +37,10 @@
 
   .mat-column-totalAmount {
     width: 120px;
-    font-weight: 600;
-    color: var(--primary-color);
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--teal-dark);
     text-align: right;
   }
 
@@ -67,8 +69,8 @@
 .member-card {
   background: var(--surface-color);
   border: 1px solid var(--border-color);
+  border-left: 3px solid var(--teal);
   border-radius: var(--border-radius-md);
-  box-shadow: var(--shadow-sm);
   overflow: hidden;
 
   &__header {
@@ -147,9 +149,25 @@
   }
 
   &__total {
+    font-family: var(--font-mono);
     font-weight: 700;
     font-size: 1.05rem;
-    color: var(--primary-color);
+    font-variant-numeric: tabular-nums;
+    color: var(--teal-dark);
   }
+}
+
+/* Checkbox "Đã thanh toán" checked: teal mặc định của theme -> đổi sang xanh lá
+   (trạng thái "đã thanh toán"). Tên biến xác nhận qua grep node_modules/@angular/material
+   (checkbox/_m3-checkbox.scss, _m2-checkbox.scss): các key `checkbox-selected-*`
+   được map thành custom property `--mdc-checkbox-selected-*`. */
+mat-checkbox.mat-mdc-checkbox {
+  --mdc-checkbox-selected-icon-color: var(--green);
+  --mdc-checkbox-selected-focus-icon-color: var(--green);
+  --mdc-checkbox-selected-hover-icon-color: var(--green);
+  --mdc-checkbox-selected-pressed-icon-color: var(--green);
+  --mdc-checkbox-selected-focus-state-layer-color: var(--green);
+  --mdc-checkbox-selected-hover-state-layer-color: var(--green);
+  --mdc-checkbox-selected-pressed-state-layer-color: var(--green);
 }
 

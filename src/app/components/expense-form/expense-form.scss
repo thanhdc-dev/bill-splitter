@@ -11,6 +11,8 @@
     text-align: right;
     font-weight: 600;
     color: var(--primary-color);
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
   }
 
   .mat-column-actions {

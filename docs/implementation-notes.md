@@ -750,3 +750,102 @@ khả năng lưu, chỉ mất khả năng "lưu mà chưa muốn lộ link" — 
   nội bộ cùng chạy song song có thể gây trùng lặp sự kiện/focus không mong muốn.
 - **Giữ 2 FAB, chỉ thu nhỏ nút lưu phụ** (phương án 2 trong kế hoạch) — người dùng chọn phương
   án 1 (chỉ 1 CTA) ở bước lập kế hoạch vì đơn giản hơn và không thực sự mất chức năng.
+
+## 2026-09-21 (Pha 4-12 — áp theme mới cho các component còn lại, chạy song song)
+
+### Decision
+
+Sau Pha 3, các pha còn lại (4: expense-form, 5: member-table + quantity-selector, 6:
+result-display, 7: payment + bank-select, 8: bank + qr-popup, 9: image-upload + image-lightbox,
+10: setting + 3 dialog, 11-12: pwa-install-prompt/empty-state/app shell) đều thao tác trên các
+tập file KHÔNG chồng lấp nhau (không có 2 pha nào cùng sửa 1 file, trừ 1 điểm giao duy nhất:
+Pha 6 cần thêm 1 `id` vào `create-bill.html` — đã xác định rõ trước và giao đúng cho 1 nhánh).
+Theo yêu cầu của người dùng ("phase nào có thể song song thì thực hiện song song"), toàn bộ 8
+nhóm việc trên được giao cho 8 agent chạy nền độc lập cùng lúc, mỗi agent chỉ đọc/sửa đúng phạm
+vi file của mình, không tự ý `ng build`/`ng lint`/git — người điều phối (tôi) tự build/lint/
+review/ghi tài liệu/commit tập trung sau khi tất cả agent hoàn tất, để tránh nhiều agent cùng
+sửa `styles.scss`/`docs/implementation-notes.md` gây xung đột.
+
+### Before / After (tóm tắt theo từng pha — chi tiết đầy đủ xem diff git của từng file)
+
+- **Pha 4 — `expense-form.scss`**: `.mat-column-amount` thêm `font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;` (số tiền khoản mục), giữ nguyên `mat-table`.
+- **Pha 5 — `quantity-selector.scss`**: sửa bug `background: white` hardcode → `var(--surface-color)`;
+  thêm font mono cho `.quantity-input` (giữ `text-align:center`, khác số tiền tĩnh luôn `right`).
+  **`member-table.scss`**: `.mat-column-totalAmount`/`.member-card__total` thêm font mono +
+  đổi màu `var(--primary-color)` → `var(--teal-dark)`; `.member-card` bỏ `box-shadow`, thêm
+  `border-left: 3px solid var(--teal)` (gợi "cuống vé" mà không cần đổi cấu trúc); checkbox "Đã
+  thanh toán" override 7 CSS custom property MDC (`--mdc-checkbox-selected-*`, tên đã xác nhận
+  qua đọc `node_modules/@angular/material/checkbox/_m3-checkbox.scss` — không đoán) sang
+  `var(--green)`.
+- **Pha 6 — `result-display.html`/`.scss`/`.ts`**: đổi bảng "Khoản mục" từ `mat-table`
+  (`CdkTable`) sang thẻ `<table>` HTML thường + `*ngFor` (giữ ngữ nghĩa accessibility có sẵn của
+  bảng HTML, không cần tự thêm ARIA) — mỗi dòng dùng `.leader-row` (dotted-leader thật giữa tên
+  và số tiền), thông tin "người tham gia"/"mỗi người trả" gộp vào `.expense-meta` (dòng phụ nhỏ,
+  muted) dưới tên khoản mục, không mất thông tin so với bảng 4 cột cũ. Sticky header/footer tự
+  làm bằng `position: sticky` (theo tiền lệ kỹ thuật box-shadow giả viền đã dùng ở cột `name`
+  sticky trong `member-table.scss`). "Mỗi người cần trả" đổi sang ticket-lite
+  (`.member-amount__stub` dải teal-soft hiện chữ cái đầu tên + `.member-amount__body`), bỏ
+  hover-lift, `--notch-bg: var(--surface-color)` vì nằm trong `mat-card`. **Sửa kèm**:
+  `onSettingClick()` trước đó gọi `billTabControlService.changeTab(1)` để nhảy tab "Thanh toán"
+  — nhưng Pha 3 đã bỏ Thanh toán khỏi tab hẳn, nên đổi thành
+  `document.getElementById('payment-section')?.scrollIntoView(...)`; thêm `id="payment-section"`
+  vào đúng `<div class="payment">` trong `create-bill.html` (đây là điểm giao duy nhất giữa 2
+  pha, đã lường trước khi giao việc). Xoá import `BillTabControlService`/`MatTableModule`/
+  `displayedColumns` không còn dùng. Tôi (người điều phối) review thêm 1 chỗ sau khi agent xong:
+  `.amount` (số tiền mỗi người trong "Mỗi người cần trả") bị đổi màu về `var(--text-primary)`
+  mặc định, mất nhấn — sửa lại thành `var(--teal-dark)` + `font-weight:700` để khớp mức nhấn của
+  các số tiền khác trong trang (bills list, member-table, expense-form đều tô teal-dark).
+- **Pha 7 — `payment.html`**: thêm class `.mono-text` (đã có sẵn global) vào 3 input số tài
+  khoản/số điện thoại. `bank-select.scss` không cần sửa (đã review, không có hardcode).
+- **Pha 8 — `bank.scss`**: `.container` giảm từ `--border-radius-lg`+`--shadow-md` xuống
+  `--border-radius-md`+`--shadow-sm`; ảnh QR bỏ hẳn `border-radius`/`box-shadow`, chỉ còn viền
+  mảnh. **`qr-popup.scss`**: sửa bug `:host{width:"400px";max-width:"90vw"}` (quote sai khiến vô
+  hiệu) → `width:400px; max-width:90vw;`. `.qr-image{background:white}` **giữ nguyên** — đã kiểm
+  tra `qr.service.ts`/`result-display.ts`: ảnh QR do backend generate động qua endpoint
+  `/qr/bank`/`/qr/momo` (ngoài repo frontend), không thể xác nhận chắc chắn ảnh có nền đục hay
+  trong suốt, nên giữ nguyên theo đúng nguyên tắc "không chắc thì không đổi, QR cần nền trắng
+  thật để máy quét đọc được". Nút Download đổi `mat-raised-button` → `mat-stroked-button` (vẫn
+  teal, không dùng gold vì đây không phải CTA chính toàn app).
+- **Pha 9 — `image-upload.scss`**: `box-shadow` hardcode rgba → `var(--shadow-sm)`;
+  `.remove-btn` nền đen mờ hardcode → `var(--overlay-color)`; bỏ `transform: scale(1.05)` hover
+  nhưng giữ nguyên phần đổi `opacity` hiện nút xoá (có ý nghĩa chức năng). `image-lightbox.scss`/
+  `.html`: đọc toàn bộ, không có gì cần sửa (đã dùng biến sẵn từ trước).
+- **Pha 10 — `setting.scss`**: xoá dead code `.settings-wrapper` (xác nhận không dùng trong
+  `setting.html`); `.form-error-hint` đổi `var(--mat-sys-error)` → `var(--danger-color)`.
+  **`edit-field-dialog.scss`** (trước đó rỗng hoàn toàn): thêm style dialog cơ bản + class
+  `.mono-amount` áp cho input khi `type` là `amount`/`number` (không áp cho `text`).
+  **`confirm-dialog.scss`**: không cần sửa (đã review). **`login-dialog.scss`**: thêm rule
+  `.zalo-btn` bị thiếu từ trước (copy đúng layout `.google-btn`, không đổi màu icon brand Zalo).
+- **Pha 11-12 — `app.scss`**: bỏ `.settings-btn:hover/.active { transform: rotate(90deg) }`
+  (animation không có ý nghĩa trạng thái), thay bằng đổi `background-color: var(--surface-muted)`.
+  **`pwa-install-prompt.scss`**: đổi 1 giá trị hardcode `border-radius: 12px` → `var(--border-radius-md)`
+  (đúng cùng giá trị, chỉ đổi nguồn biến); animation `slideUp` giữ nguyên. **`empty-state.scss`**:
+  đọc toàn bộ, xác nhận không cần sửa (đã đúng theme từ trước).
+- Verify (tôi tự chạy sau khi tổng hợp tất cả nhánh, KHÔNG phải agent tự chạy): `ng build
+  --configuration=development` và `ng lint` đều pass — 0 lỗi mới, chỉ còn 2 lỗi lint pre-existing
+  không liên quan (`thousand-separator.ts`, `bill-splitter.service.ts`, đã ghi từ các đợt trước).
+  **Chưa xem bằng mắt** trên trình duyệt thật (không có công cụ browser trong session).
+
+### Reason
+
+Các pha này sửa những tập file hoàn toàn tách biệt (không có 2 pha nào cùng sửa 1 file ngoài 1
+điểm giao đã lường trước), nên chạy song song bằng nhiều agent độc lập giảm đáng kể thời gian so
+với làm tuần tự từng pha, đúng yêu cầu của người dùng. Giữ việc build/lint/ghi tài liệu/commit ở
+người điều phối (không giao cho từng agent) để tránh nhiều tiến trình cùng ghi vào 1 file
+(`styles.scss` đã hoàn tất từ Pha 0-1 nên không ai cần sửa lại; `docs/implementation-notes.md`
+nếu 8 agent cùng sửa sẽ conflict).
+
+### Alternatives Considered
+
+- **Giao luôn việc ghi `docs/implementation-notes.md` cho từng agent** — bị loại vì 8 agent viết
+  đồng thời vào cùng 1 file rất dễ ghi đè/conflict lẫn nhau (agent chạy nền không thấy thay đổi
+  của agent khác); gộp về 1 người viết sau khi tổng hợp toàn bộ kết quả an toàn hơn.
+- **Để mỗi agent tự chạy `ng build`/`ng lint` sau khi sửa** — bị loại vì nhiều tiến trình `ng
+  build` chạy đồng thời có thể cùng ghi vào 1 thư mục `dist/` (outputPath chung), dễ gây file bị
+  ghi đè nửa chừng/kết quả sai; build 1 lần sau khi tất cả agent xong vừa an toàn vừa đủ để phát
+  hiện lỗi tổng thể.
+- **Dùng `.receipt-ticket` đúng 100% (có notch thật) cho `.member-card` (Pha 5) và
+  `.member-amount` (Pha 6)** — cả 2 nhánh đều chọn đơn giản hoá thành viền mảnh + dải màu/stub
+  không notch, vì cấu trúc nội dung (header/list/footer nhiều phần) phức tạp hơn ticket đơn giản
+  trong mockup gốc — ưu tiên đơn giản/an toàn hơn đúng tuyệt đối hình mẫu.

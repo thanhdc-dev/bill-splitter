@@ -36,14 +36,14 @@
 .settings-btn {
   padding: 0.5rem;
   border-radius: 50%;
-  transition: transform 0.3s ease;
+  transition: background-color 0.3s ease;
   display: flex;
   align-items: center;
   justify-content: center;
 
   &:hover,
   &.active {
-    transform: rotate(90deg);
+    background-color: var(--surface-muted);
   }
 }
 

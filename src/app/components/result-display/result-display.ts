@@ -2,7 +2,6 @@ import { Component, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AsyncPipe, CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
-import { MatTableModule } from '@angular/material/table';
 import { BillSplitterService } from '../../services/bill-splitter.service';
 import { ExpenseItem, Member } from '../../models/bill-splitter.model';
 import { Observable } from 'rxjs';
@@ -11,7 +10,6 @@ import { QrPopupComponent } from '../qr-popup/qr-popup';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { removeVietnameseTones, roundedToThousand } from '../../shared/helpers';
 import { BankInfoItem } from '../../models/bank.model';
-import { BillTabControlService } from '../bill-details/bill-tab-control.service';
 import { MatButtonModule } from '@angular/material/button';
 import { QRService } from '../../services';
 import { EmptyStateComponent } from '../empty-state/empty-state';
@@ -23,7 +21,6 @@ import { EmptyStateComponent } from '../empty-state/empty-state';
     CommonModule,
     AsyncPipe,
     MatCardModule,
-    MatTableModule,
     MatIconModule,
     MatDialogModule,
     MatButtonModule,
@@ -34,7 +31,6 @@ import { EmptyStateComponent } from '../empty-state/empty-state';
 })
 export class ResultDisplayComponent implements OnInit {
   private readonly dialog = inject(MatDialog);
-  private readonly billTabControlService = inject(BillTabControlService);
   private readonly billSplitterService = inject(BillSplitterService);
   private readonly qrService = inject(QRService);
 
@@ -42,7 +38,6 @@ export class ResultDisplayComponent implements OnInit {
   billName = '';
   expenses$: Observable<ExpenseItem[]>;
   members$: Observable<Member[]>;
-  displayedColumns: string[] = ['name', 'amount', 'participants', 'perPerson'];
   bankInfo$: Observable<BankInfoItem>;
   bankInfo!: BankInfoItem;
   isShowBankInfo = false;
@@ -161,8 +156,11 @@ export class ResultDisplayComponent implements OnInit {
   }
 
   onSettingClick() {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    this.billTabControlService.changeTab(1); // giả sử tab Setting có index là 1
+    // Thanh toán không còn là tab riêng (Pha 3) — cuộn tới phần thanh toán
+    // (luôn hiện full-width dưới trong create-bill.html) thay vì đổi tab.
+    document
+      .getElementById('payment-section')
+      ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   isEditable() {

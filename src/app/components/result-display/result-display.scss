@@ -19,72 +19,64 @@
 
   .table-container {
     width: 100%;
+    max-height: 480px;
     overflow-x: auto;
+    overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     border-radius: var(--border-radius-md);
     border: 1px solid var(--border-color);
     background: var(--surface-color);
     box-shadow: var(--shadow-sm);
 
-    table {
+    .expense-receipt-table {
       width: 100%;
+      border-collapse: collapse;
 
-      th.mat-header-cell {
+      thead th {
+        position: sticky;
+        top: 0;
+        z-index: 1;
         background-color: var(--surface-muted);
         color: var(--text-secondary);
         font-weight: 600;
         font-size: 0.875rem;
-        border-bottom: 1px solid var(--border-color);
+        text-align: left;
+        padding: 16px 20px;
+        /* Giả viền dưới bằng box-shadow (như cột name sticky trong member-table.scss) vì
+           border thường bị header sticky "che" khi cuộn. */
+        box-shadow: 0 1px 0 0 var(--border-color);
       }
 
-      th.mat-header-cell,
-      td.mat-cell,
-      td.mat-footer-cell {
-        padding: 16px 16px;
-        white-space: nowrap;
-
-        &:first-child {
-          padding-left: 20px;
-        }
-
-        &:last-child {
-          padding-right: 20px;
-        }
-      }
-
-      td.mat-cell {
+      tbody td {
+        padding: 14px 20px;
         color: var(--text-primary);
-        font-size: 0.95rem;
         border-bottom: 1px solid var(--border-subtle);
       }
 
-      td.mat-footer-cell {
+      tfoot td {
+        padding: 16px 20px;
         background-color: var(--surface-muted);
         border-top: 2px solid var(--border-color);
-        font-size: 1rem;
-        color: var(--text-primary);
+        position: sticky;
+        bottom: 0;
       }
 
-      .mat-column-name {
-        min-width: 130px;
-      }
-
-      .mat-column-amount {
-        min-width: 120px;
+      .leader-row__value {
         text-align: right;
-        font-weight: 500;
       }
 
-      .mat-column-participants {
-        min-width: 160px;
+      .leader-row--total .leader-row__value {
+        font-size: 1.05rem;
+      }
+
+      .expense-meta {
+        margin-top: 4px;
+        font-size: 0.8rem;
         color: var(--text-secondary);
-      }
 
-      .mat-column-perPerson {
-        min-width: 130px;
-        text-align: right;
-        color: var(--primary-color);
-        font-weight: 600;
+        .expense-meta__sep {
+          margin: 0 6px;
+        }
       }
     }
   }
@@ -105,20 +97,37 @@
       gap: 16px;
 
       .member-amount {
-        background: var(--surface-color);
-        padding: 20px;
-        border-radius: var(--border-radius-md);
+        /* Ticket-lite: mượn motif .receipt-ticket nhưng thu nhỏ, không notch, vì nằm
+           trong mat-card (nền --surface-color) — dùng viền mảnh thay cho shadow/hover-lift. */
+        --notch-bg: var(--surface-color);
         display: flex;
-        justify-content: space-between;
-        align-items: center;
+        align-items: stretch;
         border: 1px solid var(--border-color);
-        box-shadow: var(--shadow-sm);
-        transition: all 0.2s ease;
+        border-radius: var(--border-radius-md);
+        background: var(--surface-color);
+        overflow: hidden;
 
-        &:hover {
-          transform: translateY(-2px);
-          box-shadow: var(--shadow-md);
-          border-color: var(--border-color);
+        .member-amount__stub {
+          flex: 0 0 auto;
+          width: 36px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: var(--teal-soft);
+          color: var(--teal-dark);
+          font-family: var(--font-mono);
+          font-weight: 700;
+          text-transform: uppercase;
+        }
+
+        .member-amount__body {
+          flex: 1;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 16px 20px;
+          gap: 12px;
+          min-width: 0;
         }
 
         .member-name {
@@ -132,9 +141,9 @@
           align-items: center;
 
           .amount {
-            color: var(--primary-color);
+            color: var(--teal-dark);
             font-weight: 700;
-            font-size: 1.15rem;
+            font-size: 1.1rem;
             margin-right: 8px;
           }
 
@@ -172,21 +181,12 @@
     .table-container {
       border-radius: var(--border-radius-sm);
 
-      table {
-
-        th.mat-header-cell,
-        td.mat-cell,
-        td.mat-footer-cell {
+      .expense-receipt-table {
+        thead th,
+        tbody td,
+        tfoot td {
           padding: 12px 10px;
           font-size: 0.875rem;
-
-          &:first-child {
-            padding-left: 12px;
-          }
-
-          &:last-child {
-            padding-right: 12px;
-          }
         }
       }
     }
