@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
+  FormGroupDirective,
   Validators,
   ReactiveFormsModule,
 } from '@angular/forms';
@@ -12,8 +13,7 @@ import { BillSplitterService } from '../../services/bill-splitter.service';
 import { CommonModule } from '@angular/common';
 import { ThousandSeparatorDirective } from '../../directives/thousand-separator';
 import { Observable } from 'rxjs';
-import { ExpenseItem } from '../../models/bill-splitter.model';
-import { MatTableModule } from '@angular/material/table';
+import { ExpenseItem, Member } from '../../models/bill-splitter.model';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -30,7 +30,6 @@ import { EmptyStateComponent } from '../empty-state/empty-state';
     MatInputModule,
     MatButtonModule,
     ThousandSeparatorDirective,
-    MatTableModule,
     MatIconModule,
     EmptyStateComponent,
   ],
@@ -43,9 +42,9 @@ export class ExpenseFormComponent {
   private readonly billSplitterService = inject(BillSplitterService);
   private readonly snackBar = inject(MatSnackBar);
 
-  displayedColumns: string[] = ['name', 'amount', 'actions'];
   expenseForm: FormGroup;
   expenses$: Observable<ExpenseItem[]>;
+  members$: Observable<Member[]>;
 
   constructor() {
     this.expenseForm = this.fb.group({
@@ -54,6 +53,15 @@ export class ExpenseFormComponent {
       amount: ['', [Validators.required, Validators.min(0)]],
     });
     this.expenses$ = this.billSplitterService.expenses$;
+    this.members$ = this.billSplitterService.members$;
+  }
+
+  /** Số người đang chọn tham gia khoản mục này — hiện như dòng phụ dưới tên món. */
+  getParticipantCount(expense: ExpenseItem, members: Member[]): number {
+    return members.reduce(
+      (total, member) => total + (member.participations.get(expense.id) || 0),
+      0
+    );
   }
 
   removeExpense(expenseId: string) {
@@ -109,12 +117,20 @@ export class ExpenseFormComponent {
     });
   }
 
-  onSubmit() {
+  onSubmit(formDirective?: FormGroupDirective) {
     if (this.expenseForm.valid) {
       const { name, amount } = this.expenseForm.value;
       const rawAmount = +amount.replace(/\s/g, '');
       this.billSplitterService.addExpense(name, rawAmount);
-      this.expenseForm.reset();
+      // `expenseForm.reset()` alone clears values but NOT the directive's `submitted` flag,
+      // so Material's default ErrorStateMatcher (`invalid && (touched || submitted)`) keeps
+      // showing red error state on the now-empty fields after every successful add.
+      // `resetForm()` clears both.
+      if (formDirective) {
+        formDirective.resetForm();
+      } else {
+        this.expenseForm.reset();
+      }
     }
   }
 }

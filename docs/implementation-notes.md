@@ -934,3 +934,72 @@ là trường hợp AGENTS.md cảnh báo: kiểm tra bằng mắt trên trình 
 - **Đổi sang dùng `mat.define-theme` với cấu hình primary tuỳ biến thay vì override token sau
   khi build** — đã cân nhắc lại ở đợt rà soát này nhưng vẫn giữ quyết định gốc từ Pha 0 (không
   có API Sass công khai để build palette M3 từ hex tuỳ ý ở bản `^20.0.2`).
+
+## 2026-09-21 (Làm lại card "Khoản mục" cho đúng mockup đã duyệt)
+
+### Decision
+
+Người dùng đối chiếu ảnh chụp app thật với ảnh mockup gốc (`CreateBill.dc.html` đã duyệt ở bước
+lập kế hoạch) và chỉ ra `expense-form` (card "Khoản mục") không giống thiết kế. Đúng — kế hoạch
+Pha 4 (`docs/ui-redesign-plan.md`) cố tình giới hạn phạm vi rất hẹp ("chỉ thêm `.mono-amount`
+cho cột số tiền, giữ nguyên `mat-table`") để giảm rủi ro, nhưng hệ quả là phần khung card
+(tiêu đề + icon), nút thêm gọn kiểu icon, và danh sách item kiểu receipt (tên + số người tham
+gia + số tiền + xoá) chưa từng được làm — component vẫn là `mat-table` + form field to + nút
+"Thêm khoản mục" dạng text đầy đủ, khác hẳn mockup. Làm lại đúng theo mockup lần này.
+
+### Before
+
+- `expense-form.html`: `<form class="inline-add-form">` (class layout dùng chung toàn app) với
+  2 `mat-form-field` to (có `mat-label` nổi) + `button mat-raised-button` text "Thêm khoản mục".
+  Danh sách hiển thị qua `<table mat-table>` 3 cột (name/amount/actions), mỗi dòng có nút bút
+  chì riêng để sửa tên/tiền, không có thông tin số người tham gia.
+- `expense-form.ts`: chỉ có `expenses$`, không có `members$` — không đủ dữ liệu để tính số người
+  tham gia mỗi khoản mục.
+- `onSubmit()` gọi `this.expenseForm.reset()` — chỉ xoá giá trị, không xoá cờ `submitted` của
+  `FormGroupDirective`, nên sau lần submit đầu tiên, các ô trống sau mỗi lần thêm mới đều hiện
+  viền đỏ lỗi validation (ErrorStateMatcher mặc định của Material xét `invalid && (touched ||
+  submitted)`) dù người dùng chưa động vào gì — lỗi có sẵn từ trước, chỉ lộ rõ hơn khi field co
+  gọn lại theo thiết kế mới (không có `mat-label` che bớt).
+
+### After
+
+- `expense-form.html`: viết lại theo đúng cấu trúc mockup — `.expense-card` (khung viền mảnh,
+  bo góc) chứa `<h2>` icon `receipt` + "Khoản mục", hàng nhập liệu gọn (`input` không
+  `mat-label`, chỉ placeholder + `aria-label`, ô số tiền cố định 130px) và `mat-mini-fab` icon
+  "+" (thay nút text to). Danh sách đổi từ `mat-table` sang `<ul class="expense-list">` +
+  `*ngFor`: mỗi dòng có tên (giờ là `<button>` bấm để sửa, thay nút bút chì riêng — gọn hơn,
+  vẫn giữ đúng chức năng sửa qua `EditFieldDialogComponent`, chỉ đổi cách kích hoạt), dòng phụ
+  nhỏ "`N` người ăn chung" (thông tin MỚI, khớp mockup), số tiền (`.mono-amount`, cũng bấm để
+  sửa) và nút xoá mờ (opacity 0.6→1 khi hover, theo đúng pattern cũ).
+- `expense-form.ts`: thêm `members$` (từ `billSplitterService.members$`) và
+  `getParticipantCount(expense, members)` (giống hệt cách tính ở `result-display.ts`) để bind
+  "N người ăn chung". Sửa `onSubmit()` nhận thêm `FormGroupDirective` (qua template ref
+  `#expenseFormDirective="ngForm"`) và gọi `formDirective.resetForm()` thay vì
+  `expenseForm.reset()` — xoá luôn cờ `submitted`, hết viền đỏ dai dẳng sau mỗi lần thêm.
+- `expense-form.scss`: viết mới hoàn toàn theo khung `.expense-card`, không còn phụ thuộc
+  `.inline-add-form`/`.data-table-scroll` (2 class layout dùng chung của `styles.scss`) — nút
+  "+" tô `var(--teal)` khi hợp lệ, `var(--surface-muted)` khi disabled (không dùng `.fab-gold`
+  vì đây không phải CTA chính toàn app).
+- Verify: `ng build` + `ng lint` pass. Xem bằng browser thật (skill `run-web`) ở cả 2 theme,
+  cả mobile (390px, hàng nhập liệu tự xuống dòng) và desktop, xác nhận: nút "+" đổi màu đúng
+  theo trạng thái hợp lệ/disabled, viền đỏ không còn lặp lại sau khi thêm khoản mục, layout
+  khớp sát mockup (tiêu đề icon, danh sách kiểu receipt có số người tham gia).
+
+### Reason
+
+Kế hoạch Pha 4 chủ động thu hẹp phạm vi để giảm rủi ro ở giai đoạn đó (ưu tiên làm
+`result-display` — màn hình trọng tâm — trước), nhưng việc đó vô tình bỏ sót phần khung/danh
+sách của `expense-form` dù đây cũng là 1 trong 2 card chính ở màn hình tạo hoá đơn theo mockup
+đã duyệt. Người dùng phát hiện qua so sánh ảnh trực tiếp — đúng loại sai lệch mà lẽ ra nên bắt
+được ở bước rà soát trước đó nếu so ảnh mockup cạnh ảnh app thật thay vì chỉ soát theo hạng mục
+kỹ thuật (dark mode, breakpoint, override Material...).
+
+### Alternatives Considered
+
+- **Giữ nút bút chì riêng để sửa tên/tiền** (như bản cũ) thay vì bấm trực tiếp vào text — bị bỏ
+  vì mockup không có icon bút chì nào, thêm 2 icon nữa mỗi dòng sẽ rối hơn hẳn so với thiết kế;
+  bấm-để-sửa là pattern phổ biến và giữ nguyên được chức năng.
+- **Không sửa bug viền đỏ, để nguyên phạm vi chỉ đổi UI** — cân nhắc nhưng bug này LỘ RÕ ngay
+  trong ảnh chụp khi làm theo thiết kế mới (ô nhỏ lại, không còn `mat-label` che bớt phần viền),
+  và fix chỉ tốn vài dòng (đổi `reset()` → `resetForm()`) nên sửa luôn thay vì để lại một sai
+  lệch mới với mockup (mockup không có trạng thái lỗi đỏ dai dẳng).
