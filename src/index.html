@@ -48,8 +48,7 @@
       try {
         var mode = localStorage.getItem('theme');
         var isDark = mode === 'dark' ||
-          ((!mode || mode === 'system') &&
-            window.matchMedia('(prefers-color-scheme: dark)').matches);
+          (!mode && window.matchMedia('(prefers-color-scheme: dark)').matches);
         if (isDark) {
           document.documentElement.classList.add('dark');
         }

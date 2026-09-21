@@ -423,3 +423,65 @@ pass, `ng serve` khởi động sạch (HTTP 200).
 6. **0 file test** trong toàn dự án (`*.spec.ts`), dù Karma/Jasmine đã cấu hình sẵn trong
    `angular.json`. Không có cách nào chạy test tự động để bảo vệ các thay đổi qua 4 đợt —
    toàn bộ xác nhận đến từ `tsc --noEmit`, `ng lint`, `ng build` và đọc code, không phải test.
+
+## 2026-09-21
+
+### Decision
+
+Sau khi mở app thật và phân tích UX của `#themeMenu` (dropdown 3 lựa chọn Sáng/Tối/Theo hệ
+thống, đánh dấu bằng icon ✓), phát hiện `.theme-check { margin-left: auto }` không đẩy được
+dấu tích ra sát mép phải hàng vì wrapper flex nội bộ của `mat-menu-item` — khiến nhãn text của
+3 dòng bị lệch hàng với nhau (bug thật, thấy được qua screenshot).
+
+Người dùng chọn đơn giản hoá thay vì vá riêng bug lệch hàng: bỏ hẳn chế độ `system`, chỉ còn
+2 trạng thái `light`/`dark`, thay dropdown bằng 1 nút toggle duy nhất trên header.
+
+Hai điểm chưa rõ trong yêu cầu gốc đã hỏi lại người dùng và chốt:
+- **Persist**: người dùng mới (chưa có `localStorage.theme`) → detect `prefers-color-scheme`
+  một lần duy nhất, lưu ngay vào `localStorage`. Từ sau đó app không còn theo dõi thay đổi giao
+  diện hệ thống nữa (bỏ hẳn `matchMedia('change')` listener) — đổi trạng thái chỉ qua nút bấm.
+- **Icon**: nút hiển thị icon của giao diện **sẽ chuyển tới** khi bấm (đang sáng → hiện icon mặt
+  trăng), không phải giao diện hiện tại — nhấn mạnh hành động thay vì trạng thái.
+
+### Before
+
+- `ThemeMode = 'light' | 'dark' | 'system'`; `ThemeService` giữ 2 signal (`modeSignal` +
+  `systemPrefersDark`) và 1 `matchMedia('change')` listener để tự theo hệ thống khi ở mode
+  `system`.
+- `app.html`: nút `mat-icon-button` mở `mat-menu` 3 item, mỗi item tự so `themeMode() === '...'`
+  để hiện icon `check` (bug lệch hàng nêu trên).
+- `index.html`: script chống-nháy coi `!mode || mode === 'system'` là "theo hệ thống".
+
+### After
+
+- `ThemeMode = 'light' | 'dark'`. `readStoredMode()` đọc `localStorage`; nếu chưa có, detect
+  `matchMedia('(prefers-color-scheme: dark)')` **một lần** và gọi `persistMode()` ngay (ghi
+  `localStorage`) trước khi trả về — không còn theo dõi thay đổi hệ thống về sau.
+- `ThemeService.toggle()` thay cho `setMode(mode)` gọi từ 3 nút menu.
+- `app.html`: bỏ hẳn `mat-menu`/`MatMenuModule`; 1 nút `(click)="toggleTheme()"`,
+  `[attr.aria-label]`/`[matTooltip]` lấy từ `themeToggleLabel()` (text mô tả hành động, ví dụ
+  "Chuyển sang giao diện Tối"), icon lấy từ `themeIcon()` (icon của trạng thái đích).
+- Xoá CSS `.theme-check` (không còn markup dùng tới) và đơn giản hoá điều kiện `system` trong
+  script chống-nháy của `index.html`.
+- Đã chạy `ng build --configuration development` (pass) và chạy thật app qua Chrome headless
+  (CDP) với profile trắng để mô phỏng "người dùng mới": xác nhận detect hệ thống → lưu
+  `localStorage` ngay → bấm toggle đổi đúng theme/icon/label → reload vẫn giữ lựa chọn đã lưu
+  (không detect lại hệ thống).
+
+### Reason
+
+Người dùng chủ động muốn giảm từ 3 trạng thái xuống 2 để đơn giản hoá thao tác đổi theme (1
+click thay vì mở menu rồi chọn), đồng thời gọn lại `ThemeService`. Việc này cũng loại bỏ luôn
+vector gây ra bug lệch hàng ở dropdown cũ mà không cần vá riêng.
+
+### Alternatives Considered
+
+- **Giữ dropdown, chỉ đổi cách đánh dấu item chọn** (nền tô màu + label đậm thay vì icon ✓) —
+  bị người dùng bỏ qua để chọn hướng đơn giản hoá luôn cả số lượng trạng thái.
+  - Xem thêm 2 phương án khác đã đề xuất trong hội thoại (segmented control 3 nút, kết hợp cả
+    hai) — không được chọn vì người dùng ưu tiên "đơn giản hơn" với 1 icon duy nhất.
+- **Không chốt lưu ngay lần đầu, tiếp tục theo hệ thống ngầm cho đến khi người dùng tự chọn** —
+  người dùng từ chối, chọn "chốt ngay và lưu localStorage" vì đơn giản hơn và khớp sát mô tả gốc.
+- **Icon thể hiện trạng thái hiện tại** (đang tối → hiện icon mặt trăng) — đây là lựa chọn được
+  gợi ý là "Recommended" vì khớp hành vi nút cũ, nhưng người dùng chọn ngược lại: icon thể hiện
+  trạng thái sẽ chuyển tới.

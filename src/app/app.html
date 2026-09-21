@@ -9,29 +9,12 @@
       <!-- Ngoài nhánh đăng nhập để người chưa đăng nhập cũng đổi được giao diện -->
       <button
         mat-icon-button
-        [matMenuTriggerFor]="themeMenu"
-        aria-label="Chọn giao diện sáng tối"
-        matTooltip="Giao diện"
+        (click)="toggleTheme()"
+        [attr.aria-label]="themeToggleLabel()"
+        [matTooltip]="themeToggleLabel()"
       >
         <mat-icon>{{ themeIcon() }}</mat-icon>
       </button>
-      <mat-menu #themeMenu="matMenu">
-        <button mat-menu-item (click)="setTheme('light')">
-          <mat-icon>light_mode</mat-icon>
-          <span>Sáng</span>
-          @if (themeMode() === 'light') { <mat-icon class="theme-check">check</mat-icon> }
-        </button>
-        <button mat-menu-item (click)="setTheme('dark')">
-          <mat-icon>dark_mode</mat-icon>
-          <span>Tối</span>
-          @if (themeMode() === 'dark') { <mat-icon class="theme-check">check</mat-icon> }
-        </button>
-        <button mat-menu-item (click)="setTheme('system')">
-          <mat-icon>brightness_auto</mat-icon>
-          <span>Theo hệ thống</span>
-          @if (themeMode() === 'system') { <mat-icon class="theme-check">check</mat-icon> }
-        </button>
-      </mat-menu>
 
       <ng-container *ngIf="user$ | async as user; else loginSection">
         <span class="user-name">Xin chào, {{ user.fullname }}!</span>

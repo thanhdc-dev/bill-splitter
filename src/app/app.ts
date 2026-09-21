@@ -8,9 +8,8 @@ import { MatDialog } from '@angular/material/dialog';
 import { AsyncPipe, CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
-import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { BillSplitterService, SeoService, ThemeService, ThemeMode } from './services';
+import { BillSplitterService, SeoService, ThemeService } from './services';
 import { PwaInstallPromptComponent } from './components/pwa-install-prompt/pwa-install-prompt';
 
 @Component({
@@ -21,7 +20,6 @@ import { PwaInstallPromptComponent } from './components/pwa-install-prompt/pwa-i
     CommonModule,
     MatIconModule,
     MatButtonModule,
-    MatMenuModule,
     MatTooltipModule,
     RouterLink,
     PwaInstallPromptComponent,
@@ -37,13 +35,13 @@ export class App implements OnInit {
   private readonly billSplitterService = inject(BillSplitterService);
   private readonly themeService = inject(ThemeService);
 
-  readonly themeMode = this.themeService.mode;
-  readonly themeIcon = computed(() => {
-    const mode = this.themeService.mode();
-    if (mode === 'light') return 'light_mode';
-    if (mode === 'dark') return 'dark_mode';
-    return 'brightness_auto';
-  });
+  // Icon/label thể hiện giao diện SẼ chuyển tới khi bấm, không phải giao diện hiện tại.
+  readonly themeIcon = computed(() =>
+    this.themeService.mode() === 'dark' ? 'light_mode' : 'dark_mode'
+  );
+  readonly themeToggleLabel = computed(() =>
+    this.themeService.mode() === 'dark' ? 'Chuyển sang giao diện Sáng' : 'Chuyển sang giao diện Tối'
+  );
 
   sidebarOpen = false;
   user$: Observable<AuthUser | null>;
@@ -56,8 +54,8 @@ export class App implements OnInit {
     this.seoService.generateTags();
   }
 
-  setTheme(mode: ThemeMode) {
-    this.themeService.setMode(mode);
+  toggleTheme() {
+    this.themeService.toggle();
   }
 
   toggleSidebar() {

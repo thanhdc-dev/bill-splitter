@@ -138,9 +138,3 @@
     max-width: 40vw;
   }
 }
-
-/* Dấu tích chế độ giao diện đang chọn, đẩy về cuối dòng menu */
-::ng-deep .theme-check {
-  margin-left: auto;
-  color: var(--primary-color);
-}
