@@ -849,3 +849,88 @@ nếu 8 agent cùng sửa sẽ conflict).
   `.member-amount` (Pha 6)** — cả 2 nhánh đều chọn đơn giản hoá thành viền mảnh + dải màu/stub
   không notch, vì cấu trúc nội dung (header/list/footer nhiều phần) phức tạp hơn ticket đơn giản
   trong mockup gốc — ưu tiên đơn giản/an toàn hơn đúng tuyệt đối hình mẫu.
+
+## 2026-09-21 (Rà soát toàn bộ 13 pha bằng browser thật — sửa 1 bug nghiêm trọng)
+
+### Decision
+
+Sau khi có công cụ điều khiển browser thật (skill `run-web`, `.claude/skills/run-web/`), rà
+soát lại từng pha bằng ảnh chụp thật thay vì chỉ đọc code. Phát hiện **`--mat-sys-primary`
+(và 3 token liên quan) chưa từng thực sự được override** kể từ Pha 0, dù `ng build` luôn pass
+và mọi chỗ tôi kiểm tra bằng mắt trước đó (FAB, tab, dropdown, checkbox...) tình cờ đều xanh
+teal đúng — vì tất cả những chỗ đó dùng biến RIÊNG của app (`--teal`, `--accent-soft-bg`,
+`.fab-gold`...) có `!important` đè lên, không thực sự đi qua `--mat-sys-primary`. Bug chỉ lộ ra
+ở các nút Material "trần" không có override riêng, ví dụ nút trong `app-empty-state`
+(`mat-raised-button color="primary"` không kèm class gì thêm) — kiểm tra bằng
+`getComputedStyle(document.documentElement).getPropertyValue('--mat-sys-primary')` cho ra
+`light-dark(#005cbb, #abc7ff)` (azure gốc), không phải teal.
+
+### Before
+
+`src/styles.scss`: override `--mat-sys-primary`/`--mat-sys-on-primary`/
+`--mat-sys-primary-container`/`--mat-sys-on-primary-container` được viết TIẾP TRONG cùng khối
+`html { @include mat.theme(...); color-scheme: light; --mat-sys-primary: ...; }` — tưởng rằng
+"khai báo sau trong cùng rule sẽ thắng" theo cascade CSS thông thường.
+
+### After
+
+Tách override thành **rule `html {}` HOÀN TOÀN RIÊNG**, đặt sau khối gọi `mat.theme()`, và
+thêm `!important` trên cả 4 dòng (2 lớp phòng thủ, không chỉ dựa vào thứ tự source nữa):
+
+```scss
+html { @include mat.theme(...); color-scheme: light; }
+html.dark { color-scheme: dark; }
+
+html {
+  --mat-sys-primary: #1B6B72 !important;
+  --mat-sys-on-primary: #FFFFFF !important;
+  --mat-sys-primary-container: #E3EFEE !important;
+  --mat-sys-on-primary-container: #123F44 !important;
+}
+html.dark {
+  --mat-sys-primary: #6FBFC4 !important;
+  --mat-sys-on-primary: #00363A !important;
+  --mat-sys-primary-container: #1B3A3D !important;
+  --mat-sys-on-primary-container: #9FDEE2 !important;
+}
+```
+
+Verify sau fix: `getComputedStyle(document.documentElement).getPropertyValue('--mat-sys-primary')`
+trả về đúng `#1B6B72` (sáng) / `#6FBFC4` (tối); nút `app-empty-state` đổi màu chữ từ
+`rgb(0, 92, 187)` (azure) sang `rgb(27, 107, 114)` (teal) — xác nhận bằng ảnh chụp thật ở cả 2
+theme. `ng build` vẫn pass.
+
+Rà soát thêm bằng browser thật (điền dữ liệu giả qua form, mock API `/auth/me` và `/bills` bằng
+`page.route()` để xem được các trang cần đăng nhập) xác nhận các pha còn lại **khớp thiết kế**,
+không cần sửa gì thêm:
+- Bills list: cuống vé + notch đục lỗ render đúng (notch khá nhỏ ở kích thước thật, phải zoom
+  6x mới thấy rõ — không phải bug, chỉ là chi tiết tinh tế đúng như thiết kế).
+- `result-display`: dotted-leader, "Tham gia: Thanh(x0.5)...", ticket-lite "Tổng tiền mỗi người
+  cần trả" với check xanh khi đã thanh toán — đúng mockup.
+- `create-bill` 2 cột desktop / tab mobile, dark mode, dropdown ngân hàng hover teal — đúng.
+- `bank`/`qr-popup`: card viền mảnh không shadow nặng, QR nền trắng đục không vỡ, nút Download
+  stroked teal, dialog width đúng 400px — đúng theo Pha 8.
+- `login-dialog`: nút Zalo giờ đã có layout đồng nhất với nút Google — đúng theo Pha 10.
+
+2 nghi vấn ban đầu hoá ra là **artifact của chính công cụ test**, không phải bug thật (đã xác
+minh bằng `getBoundingClientRect()`/chờ transition trước khi kết luận, không sửa nhầm code
+đúng): ảnh `fullPage` làm phần tử `position:fixed` (sidebar, FAB) hiện sai vị trí do Playwright
+stitch nhiều đoạn cuộn; và sidebar "không thấy" khi kiểm tra `getComputedStyle` ngay sau click
+— vì đọc giữa lúc CSS transition 0.3s còn đang chạy dở, chưa đợi xong.
+
+### Reason
+
+`ng build`/`ng lint` xanh chỉ xác nhận code hợp lệ về mặt cú pháp/kiểu, không xác nhận Sass
+cascade thật sự resolve đúng ý đồ — đặc biệt với mixin phức tạp như `mat.theme()` (đã có cảnh
+báo deprecation "mixed declarations" từ Pha 0 nhưng lúc đó đánh giá nhầm là vô hại). Đây đúng
+là trường hợp AGENTS.md cảnh báo: kiểm tra bằng mắt trên trình duyệt thật mới phát hiện được.
+
+### Alternatives Considered
+
+- **Chỉ thêm `!important` mà không tách rule riêng** — có thể đã đủ để fix (vì `!important`
+  thắng bất kể thứ tự), nhưng giữ nguyên cấu trúc lồng trong khối `mat.theme()` vẫn tiềm ẩn rủi
+  ro tương tự cho các token khác thêm sau này; tách rule riêng loại bỏ hẳn phụ thuộc vào hành vi
+  "mixed declarations" của Sass, dễ audit hơn.
+- **Đổi sang dùng `mat.define-theme` với cấu hình primary tuỳ biến thay vì override token sau
+  khi build** — đã cân nhắc lại ở đợt rà soát này nhưng vẫn giữ quyết định gốc từ Pha 0 (không
+  có API Sass công khai để build palette M3 từ hex tuỳ ý ở bản `^20.0.2`).

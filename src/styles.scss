@@ -11,9 +11,9 @@
    (azure, violet, rose...) — it does not expose a function to build a new palette from an
    arbitrary hex at build time. `mat.theme()` is kept with `$azure-palette` purely so every
    other M3 "sys" token (elevation, shape, motion, state, typography) gets generated
-   correctly; right after it we override just the *primary* role tokens that this app's
-   components actually consume via `color="primary"` (button, fab, tab, select, checkbox...)
-   with the app's own teal, so azure never actually renders anywhere. */
+   correctly; a SEPARATE rule further below overrides just the *primary* role tokens that
+   this app's components actually consume via `color="primary"` (button, fab, tab, select,
+   checkbox...) with the app's own teal, so azure never actually renders anywhere. */
 html {
   @include mat.theme((color: mat.$azure-palette,
       typography: (brand: 'Inter, "Helvetica Neue", sans-serif',
@@ -23,22 +23,33 @@ html {
     ));
 
   color-scheme: light;
-
-  --mat-sys-primary: #1B6B72;
-  --mat-sys-on-primary: #FFFFFF;
-  --mat-sys-primary-container: #E3EFEE;
-  --mat-sys-on-primary-container: #123F44;
 }
 
 html.dark {
   color-scheme: dark;
+}
 
-  /* M3 dark scheme lightens the "primary" tone and darkens "on-primary" (inverted from
-     light mode) so text/icons drawn straight in primary color stay readable on dark bg. */
-  --mat-sys-primary: #6FBFC4;
-  --mat-sys-on-primary: #00363A;
-  --mat-sys-primary-container: #1B3A3D;
-  --mat-sys-on-primary-container: #9FDEE2;
+/* Rebrand primary: MUST be its own rule, not appended inside the `html { @include
+   mat.theme(...); }` block above. `mat.theme()` expands into declarations interleaved with
+   nested rules, and Sass's "mixed declarations" handling can reorder trailing plain
+   declarations in that same block ahead of the mixin's own — so a `--mat-sys-primary`
+   written there can silently lose to the mixin's azure value in the compiled CSS despite
+   being later in the source (confirmed via computed style: it stayed azure). A fully
+   separate `html {}` rule, plus `!important` as a second guarantee, avoids that. */
+html {
+  --mat-sys-primary: #1B6B72 !important;
+  --mat-sys-on-primary: #FFFFFF !important;
+  --mat-sys-primary-container: #E3EFEE !important;
+  --mat-sys-on-primary-container: #123F44 !important;
+}
+
+/* M3 dark scheme lightens the "primary" tone and darkens "on-primary" (inverted from
+   light mode) so text/icons drawn straight in primary color stay readable on dark bg. */
+html.dark {
+  --mat-sys-primary: #6FBFC4 !important;
+  --mat-sys-on-primary: #00363A !important;
+  --mat-sys-primary-container: #1B3A3D !important;
+  --mat-sys-on-primary-container: #9FDEE2 !important;
 }
 
 /* ---------------------------------------------------------------------------
