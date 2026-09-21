@@ -185,7 +185,8 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .mat-mdc-fab, .mat-mdc-mini-fab {
-  box-shadow: var(--shadow-md) !important;
+  /* Ít shadow hơn mặc định Material — viền mảnh + màu là điểm nhấn chính, không phải shadow nổi. */
+  box-shadow: var(--shadow-sm) !important;
   border-radius: var(--border-radius-lg) !important; /* Bo góc hơn là bo tròn hẳn */
 }
 
@@ -216,6 +217,50 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--mat-sys-error);
 }
 
+/* Overlay Material (mat-select panel, mat-autocomplete...) render ra ngoài DOM của component,
+   vào .cdk-overlay-container — không override được từ style riêng của từng component
+   (vd bank-select.scss), phải làm ở đây. */
+.mat-mdc-option:hover:not(.mdc-list-item--disabled),
+.mat-mdc-option.mat-mdc-option-active,
+.mat-mdc-option[aria-selected="true"]:not(.mdc-list-item--disabled) {
+  background-color: var(--accent-soft-bg) !important;
+}
+
+.mat-mdc-option[aria-selected="true"]:not(.mdc-list-item--disabled) .mdc-list-item__primary-text {
+  color: var(--accent-soft-fg);
+}
+
+.mat-mdc-dialog-surface {
+  border-radius: var(--border-radius-lg) !important;
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-md) !important;
+  background-color: var(--surface-color) !important;
+}
+
+/* CTA vàng đồng — CHỈ dành cho đúng 1 hành động chính toàn app trên mỗi màn hình (vd "Lưu &
+   chia sẻ"). Mọi nút khác giữ teal qua color="primary" như mặc định, không thêm class này. */
+.fab-gold.mat-mdc-fab,
+.btn-gold.mat-mdc-raised-button,
+.btn-gold.mat-mdc-unelevated-button,
+.btn-gold.mat-mdc-outlined-button {
+  background-color: var(--gold) !important;
+  color: #fff !important;
+  border-color: var(--gold) !important;
+}
+
+/* Focus ring rõ ràng trên mọi nút — quan trọng hơn khi nền đổi sang teal/gold thay vì primary
+   xanh Material mặc định, cần tự kiểm tra lại độ tương phản. */
+.mat-mdc-button:focus-visible,
+.mat-mdc-raised-button:focus-visible,
+.mat-mdc-unelevated-button:focus-visible,
+.mat-mdc-outlined-button:focus-visible,
+.mat-mdc-icon-button:focus-visible,
+.mat-mdc-fab:focus-visible,
+.mat-mdc-mini-fab:focus-visible {
+  outline: 2px solid var(--text-primary);
+  outline-offset: 2px;
+}
+
 /* Scrollbar Customization for a cleaner look */
 ::-webkit-scrollbar {
   width: 6px;
@@ -238,6 +283,131 @@ h1, h2, h3, h4, h5, h6 {
 
 .mat-mdc-card-header-text {
   width: 100%;
+}
+
+/* ---------------------------------------------------------------------------
+   Redesign motifs — "biên nhận giấy" (docs/ui-redesign-plan.md, Pha 1).
+
+   Global vì đây là ngôn ngữ hình ảnh chung của cả app, không riêng 1 component.
+   --------------------------------------------------------------------------- */
+
+/* Số tiền/số lượng — CHỈ dùng cho nội dung số, không dùng cho label/text thường. */
+.mono-amount {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+/* Biến thể căn phải, dùng trong bảng/danh sách để số dễ so sánh theo cột. */
+.mono-amount--table {
+  display: block;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* Số tài khoản/số điện thoại — mono nhưng KHÔNG in đậm như tiền, tránh nhầm là số tiền. */
+.mono-text {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* "Cuống vé" — dùng cho item danh sách hoá đơn, member-card, ticket-lite trong kết quả chia
+   tiền. 2 notch tròn (::before/::after trên .receipt-ticket__stub) giả lập lỗ đục ngay tại
+   điểm nối giữa stub và thân, bằng cách vẽ hình tròn cùng màu NỀN PHÍA SAU card
+   (--notch-bg, mặc định = --bg-color). Nơi đặt receipt-ticket trên nền khác (trong mat-card,
+   trong dialog...) phải tự override --notch-bg cho khớp, nếu không notch sẽ lộ viền sai màu. */
+.receipt-ticket {
+  --notch-bg: var(--bg-color);
+  position: relative;
+  display: flex;
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  overflow: hidden;
+}
+
+.receipt-ticket__stub {
+  position: relative;
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 10px 14px;
+  background: var(--teal);
+  color: #fff;
+
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    right: -7px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--notch-bg);
+  }
+
+  &::before {
+    top: -7px;
+  }
+
+  &::after {
+    bottom: -7px;
+  }
+}
+
+/* "Đường chấm dẫn" kiểu thực đơn/biên nhận — nối tên khoản mục với số tiền trong cùng 1 hàng,
+   thay cho border-bottom đặc của bảng thường. */
+.leader-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.leader-row__label {
+  white-space: nowrap;
+}
+
+.leader-row__fill {
+  flex: 1;
+  height: 0;
+  margin-bottom: 3px;
+  border-bottom: 2px dotted var(--border-color);
+}
+
+.leader-row__value {
+  white-space: nowrap;
+}
+
+/* "Đường xé" — ranh giới giữa vùng nhập liệu và vùng tổng kết thanh toán. Dùng chung quy ước
+   --notch-bg như .receipt-ticket. */
+.tear-line {
+  --notch-bg: var(--bg-color);
+  position: relative;
+  height: 0;
+  margin: 24px 0;
+  border-top: 2px dashed var(--border-color);
+
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    top: -7px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--notch-bg);
+  }
+
+  &::before {
+    left: -7px;
+  }
+
+  &::after {
+    right: -7px;
+  }
 }
 
 /* ---------------------------------------------------------------------------

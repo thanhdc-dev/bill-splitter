@@ -571,3 +571,62 @@ tertiary) × 2 theme — trong khi component thực tế trong app chỉ dùng 4
   override phẳng trong `html.dark {}` — cân nhắc nhưng đổi khác convention hiện có của file
   (toàn bộ token app cũ, ví dụ `--success-bg`/`--success-fg`, đều dùng pattern `html.dark {}`),
   giữ nguyên convention để code nhất quán, dễ đọc hơn là trộn 2 kỹ thuật trong cùng file.
+
+## 2026-09-21 (Pha 1 — motif dùng chung + override Material toàn cục)
+
+### Decision
+
+Thêm 5 nhóm class dùng chung vào `styles.scss` (không component nào sở hữu riêng, vì đây là
+ngôn ngữ hình ảnh của cả app): `.mono-amount`/`.mono-text` (số tiền/số liệu dùng font mono),
+`.receipt-ticket`/`.receipt-ticket__stub` (motif "cuống vé" + notch đục lỗ), `.leader-row`
+(dotted-leader nối tên khoản mục ↔ số tiền), `.tear-line` (ranh giới nhập liệu/tổng kết),
+`.btn-gold`/`.fab-gold` (CTA vàng đồng). Đồng thời override toàn cục `.mat-mdc-option`
+(dropdown mat-select, render ngoài DOM component qua `.cdk-overlay-container`) và
+`.mat-mdc-dialog-surface` (mọi dialog) sang theme mới; giảm shadow FAB từ `--shadow-md` xuống
+`--shadow-sm`; thêm outline `focus-visible` rõ ràng cho toàn bộ nút Material.
+
+### Before
+
+`.mat-mdc-fab`/`.mat-mdc-mini-fab` dùng `box-shadow: var(--shadow-md)`; `mat-select`
+dropdown option hover/selected dùng màu Material mặc định (`--mat-sys-secondary-container`,
+xem CSS gốc của `MatOption` trong `node_modules`); `.mat-mdc-dialog-surface` không có override
+nào (border-radius/màu mặc định M3); chưa có class nào cho motif "biên nhận".
+
+### After
+
+- `.receipt-ticket__stub` tạo notch bằng `::before`/`::after` ngay trên chính stub (không phải
+  markup riêng) với `right: -7px` — nhờ vậy width của stub tuỳ biến theo nội dung mà notch vẫn
+  luôn nằm đúng ngay tại đường nối, không cần tính toán vị trí theo từng nơi dùng. Quy ước biến
+  `--notch-bg` (mặc định `var(--bg-color)`) để nơi đặt `.receipt-ticket` trên nền khác nền trang
+  (trong `mat-card`, dialog...) tự override, tránh notch lộ viền sai màu.
+- `.mat-mdc-option` override dùng đúng class/attribute thật đã xác nhận trong mã nguồn Angular
+  Material 20 (`node_modules/@angular/material/fesm2022/option-*.mjs`): `.mdc-list-item--selected`
+  không dùng (đã có sẵn `[aria-selected="true"]` phản chiếu cùng giá trị `selected`, đơn giản
+  hơn), `.mat-mdc-option-active` (trạng thái focus bàn phím) — tránh đoán tên class sai.
+- `.mat-mdc-dialog-surface` xác nhận đúng là class thật (`mat-dialog-container.ts` template:
+  `<div class="mat-mdc-dialog-surface mdc-dialog__surface">`) trước khi override — không đụng gì
+  tới `.image-lightbox-panel ... .mdc-dialog__surface` đã có (selector đó cụ thể hơn nên vẫn
+  thắng, không bị rule mới đè).
+- Verify: `ng build --configuration=development` pass, không lỗi Sass mới (chỉ còn các cảnh báo
+  deprecation cũ). **Chưa xem bằng mắt** dropdown/dialog/ticket thật trên trình duyệt (không có
+  công cụ browser trong session) — để dành cho Pha 2 khi có component thật dùng các class này.
+
+### Reason
+
+Tách motif thành class dùng chung 1 lần trong `styles.scss` (giống cách `.inline-add-form`/
+`.data-table-scroll` đã làm) thay vì lặp lại SCSS tương tự ở `bills.scss`, `member-table.scss`,
+`result-display.scss` — vì cả 3 nơi đó dùng chung đúng 1 khái niệm hình ảnh ("cuống vé", "đường
+chấm dẫn"). Override overlay Material (`mat-select` panel, dialog) buộc phải đặt ở file global vì
+nội dung 2 loại đó render ra `.cdk-overlay-container`, ngoài cây DOM/style-scope của component gọi
+chúng — không thể override từ `bank-select.scss` hay `confirm-dialog.scss`.
+
+### Alternatives Considered
+
+- **Markup riêng cho notch** (2 `<span>` tuyệt đối định vị theo % width của stub) thay vì
+  `::before/::after` trên chính stub — bị bỏ vì phải tính lại vị trí theo từng chiều rộng stub cụ
+  thể ở mỗi nơi dùng; đặt trên mép phải của chính stub (`right: -7px`) tự động đúng vị trí bất kể
+  stub rộng bao nhiêu.
+- **Dùng `panelClass` trên từng `MatSelect`/`MatDialog` để scope override** thay vì global — bị
+  bỏ vì `panelClass` chỉ áp lên container overlay, không "chui" được vào nội dung `<mat-option>`/
+  `.mat-mdc-dialog-surface` do chính Material component tự render, global vẫn là cách duy nhất áp
+  được màu cho nội dung đó.
