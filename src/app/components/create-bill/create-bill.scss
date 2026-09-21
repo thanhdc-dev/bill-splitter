@@ -36,6 +36,20 @@
     padding-bottom: 20px;
   }
 
+  /* Từ 768px: Khoản mục | Thành viên song song, khỏi bấm qua lại giữa 2 tab liên tục — chỉ
+     render khi !isMobile (xem create-bill.html), nên không cần media query ở đây nữa. */
+  .two-col-layout {
+    display: grid;
+    grid-template-columns: 1.25fr 1fr;
+    gap: 24px;
+    align-items: start;
+
+    .expense-form,
+    .member-table {
+      padding-top: 0;
+    }
+  }
+
   /* Floating Action Buttons */
   .buttons {
     z-index: 999;

@@ -687,3 +687,66 @@ giữ optional/ẩn dữ liệu không cần thiết.
   định sai về API. Bỏ sau khi người dùng xác nhận API đã trả đủ dữ liệu.
 - **Hiện ngày đầy đủ (dd/mm/yyyy) ngay trên cuống vé** thay vì chỉ ngày/tháng — bỏ vì cuống vé
   quá hẹp (56px) để chứa cả năm mà không vỡ dòng; ngày đầy đủ vẫn xem được qua `title` khi hover.
+
+## 2026-09-21 (Pha 3 — layout 2 cột + gộp FAB cho trang tạo hoá đơn)
+
+### Decision
+
+Thống nhất breakpoint mobile/desktop của trang tạo hoá đơn về `(max-width: 767px)` (khớp
+`MOBILE_BREAKPOINT` của `member-table.ts`, thay `600px` cũ). Dưới ngưỡng: giữ `mat-tab-group`
+2 tab (Khoản mục/Thành viên). Từ ngưỡng: `.two-col-layout` (grid 2 cột) hiện song song, không
+qua tab. "Thanh toán" bỏ hẳn khỏi tab ở mọi breakpoint, luôn full-width ngay dưới. Gộp 2 FAB
+(share + auto-save) thành 1 FAB gold duy nhất "Lưu & chia sẻ".
+
+### Before
+
+- `create-bill.ts`: không có khái niệm mobile/desktop, `@ViewChild('tabGroup') tabGroup!:
+  MatTabGroup` (non-null assertion — tabGroup luôn tồn tại vì tab luôn render).
+- `create-bill.html`: 1 `mat-tab-group` cố định 3 tab (Khoản mục/Thành viên/Thanh toán) ở mọi
+  kích thước màn hình, chỉ đổi label→icon dưới 600px. 2 `mat-fab color="primary"` xếp chồng
+  (`share-button` + `auto-save-button`), `upload-progress` định vị `bottom-[170px]` để tránh
+  đè lên cả 2 FAB.
+
+### After
+
+- `create-bill.ts`: thêm `BreakpointObserver` + `MOBILE_BREAKPOINT = '(max-width: 767px)'`
+  (copy nguyên văn từ `member-table.ts` để 2 nơi luôn đồng bộ ngưỡng), field `isMobile`. Đổi
+  `tabGroup!: MatTabGroup` → `tabGroup?: MatTabGroup` (optional thật, vì giờ có thể không tồn
+  tại ở desktop) và thêm guard `if (this.tabGroup)` trong `ngAfterViewInit` trước khi gán
+  `selectedIndex` — nếu không sẽ crash khi `BillTabControlService.changeTab()` được gọi lúc
+  đang ở layout desktop.
+- `create-bill.html`: `@if (isMobile) { <mat-tab-group> 2 tab } @else { <div
+  class="two-col-layout"> 2 cột }` — chỉ 1 bộ DOM render tại 1 thời điểm (không double-render
+  `app-expense-form`/`app-member-table`, tránh 2 instance cùng subscribe `expenses$`/`members$`).
+  `app-payment` chuyển ra ngoài, đặt cố định dưới cả 2 nhánh. Thêm `<div class="tear-line">`
+  giữa `mat-card` (vùng nhập liệu) và `app-result-display` (vùng tổng kết). Bỏ hẳn nút
+  `auto-save-button`; nút còn lại đổi `color="primary"` → class `.fab-gold` (Pha 1). Dịch
+  `upload-progress` từ `bottom-[170px]` xuống `bottom-24` và FAB từ `bottom-[100px]` xuống
+  `bottom-7` (chỉ còn 1 FAB, không cần chỗ cho 2 nút xếp chồng nữa).
+- `create-bill.scss`: thêm `.two-col-layout { display:grid; grid-template-columns: 1.25fr 1fr;
+  gap:24px; }`. Bỏ padding-top của `.expense-form`/`.member-table` khi ở trong `.two-col-layout`
+  (đã có gap của grid, không cần cộng thêm padding riêng).
+- **Chưa sửa** `onSettingClick()` trong `result-display.ts` (gọi `changeTab(1)` để nhảy tab
+  Thanh toán) — đây là việc của Pha 6, chạy sau vì cần biết chắc `tabGroup` đã optional-safe.
+  Ghi chú: quan sát thấy code hiện tại gọi `changeTab(1)` nhưng comment nói "giả sử tab Setting
+  có index là 1" — với 3 tab cũ (Khoản mục=0, Thành viên=1, Thanh toán=2) thì `changeTab(1)`
+  thực ra nhảy tới tab Thành viên, không phải Thanh toán (có vẻ là bug từ trước, không phải do
+  đợt sửa này). Với 2 tab mới, index 1 vẫn hợp lệ và vẫn trỏ tới Thành viên — hành vi không đổi,
+  không phải regression, nhưng cần xử lý đúng ý định gốc ở Pha 6.
+- Verify: `ng build` + `ng lint` pass (0 lỗi mới). **Chưa xem bằng mắt** trên trình duyệt thật.
+
+### Reason
+
+Luồng thực tế khi chia tiền là thêm món rồi thêm người rồi quay lại thêm món — tab ẩn buộc
+người dùng bấm qua lại liên tục trên desktop dù màn hình đủ rộng để hiện cả 2 cùng lúc. Về FAB:
+`save(true)` (share) đã luôn gọi `createBill()` trước khi copy URL, nên gộp về 1 nút không mất
+khả năng lưu, chỉ mất khả năng "lưu mà chưa muốn lộ link" — người dùng đã xác nhận đánh đổi này
+ở bước lập kế hoạch.
+
+### Alternatives Considered
+
+- **Giữ cả 2 DOM (tab + 2 cột), ẩn bằng CSS `display:none` theo breakpoint** thay vì
+  `@if/@else` — bị bỏ vì tạo 2 instance `app-expense-form`/`app-member-table` cùng lúc, hai form
+  nội bộ cùng chạy song song có thể gây trùng lặp sự kiện/focus không mong muốn.
+- **Giữ 2 FAB, chỉ thu nhỏ nút lưu phụ** (phương án 2 trong kế hoạch) — người dùng chọn phương
+  án 1 (chỉ 1 CTA) ở bước lập kế hoạch vì đơn giản hơn và không thực sự mất chức năng.

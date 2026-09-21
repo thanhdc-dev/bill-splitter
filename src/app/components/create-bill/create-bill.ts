@@ -8,6 +8,7 @@ import {
   ViewChild,
   inject,
 } from '@angular/core';
+import { BreakpointObserver } from '@angular/cdk/layout';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
@@ -41,6 +42,10 @@ import { BANKS } from '../../constants';
 import { SettingsData } from '../../interfaces';
 import { BankInfoItem } from '../../models';
 import { ImageUploadComponent, ImagePreview } from '../image-upload/image-upload';
+
+/* Cùng ngưỡng với member-table.ts (MOBILE_BREAKPOINT) để "mobile vs desktop" nhất quán trong
+   toàn bộ trang tạo hoá đơn — dưới 768px thấy tab, từ 768px thấy layout 2 cột. */
+const MOBILE_BREAKPOINT = '(max-width: 767px)';
 
 @Component({
   selector: 'app-create-bill',
@@ -76,7 +81,8 @@ export class CreateBill implements OnInit, AfterViewInit {
   private readonly billTabControlService = inject(BillTabControlService);
   private readonly userService = inject(UserService);
   private readonly destroyRef = inject(DestroyRef);
-  @ViewChild('tabGroup') tabGroup!: MatTabGroup;
+  private readonly breakpointObserver = inject(BreakpointObserver);
+  @ViewChild('tabGroup') tabGroup?: MatTabGroup;
 
   nameCtrl = new FormControl();
   expenses$: Observable<ExpenseItem[]>;
@@ -85,12 +91,21 @@ export class CreateBill implements OnInit, AfterViewInit {
   files: File[] = [];
   /** null = không đang upload; 0-100 = % tiến trình của batch upload ảnh hiện tại. */
   uploadProgress: number | null = null;
+  /** Dưới 768px: tab Khoản mục/Thành viên. Từ 768px: 2 cột song song, không có tabGroup. */
+  isMobile = false;
 
   constructor() {
     this.expenses$ = this.billSplitterService.expenses$;
     this.members$ = this.billSplitterService.members$;
     this.isSaving$ = this.billSplitterService.isSaving$;
     this.patchValueNameCtrl();
+
+    this.breakpointObserver
+      .observe(MOBILE_BREAKPOINT)
+      .pipe(takeUntilDestroyed())
+      .subscribe(({ matches }) => {
+        this.isMobile = matches;
+      });
   }
 
   ngOnInit() {
@@ -119,7 +134,11 @@ export class CreateBill implements OnInit, AfterViewInit {
     this.billTabControlService.tabChange$
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((index) => {
-        this.tabGroup.selectedIndex = index;
+        // tabGroup chỉ tồn tại ở layout mobile (dưới 768px) — ở layout 2 cột desktop không có
+        // tab nào để chuyển tới.
+        if (this.tabGroup) {
+          this.tabGroup.selectedIndex = index;
+        }
       });
   }
 
