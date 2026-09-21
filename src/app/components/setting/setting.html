@@ -1,8 +1,11 @@
 <div class="settings-container">
-  <h2 class="settings-title">Thông Tin Thanh Toán</h2>
+  <h2 class="settings-title">{{ pageTitle }}</h2>
 
   <form [formGroup]="settingsForm" class="payment-form" (ngSubmit)="onSubmit()">
-    <mat-tab-group class="w-full">
+    <mat-tab-group
+      class="w-full"
+      [(selectedIndex)]="selectedTabIndex"
+    >
       <mat-tab formGroupName="bankAccount">
         <ng-template mat-tab-label>
           <mat-icon>account_balance</mat-icon>
@@ -68,8 +71,21 @@
           </mat-form-field>
         </mat-card>
       </mat-tab>
+
+      <mat-tab labelClass="security">
+        <ng-template mat-tab-label>
+          <mat-icon>security</mat-icon>
+          <span class="pl-0.5">Bảo mật</span>
+        </ng-template>
+
+        <!-- matTabContent để chỉ gọi API passkey khi user thực sự mở tab này -->
+        <ng-template matTabContent>
+          <app-passkey-manager></app-passkey-manager>
+        </ng-template>
+      </mat-tab>
     </mat-tab-group>
 
+    @if (!isSecurityTab) {
     <div class="button-group flex justify-end">
       <button
         mat-raised-button
@@ -81,5 +97,6 @@
         Lưu
       </button>
     </div>
+    }
   </form>
 </div>

@@ -3,7 +3,12 @@ import { Component, OnInit, inject } from '@angular/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { AuthService, BillSplitterService } from '../../services';
+import {
+  AuthService,
+  BillSplitterService,
+  PASSKEY_PROMPT_SHOWN_KEY,
+  PasskeyService,
+} from '../../services';
 
 @Component({
   selector: 'app-oauth-callback',
@@ -17,6 +22,7 @@ export class OauthCallback implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly snackBar = inject(MatSnackBar);
   private readonly billSplitterService = inject(BillSplitterService);
+  private readonly passkeyService = inject(PasskeyService);
 
   ngOnInit(): void {
     this.route.queryParams.subscribe((params) => {
@@ -64,6 +70,9 @@ export class OauthCallback implements OnInit {
           queryParams['save'] = 'true';
         }
         this.router.navigate([''], { queryParams });
+
+        // Mời tạo passkey sau khi đã điều hướng, không chặn luồng đăng nhập
+        this.promptPasskeySetup();
       }
     } catch (error) {
       console.error('Error verifying Google code:', error);
@@ -75,6 +84,37 @@ export class OauthCallback implements OnInit {
         }
       );
       this.router.navigate(['/']);
+    }
+  }
+
+  /**
+   * Gợi ý tạo passkey cho user vừa đăng nhập bằng OAuth, chỉ khi thiết bị có
+   * sẵn sinh trắc học và user chưa có passkey nào. Chỉ mời đúng một lần —
+   * cờ được ghi ngay khi hiện snackbar để không làm phiền ở các lần sau.
+   */
+  private async promptPasskeySetup(): Promise<void> {
+    try {
+      const passkeyPromptShown = localStorage.getItem(PASSKEY_PROMPT_SHOWN_KEY);
+      if (passkeyPromptShown && passkeyPromptShown === '1') return;
+      if (!(await this.passkeyService.hasPlatformAuthenticator())) return;
+
+      const credentials = await this.passkeyService.listCredentials();
+      if (credentials.length) return;
+
+      localStorage.setItem(PASSKEY_PROMPT_SHOWN_KEY, '1');
+      const snackBarRef = this.snackBar.open(
+        'Lần sau đăng nhập nhanh hơn bằng vân tay hoặc FaceID?',
+        'Thiết lập',
+        { duration: 10000 }
+      );
+      snackBarRef.onAction().subscribe(() => {
+        this.router.navigate(['/setting'], {
+          queryParams: { tab: 'security' },
+        });
+      });
+    } catch (error) {
+      // Gợi ý là tuỳ chọn, lỗi ở đây không được ảnh hưởng luồng đăng nhập
+      console.error('Passkey prompt error:', error);
     }
   }
 }
