@@ -4,13 +4,22 @@
   background-color: transparent !important;
   box-shadow: none !important;
 
-  >mat-card-title {
+  /* Không dùng combinator ">" — mat-card-title nằm trong mat-card-header (mat-card >
+     mat-card-header > mat-card-title), không phải con trực tiếp của .result-card. Selector
+     ">mat-card-title" trước đây không bao giờ khớp, khiến rule font-size/weight/color bên
+     dưới vô hiệu và h2 luôn hiển thị theo cỡ mặc định của trình duyệt (~33px thay vì 1.25rem). */
+  mat-card-title {
     display: flex;
     justify-content: space-between;
     align-items: baseline;
     padding-bottom: 12px;
 
     h2 {
+      /* Reset margin mặc định của trình duyệt cho <h2> (~0.83em trên/dưới, tức ~16.6px ở
+         cỡ chữ này) — cộng với padding-top của mat-card-header và padding-bottom ở trên,
+         2 khoảng margin auto này là nguyên nhân chính khiến khoảng cách trên/dưới tiêu đề
+         bị dư thừa so với thiết kế. */
+      margin: 0;
       font-size: 1.25rem;
       font-weight: 600;
       color: var(--text-primary);
@@ -60,10 +69,23 @@
       .expense-meta {
         margin-top: 4px;
         font-size: 0.8rem;
-        color: var(--text-secondary);
+
+        .expense-meta__participants {
+          color: var(--text-secondary);
+        }
 
         .expense-meta__sep {
           margin: 0 6px;
+          color: var(--text-secondary);
+        }
+
+        .expense-meta__per-person {
+          color: var(--text-primary);
+          font-weight: 600;
+        }
+
+        .expense-meta__warning {
+          color: var(--danger-color);
         }
       }
     }
@@ -92,6 +114,17 @@
         border-radius: var(--border-radius-md);
         background: var(--surface-color);
         overflow: hidden;
+
+        /* Card đã thanh toán: đổi nền/viền để phân biệt ngay bằng thị giác,
+           không chỉ dựa vào icon nhỏ ở góc phải. */
+        &.member-amount--paid {
+          background: var(--success-bg);
+          border-color: var(--success-fg);
+
+          .amount {
+            color: var(--text-secondary);
+          }
+        }
 
         .member-amount__body {
           flex: 1;
@@ -131,7 +164,9 @@
             color: var(--text-secondary);
 
             &.paid {
-              background: var(--success-bg);
+              /* Nền card giờ đã dùng --success-bg (xem .member-amount--paid), nên icon
+                 dùng nền trắng để không bị hòa lẫn vào card. */
+              background: var(--surface-color);
               color: var(--success-fg);
             }
 
@@ -150,6 +185,14 @@
 
   @media screen and (max-width: 600px) {
     margin-top: 16px;
+
+    /* 1.25rem (20px) quá to so với các heading khác trong cùng màn hình (h3
+       "Tổng tiền..." mobile là 1rem, tiêu đề "Khoản mục"/"Thành viên" là 15px) —
+       thu nhỏ về 1.1rem trên mobile, vẫn giữ là heading lớn nhất trên card nhưng
+       không lấn át phần nội dung bên dưới. */
+    mat-card-title h2 {
+      font-size: 1.1rem;
+    }
 
     .table-container {
       border-radius: var(--border-radius-sm);
@@ -175,8 +218,13 @@
         grid-template-columns: 1fr;
         gap: 12px;
 
-        .member-amount {
-          padding: 16px;
+        /* Padding thực tế nằm ở __body (16px 20px ở desktop), không phải ở
+           .member-amount — giảm 50% ở đây thay vì set padding thừa lên container ngoài.
+           Giữ nguyên độ sâu nesting `.member-amount .member-amount__body` để specificity
+           bằng rule desktop ở trên, nếu không rule desktop (khai báo sau trong cùng file
+           nhưng nesting sâu hơn) sẽ thắng dù nằm trong media query. */
+        .member-amount .member-amount__body {
+          padding: 8px 10px;
         }
       }
     }

@@ -7,7 +7,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem;
+  padding: 0.75rem 1rem;
   background-color: var(--surface-color);
   border-bottom: 1px solid var(--border-color);
   position: relative;
@@ -29,7 +29,13 @@
   }
 
   h1 {
-    margin-bottom: 0;
+    /* Trước đây chỉ reset margin-bottom — margin-top mặc định của trình duyệt cho <h1>
+       (~21.44px ở font-size mặc định 32px) vẫn còn, cộng thêm display: flex để loại phần
+       đệm dòng (line-height leading) quanh <img>, vốn là 2 nguồn chính khiến .header cao
+       hơn hẳn so với kích thước logo thực tế (110px thay vì ~72px). */
+    margin: 0;
+    display: flex;
+    align-items: center;
   }
 }
 

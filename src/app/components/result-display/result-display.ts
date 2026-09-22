@@ -87,8 +87,8 @@ export class ResultDisplayComponent implements OnInit {
     }, 0);
   }
 
-  calculatePerPerson(amount: number, participantCount: number): number {
-    return amount / participantCount;
+  calculatePerPerson(amount: number, participantCount: number): number | null {
+    return participantCount > 0 ? amount / participantCount : null;
   }
 
   getTotalAmount(expenses: ExpenseItem[]): number {
@@ -153,18 +153,6 @@ export class ResultDisplayComponent implements OnInit {
         qrImageDownloadUrl,
       },
     });
-  }
-
-  onSettingClick() {
-    // Thanh toán không còn là tab riêng (Pha 3) — cuộn tới phần thanh toán
-    // (luôn hiện full-width dưới trong create-bill.html) thay vì đổi tab.
-    document
-      .getElementById('payment-section')
-      ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
-
-  isEditable() {
-    return this.billSplitterService.isEditable();
   }
 
   fetchIsShowBankInfo() {

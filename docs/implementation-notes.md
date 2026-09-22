@@ -3,6 +3,386 @@
 > Ghi chép quyết định triển khai theo quy ước tại `AGENTS.md`.
 > Các ghi chép về tích hợp CDN ảnh (2026-06-11) nằm ở `docs/implementation-notes.html`.
 
+## 2026-09-22 (giảm chiều cao `.header` — reset margin-top mặc định của `h1`)
+
+### Decision
+
+Người dùng phản hồi `.header` (app.html) cao "chưa cân đối" so với thiết kế. Đo bằng
+`run-web` (`getBoundingClientRect().height`) xác nhận chiều cao thực tế là **110.4px**
+trong khi nội dung cao nhất bên trong (logo `<img>` 48px) + padding dọc `1rem` × 2 (32px)
+đáng lẽ chỉ nên ~80px. Truy vết thêm bằng `getComputedStyle(h1)` phát hiện `h1` (bọc logo)
+có `margin-top: 21.44px` — chỉ `margin-bottom: 0` từng được reset trong `app.scss`,
+`margin-top` vẫn kế thừa mặc định của trình duyệt cho `<h1>` (`~0.67em` ở font-size mặc
+định 32px). Ngoài ra `h1` không phải flex container nên `<img>` bên trong tạo thêm ~8px
+đệm dòng (line-height leading) theo cách trình duyệt layout ảnh trong ngữ cảnh inline —
+tổng 2 nguồn này cộng thêm ~30px ngoài dự kiến.
+
+### Before
+
+```scss
+.header {
+  padding: 1rem;
+  h1 { margin-bottom: 0; } // margin-top mặc định trình duyệt vẫn còn (~21.44px)
+}
+```
+
+### After
+
+```scss
+.header {
+  padding: 0.75rem 1rem; // giảm nhẹ padding dọc, siết chặt hơn
+  h1 {
+    margin: 0;            // reset cả margin-top, không chỉ margin-bottom
+    display: flex;        // loại bỏ đệm dòng quanh <img> do ngữ cảnh inline
+    align-items: center;
+  }
+}
+```
+
+Đã xác minh bằng `run-web`: chiều cao `.header` giảm từ `110.4375px` xuống **`73px`**
+(desktop 1280px và mobile 390px cho cùng kết quả, không có breakpoint riêng cho header).
+Kiểm tra thêm trạng thái đã đăng nhập (mock `/auth/me`, tên dài) để đảm bảo `.settings-btn`
+và `.user-name` vẫn căn giữa đúng, không vỡ layout sau khi đổi `h1` sang `display: flex`.
+
+### Reason
+
+Cũng là lỗi thuộc nhóm "chỉ reset một nửa margin mặc định của trình duyệt" — tương tự lỗi
+`h2` margin trong `app-result-display` sửa cùng ngày (xem mục "giảm khoảng cách trên/dưới
+tiêu đề..." bên dưới) — cho thấy đây là một pattern lặp lại trong codebase khi thêm style
+riêng cho heading mà không audit toàn bộ box model bằng số đo thực tế.
+
+### Alternatives Considered
+
+- Giảm kích thước `<img>` logo (48px → nhỏ hơn) thay vì sửa margin — không chọn vì logo
+  không phải nguyên nhân chính (chỉ chiếm 48px, đúng như thiết kế); giảm kích thước logo
+  sẽ che giấu bug margin thay vì sửa gốc, và làm logo nhỏ hơn dự định ban đầu.
+
+## 2026-09-22 (giảm khoảng cách trên/dưới tiêu đề "Chi tiết chia tiền")
+
+### Decision
+
+Người dùng phản hồi padding của `mat-card-title` và margin của `h2` khiến khoảng cách
+trên/dưới tiêu đề "Chi tiết chia tiền" quá lớn. Đo bằng `run-web`
+(`getComputedStyle(...).margin/.padding`) phát hiện 2 nguồn cộng dồn không chủ ý:
+
+- `h2` chưa từng reset margin — kế thừa margin mặc định của trình duyệt cho heading
+  (`~0.83em` trên/dưới ở cỡ chữ 1.25rem ≈ **16.6px mỗi phía**), vì `result-display.scss`
+  trước đó chỉ set `font-size/font-weight/color`, không set `margin`.
+- `mat-card-header` (component Material, không phải phần tử do app tự style) có
+  `padding-top: 16px` mặc định từ theme của Angular Material, chưa từng bị override.
+
+Tổng khoảng cách phía trên tiêu đề trước khi sửa: `16px` (header) + `16.6px` (h2 margin-top)
+= **32.6px**; phía dưới: `16.6px` (h2 margin-bottom) + `12px` (padding-bottom cố ý của
+`mat-card-title`, xem note "bo góc"/"fix selector chết" cùng ngày) = **28.6px**.
+
+### Before
+
+```scss
+mat-card-title {
+  padding-bottom: 12px;
+  h2 { font-size: 1.25rem; font-weight: 600; color: var(--text-primary); } // không có margin
+}
+// mat-card-header không có rule riêng — dùng nguyên padding mặc định của Material
+```
+
+### After
+
+```scss
+mat-card-header {
+  padding-top: 0; // .result-card đã có margin-top: 24px riêng, không cần cộng thêm
+}
+mat-card-title {
+  padding-bottom: 12px; // giữ nguyên — khoảng cách có chủ đích trước nội dung bên dưới
+  h2 {
+    margin: 0; // reset margin mặc định của trình duyệt
+    font-size: 1.25rem; font-weight: 600; color: var(--text-primary);
+  }
+}
+```
+
+Đã xác minh bằng `run-web`: `getComputedStyle` xác nhận `mat-card-header` padding-top và
+`h2` margin đều về `0px`, chỉ còn `padding-bottom: 12px` ở `mat-card-title` làm khoảng cách
+có chủ đích. Chụp screenshot toàn trang (desktop) so sánh với các tiêu đề panel khác
+("Khoản mục", "Thành viên") — khoảng cách nay tương đồng, không còn lệch.
+
+### Reason
+
+Khoảng cách dư thừa đến từ 2 giá trị mặc định (browser UA style cho `<h2>`, Material default
+cho `mat-card-header`) không được reset khi áp custom style — một lỗi phổ biến khi override
+từng phần một component thư viện mà không kiểm tra toàn bộ box model bằng số đo thực tế.
+
+### Alternatives Considered
+
+- Chỉ giảm `padding-bottom` của `mat-card-title` mà không đụng đến `h2 margin`/`mat-card-header
+  padding-top` — không giải quyết gốc vấn đề (2 khoảng margin/padding ẩn vẫn còn), sẽ phải
+  đoán số để bù trừ thay vì kiểm soát chính xác.
+
+## 2026-09-22 (bỏ nút icon `settings` trong header `app-result-display`)
+
+### Decision
+
+Theo yêu cầu người dùng, xóa nút icon `settings` ở góc trên phải card "Chi tiết chia tiền"
+(`result-display.html:7-9` cũ). Nút này chỉ có 1 hành động: cuộn mượt tới `#payment-section`
+(`onSettingClick()` trong `result-display.ts`). Sau khi xóa nút trong template, cả
+`onSettingClick()` và `isEditable()` (chỉ dùng để điều kiện hiện/ẩn chính nút này qua
+`@if (isEditable())`, không còn nơi gọi nào khác trong component) đều thành dead code — xóa
+luôn theo nguyên tắc không giữ code không dùng. Đồng thời đơn giản hóa: div bọc
+`class="flex justify-between items-center"` quanh `h2` giờ chỉ còn 1 con (trước có 2: h2 +
+button) nên bỏ luôn, vì `mat-card-title` (SCSS) đã tự có `display: flex; justify-content:
+space-between; align-items: baseline` áp dụng cho `h2` trực tiếp.
+
+### Before
+
+```html
+<mat-card-title>
+  <div class="flex justify-between items-center">
+    <h2>Chi tiết chia tiền</h2>
+    @if (isEditable()) {
+    <button mat-icon-button aria-label="settings" (click)="onSettingClick()">
+      <mat-icon>settings</mat-icon>
+    </button>
+    }
+  </div>
+</mat-card-title>
+```
+```ts
+onSettingClick() {
+  document.getElementById('payment-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+isEditable() {
+  return this.billSplitterService.isEditable();
+}
+```
+
+### After
+
+```html
+<mat-card-title>
+  <h2>Chi tiết chia tiền</h2>
+</mat-card-title>
+```
+`onSettingClick()` và `isEditable()` đã xóa khỏi `result-display.ts`. Đã xác minh bằng
+`run-web` (desktop 1280px + mobile 390px): compile không lỗi, nút biến mất, tiêu đề hiển thị
+đúng vị trí không bị lệch do mất phần tử anh em.
+
+### Reason
+
+Yêu cầu trực tiếp từ người dùng. Không có UI/luồng nào khác trong app đang phụ thuộc vào
+`#payment-section` scroll-to từ `result-display` (phần thanh toán vẫn truy cập được bình
+thường qua vị trí cố định trong `create-bill.html`, xem ghi chú `onSettingClick` cũ đề cập
+"Thanh toán không còn là tab riêng (Pha 3)").
+
+### Alternatives Considered
+
+- Giữ lại `onSettingClick()`/`isEditable()` phòng trường hợp dùng lại sau — không chọn vì vi
+  phạm nguyên tắc tránh dead code/backwards-compat shim khi chắc chắn không còn nơi gọi; nếu
+  cần lại, có thể lấy từ git history.
+
+## 2026-09-22 (fix selector chết khiến `h2` "Chi tiết chia tiền" luôn hiển thị cỡ mặc định trình duyệt, không phải 1.25rem đã khai báo)
+
+### Decision
+
+Người dùng yêu cầu kiểm tra và thu nhỏ text tiêu đề "Chi tiết chia tiền" trên mobile cho
+"phù hợp với thiết kế". Khi thêm rule mobile mới (`@media { >mat-card-title h2 { font-size:
+1.1rem; } }`) và dùng `run-web` để `getComputedStyle(...).fontSize` xác minh, phát hiện kết
+quả là `33px` — không khớp cả rule mobile mới (1.1rem = 17.6px) lẫn rule gốc desktop
+(1.25rem = 20px). Truy vết bằng `element.matches(ruleSelector)` trong cùng session xác nhận
+`false`: selector gốc `.result-card > mat-card-title { ... h2 { font-size: 1.25rem; ... } }`
+dùng combinator **con trực tiếp** (`>`) giữa `.result-card` và `mat-card-title`, nhưng theo
+`result-display.html`, cấu trúc thực tế là `mat-card.result-card > mat-card-header >
+mat-card-title > div > h2` — `mat-card-title` nằm trong `mat-card-header`, không phải con
+trực tiếp của `.result-card`. Selector này **chưa từng khớp** kể từ khi được viết, nên toàn
+bộ rule (`display: flex`, `justify-content: space-between`, `align-items: baseline`,
+`padding-bottom`, và `font-size/font-weight/color` của `h2`) vô hiệu — `h2` luôn hiển thị
+theo cỡ chữ mặc định của trình duyệt cho phần tử heading lồng sâu trong nhiều tầng
+sectioning-like element (`mat-card > mat-card-header > mat-card-title`), ra khoảng 33px thay
+vì 20px như thiết kế — đây chính là lý do title trông "quá to" trên mobile (và thực ra cũng
+to hơn dự kiến trên desktop, chỉ là chưa ai để ý vì styles.scss:174 đã ép `font-family`
+Inter nên trông không "vỡ" rõ như font hệ thống mặc định).
+
+### Before
+
+```scss
+.result-card {
+  >mat-card-title {           // KHÔNG khớp — mat-card-title là cháu, không phải con
+    display: flex;
+    ...
+    h2 { font-size: 1.25rem; font-weight: 600; color: var(--text-primary); }
+  }
+}
+```
+
+### After
+
+```scss
+.result-card {
+  mat-card-title {             // bỏ combinator ">" — match theo descendant
+    display: flex;
+    ...
+    h2 { font-size: 1.25rem; font-weight: 600; color: var(--text-primary); }
+  }
+
+  @media screen and (max-width: 600px) {
+    mat-card-title h2 { font-size: 1.1rem; }  // tương tự, bỏ ">"
+  }
+}
+```
+
+Xác minh bằng `run-web`: `getComputedStyle` trả đúng `20px` (desktop) và `17.6px` (mobile,
+< 600px). Screenshot xác nhận layout header (icon `settings` căn baseline với tiêu đề) và cỡ
+chữ đều đúng như thiết kế lần đầu tiên.
+
+### Reason
+
+Đây là bug có sẵn từ trước (không phải do các thay đổi UX/UI gần đây trong cùng ngày gây
+ra) — phát hiện tình cờ khi verify rule mobile mới bằng cách đọc `getComputedStyle` thay vì
+chỉ nhìn screenshot (nhìn ảnh một mình không đủ phân biệt "1.25rem không áp dụng" với "1.25rem
+áp dụng nhưng vẫn to"). Việc luôn xác minh bằng số đo thực tế (không chỉ bằng mắt) qua
+`run-web` giúp lộ ra sai lệch mà nếu chỉ sửa số trong rule mobile (1.1rem) mà không kiểm tra
+gốc, kết quả mobile vẫn sẽ sai (33px) trong khi trông có vẻ "đã sửa" vì code đã đúng cú pháp.
+
+### Alternatives Considered
+
+- Chỉ thêm `!important` vào rule mobile mới để ép nó thắng bất kể bug selector gốc — sẽ che
+  giấu vấn đề: desktop vẫn giữ nguyên bug (33px thay vì 20px), không nhất quán và khó phát
+  hiện lại sau này.
+- Đổi cấu trúc HTML (bỏ `mat-card-header`, đưa `mat-card-title` làm con trực tiếp của
+  `mat-card`) — không chọn vì `mat-card-header`/`mat-card-title` là component con của
+  Angular Material, thay đổi cấu trúc DOM ảnh hưởng tới hành vi mặc định của Material (spacing,
+  a11y roles) rộng hơn cần thiết; sửa selector SCSS trong phạm vi 1 file là thay đổi tối thiểu
+  đúng gốc vấn đề.
+
+## 2026-09-22 (giảm 50% padding `.member-amount` trên mobile — fix CSS specificity)
+
+### Decision
+
+Người dùng phản hồi (kèm screenshot mobile) card "Tổng tiền mỗi người cần trả" có padding
+quá lớn trên mobile. Soát lại `result-display.scss` phát hiện rule mobile trước đó
+(`@media (max-width: 600px) { .member-amount { padding: 16px; } }`) **không có hiệu lực
+thực sự**: padding hiển thị đến từ `.member-amount__body { padding: 16px 20px; }` (phần tử
+con), không phải từ `.member-amount` (container ngoài, vốn không có padding riêng ở base
+style) — nên rule mobile này chỉ cộng thêm 16px padding thừa lên container ngoài, khiến
+tổng padding trên mobile **lớn hơn** desktop thay vì nhỏ hơn.
+
+### Before
+
+```scss
+.member-summary .member-amounts .member-amount {
+  // base: không có padding, chỉ có border/background/overflow
+  .member-amount__body { padding: 16px 20px; } // padding thật nằm ở đây
+}
+
+@media (max-width: 600px) {
+  .member-summary .member-amounts .member-amount {
+    padding: 16px; // vô nghĩa — cộng thêm, không thay thế padding của __body
+  }
+}
+```
+
+### After
+
+Sửa 2 lần: lần đầu target đúng `.member-amount__body` nhưng đặt sai độ sâu nesting
+(`.member-amounts .member-amount__body` — 4 lớp class) khiến specificity thấp hơn rule
+desktop (`.member-amounts .member-amount .member-amount__body` — 5 lớp class), nên vẫn bị
+rule desktop đè dù nằm trong media query đang match. Dùng `run-web` chụp lại và đọc
+`getComputedStyle(...).padding` mới phát hiện ra padding vẫn là `16px 20px` thay vì
+`8px 10px` đã khai báo. Sửa lần 2: giữ nguyên độ sâu nesting `.member-amount
+.member-amount__body` bên trong `@media`, để specificity bằng nhau và media query (đứng
+sau trong file) thắng theo thứ tự cascade bình thường:
+
+```scss
+@media (max-width: 600px) {
+  .member-summary .member-amounts .member-amount .member-amount__body {
+    padding: 8px 10px; // = 50% của 16px 20px
+  }
+}
+```
+
+Xác minh lại bằng `run-web`: `eval getComputedStyle(...).padding` trả về đúng `"8px 10px"`
+trên viewport 390px, chụp screenshot xác nhận card gọn hơn rõ rệt.
+
+### Reason
+
+CSS trong Angular component style (`ViewEncapsulation.Emulated` mặc định) áp thêm attribute
+selector (`_ngcontent-*`) vào mọi selector nhưng không đổi số lượng class trong specificity
+— specificity vẫn tính theo số class/nesting như CSS thường, nên một rule trong `@media`
+lồng nông hơn rule base cùng file vẫn bị base đè, kể cả khi base khai báo trước. Đây là lỗi
+dễ mắc khi override style theo breakpoint mà không giữ đúng độ sâu selector gốc.
+
+### Alternatives Considered
+
+- Dùng `!important` để ép override bất kể specificity — không chọn vì che giấu vấn đề gốc
+  (sai selector) và gây khó bảo trì/override tiếp sau này.
+- Đổi `.member-amount__body` sang dùng CSS variable (`--member-amount-padding`) rồi override
+  variable trong media query — cân nhắc nhưng over-engineering cho một giá trị chỉ dùng ở 1
+  nơi; giữ cách override trực tiếp selector cho nhất quán với các rule mobile khác trong
+  cùng file (`.expense-receipt-table thead th, tbody td, tfoot td { padding: 12px 10px; }`).
+
+## 2026-09-22 (cải thiện UX/UI `app-result-display`: chia-cho-0, trạng thái thanh toán, phân cấp thị giác)
+
+### Decision
+
+Sau khi dùng skill `run-web` dựng dữ liệu mẫu và chụp screenshot thực tế (desktop 1280px,
+mobile 390px) của `result-display`, phát hiện và sửa 4 vấn đề UX/UI:
+
+1. **Bug chia cho 0**: khi một khoản mục chưa có ai tham gia (`participantCount === 0`),
+   `calculatePerPerson()` trả về `Infinity`, hiển thị `∞ ₫/người` ra UI.
+2. **Trạng thái "đã thanh toán" khó phân biệt**: chỉ có 1 icon check nhỏ ở góc phải card,
+   nền card giống hệt card "chưa thanh toán" — dễ bị bỏ sót khi có nhiều thành viên.
+3. **Thiếu phân cấp thị giác** giữa dòng "Tham gia: ..." (thông tin phụ) và ".../người"
+   (số liệu chính) trong bảng khoản mục — cùng màu, cùng cỡ chữ.
+4. **Thiếu `aria-label`** cho icon trạng thái "Đã thanh toán" (chỉ có `title`), không đồng
+   bộ với nút QR bên cạnh đã có `aria-label` + `matTooltip`.
+
+### Before
+
+- `calculatePerPerson(amount, participantCount): number` — không guard `participantCount === 0`.
+- Template: `<span>Tham gia: ...</span> · <span class="mono-amount">.../người</span>` — không
+  nhánh riêng khi participant count = 0; cả 2 span dùng chung style `.expense-meta` (màu
+  `--text-secondary`, cùng cỡ chữ).
+- `.member-amount` không có class phân biệt trạng thái thanh toán — nền luôn là
+  `var(--surface-color)` bất kể `member.isPaid`.
+- Icon trạng thái là `<div class="status-icon paid" title="Đã thanh toán">` — không có
+  `aria-label`, screen reader có thể bỏ qua vì `div` không tự nhiên nằm trong accessibility tree.
+
+### After
+
+- `calculatePerPerson()` trả về `number | null`, guard `participantCount > 0`.
+- Template thêm nhánh `@if (getParticipantCount(...) > 0) { ... } @else { <span
+  class="expense-meta__warning">Chưa có ai tham gia khoản mục này</span> }`.
+- Tách class `.expense-meta__participants` (giữ màu `--text-secondary`, phụ) và
+  `.expense-meta__per-person` (đổi sang `--text-primary` + `font-weight: 600`, số liệu chính).
+- Thêm `[class.member-amount--paid]="member.isPaid"` trên `.member-amount`; card đã thanh
+  toán đổi nền/viền sang `var(--success-bg)`/`var(--success-fg)`, số tiền đổi màu
+  `--text-secondary` (đã xong, giảm độ nổi bật). Icon check bên trong đổi nền sang
+  `var(--surface-color)` (trắng) để không hòa lẫn vào nền xanh của card.
+- Icon trạng thái đổi từ `<div>` sang `<output class="status-icon paid" aria-label="Đã
+  thanh toán" ...>` (IDE lint `Web:S6819` từ chối `role="img"`/`role="status"` trên `div`,
+  yêu cầu phần tử ngữ nghĩa gốc — `<output>` là phần tử hợp lệ, tự có accessible role phù
+  hợp cho một giá trị/trạng thái được tính toán).
+
+Đã xác minh bằng skill `run-web`: dựng lại đúng dữ liệu mẫu (3 thành viên, khoản mục có
+trọng số tham gia khác nhau + 1 khoản mục cố tình để 0 người tham gia), chụp screenshot
+desktop/mobile, không có `console.error`/`pageerror`.
+
+### Reason
+
+Các vấn đề này được phát hiện qua kiểm tra trực quan thực tế (không chỉ đọc code), theo yêu
+cầu người dùng "dùng skill run-web để phân tích UI". Ưu tiên sửa vì: (1) là bug hiển thị sai
+dữ liệu thật (`∞ ₫`), không phải vấn đề thẩm mỹ; (2)+(3) cải thiện khả năng quét thông tin
+nhanh (scannability) khi có nhiều thành viên/khoản mục; (4) là yêu cầu accessibility tối
+thiểu, nhất quán với phần tử tương tự (nút QR) đã có sẵn trong cùng component.
+
+### Alternatives Considered
+
+- Với chia-cho-0: có thể ẩn hẳn khoản mục chưa có ai tham gia khỏi bảng, nhưng vậy sẽ che
+  mất thông tin rằng khoản mục đó tồn tại và cần được gán người tham gia — chọn hiện cảnh
+  báo rõ ràng thay vì ẩn.
+- Với trạng thái thanh toán: cân nhắc thêm checkbox/nút bấm để người dùng tự toggle
+  `isPaid` ngay tại `result-display` (đề xuất C trong phân tích ban đầu), nhưng đây là thay
+  đổi hành vi/luồng dữ liệu lớn hơn (đụng tới service, không chỉ UI) nên tạm chưa triển
+  khai — chỉ dừng ở cải thiện hiển thị trạng thái hiện có.
+
 ## 2026-09-22 (bo góc `mat-card` trong `app-payment` chỉ ở 2 góc dưới)
 
 ### Decision
