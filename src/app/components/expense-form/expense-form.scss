@@ -5,11 +5,11 @@
 .expense-card {
   background: var(--surface-color);
   border: 1px solid var(--border-color);
-  border-radius: var(--border-radius-md);
-  padding: 20px;
+  border-radius: var(--border-radius-lg);
+  padding: 22px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
 }
 
 .expense-card__title {
@@ -31,6 +31,11 @@
 
 .expense-add-row {
   display: flex;
+  /* flex-start, không phải center: mat-error (validate lỗi) đẩy field cao thêm — center sẽ
+     làm nút "+" trôi lên xuống theo độ dài thông báo lỗi. Nút cao 42px được canh khớp mép trên
+     khung input (48px, `--mat-form-field-container-height` trong flat-field) bằng padding-top
+     thay vì margin — label của mat-form-field nổi ra NGOÀI `.mat-mdc-text-field-wrapper` bằng
+     transform nên không cộng thêm chiều cao ở trên, top của field = top của khung nhìn thấy. */
   align-items: flex-start;
   gap: 8px;
 
@@ -45,7 +50,10 @@
 
   &__submit {
     flex-shrink: 0;
-    margin-top: 4px;
+    width: 42px;
+    height: 42px;
+    margin-top: 3px;
+    border-radius: var(--border-radius-sm) !important;
     background-color: var(--teal) !important;
     color: #fff !important;
 

@@ -481,6 +481,57 @@ h1, h2, h3, h4, h5, h6 {
   }
 }
 
+/* Nút xoá trung tính — dùng ở danh sách hoá đơn, bảng thành viên. Xoá 1 dòng dữ liệu ở đây
+   không phải hành động phá hủy cần cảnh báo đỏ liên tục như mockup đã duyệt; chỉ rõ hơn khi
+   hover/focus. */
+.delete-btn {
+  --mdc-icon-button-icon-color: var(--text-secondary);
+  --mat-icon-button-state-layer-color: var(--text-primary);
+  color: var(--text-secondary);
+
+  &:hover {
+    color: var(--text-primary);
+  }
+}
+
+/* Ô nhập phẳng theo mockup "biên nhận": nhãn tĩnh phía trên khung, viền mảnh, không có gạch
+   chân/nổi nền của Material appearance mặc định. Dùng với
+   `appearance="outline" floatLabel="always"` trên mat-form-field. */
+.flat-field {
+  /* --mdc-outlined-text-field-container-shape điều khiển bo góc THẬT của khung (vẽ bằng SVG
+     notched-outline) — border-radius trên .mat-mdc-text-field-wrapper không có tác dụng vì
+     wrapper đó không tự vẽ viền. Luôn dùng kèm `subscriptSizing="dynamic"` trên mat-form-field
+     (bỏ khoảng trắng dành cho hint/error khi trống) để chiều cao khớp 42-46px như mockup, nếu
+     không phần dưới ẩn vẫn chiếm chỗ và làm nút cạnh bên (mini-fab) lệch tâm so với khung. */
+  --mdc-outlined-text-field-container-shape: var(--border-radius-sm);
+  --mat-form-field-container-height: 46px;
+  --mat-form-field-container-vertical-padding: 12px;
+
+  .mdc-notched-outline__leading,
+  .mdc-notched-outline__notch,
+  .mdc-notched-outline__trailing {
+    border-color: var(--border-color) !important;
+    border-width: 1px !important;
+  }
+
+  .mdc-notched-outline__notch {
+    border-left: none;
+  }
+
+  &.mat-focused .mdc-notched-outline__leading,
+  &.mat-focused .mdc-notched-outline__notch,
+  &.mat-focused .mdc-notched-outline__trailing {
+    border-color: var(--teal) !important;
+  }
+
+  .mdc-floating-label {
+    font-size: 12px !important;
+    font-weight: 600;
+    color: var(--text-secondary) !important;
+    letter-spacing: 0.2px;
+  }
+}
+
 @media screen and (max-width: 600px) {
   .mat-mdc-form-field {
     width: 100%;

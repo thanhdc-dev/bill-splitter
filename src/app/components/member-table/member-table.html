@@ -1,15 +1,22 @@
-<form [formGroup]="memberForm" (ngSubmit)="onSubmit()" class="inline-add-form">
-  <mat-form-field appearance="outline">
-    <mat-label>Tên thành viên</mat-label>
-    <input matInput formControlName="name" placeholder="Nhập tên thành viên" (keydown.enter)="onSubmit()" />
-    <mat-hint>Nhập nhiều tên cùng lúc bằng cách ngăn cách bởi dấu phẩy</mat-hint>
-  </mat-form-field>
-  <button mat-raised-button color="primary" type="submit" aria-label="submit" [disabled]="!memberForm.valid">
-    Thêm thành viên
-  </button>
-</form>
+<div class="member-panel">
+  <h2 class="member-panel__title">
+    <mat-icon>groups</mat-icon>
+    Thành viên
+  </h2>
 
-@if (!members.length) {
+  <form [formGroup]="memberForm" (ngSubmit)="onSubmit()" class="member-panel__add">
+    <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" class="flat-field">
+      <mat-label>Tên thành viên</mat-label>
+      <input matInput formControlName="name" placeholder="Nhập tên thành viên..." (keydown.enter)="onSubmit()" />
+    </mat-form-field>
+    <button mat-mini-fab type="submit" class="member-panel__submit" aria-label="Thêm thành viên"
+      [disabled]="!memberForm.valid">
+      <mat-icon>add</mat-icon>
+    </button>
+  </form>
+  <p class="member-panel__hint">Nhập nhiều tên cùng lúc bằng cách ngăn cách bởi dấu phẩy</p>
+
+  @if (!members.length) {
 <app-empty-state
   icon="groups"
   title="Chưa có thành viên nào"
@@ -25,7 +32,7 @@
   <article class="member-card">
     <header class="member-card__header">
       <h3 class="member-card__name">{{ member.name }}</h3>
-      <button mat-icon-button color="warn" [attr.aria-label]="'Xóa ' + member.name"
+      <button mat-icon-button class="delete-btn" [attr.aria-label]="'Xóa ' + member.name"
         (click)="removeMember(member.id)">
         <mat-icon>delete</mat-icon>
       </button>
@@ -75,12 +82,12 @@
     <!-- Dynamic Expense Columns -->
     @for (expense of expenses; track expense.id) {
     <ng-container [matColumnDef]="expense.id">
-      <th mat-header-cell *matHeaderCellDef scope="col">
+      <th mat-header-cell *matHeaderCellDef scope="col" class="qty-cell">
         <span class="column-expense-name">{{expense.name}}</span>
         <small class="expense-amount">({{expense.amount | currency: 'VND': 'symbol' : '1.0-0' :
           'vi'}})</small>
       </th>
-      <td mat-cell *matCellDef="let member">
+      <td mat-cell *matCellDef="let member" class="qty-cell">
         <app-quantity-selector [value]="getParticipation(member, expense.id)" [step]="0.5" [min]="0" [max]="99"
           [compact]="true" (valueChange)="updateParticipation(member.id, expense.id, $event)"></app-quantity-selector>
       </td>
@@ -108,7 +115,7 @@
     <ng-container matColumnDef="actions">
       <th mat-header-cell *matHeaderCellDef scope="col"></th>
       <td mat-cell *matCellDef="let member">
-        <button mat-icon-button [attr.aria-label]="'Xóa ' + member.name" color="warn"
+        <button mat-icon-button class="delete-btn" [attr.aria-label]="'Xóa ' + member.name"
           (click)="removeMember(member.id)">
           <mat-icon>delete</mat-icon>
         </button>
@@ -120,3 +127,4 @@
   </table>
 </div>
 }
+</div>

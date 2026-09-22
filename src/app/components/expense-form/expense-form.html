@@ -5,16 +5,17 @@
   </h2>
 
   <form [formGroup]="expenseForm" #expenseFormDirective="ngForm" (ngSubmit)="onSubmit(expenseFormDirective)" class="expense-add-row">
-    <mat-form-field appearance="outline">
-      <input matInput formControlName="name" placeholder="Tên món, dịch vụ..." aria-label="Tên khoản mục"
-        (keydown.enter)="onSubmit()" />
+    <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" class="flat-field">
+      <mat-label>Tên món, dịch vụ...</mat-label>
+      <input matInput formControlName="name" aria-label="Tên khoản mục" (keydown.enter)="onSubmit()" />
       <mat-error *ngIf="expenseForm.get('name')?.hasError('required')">
         Vui lòng nhập tên khoản mục
       </mat-error>
     </mat-form-field>
 
-    <mat-form-field appearance="outline" class="expense-add-row__amount">
-      <input matInput type="text" inputmode="numeric" formControlName="amount" placeholder="Số tiền"
+    <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" class="flat-field expense-add-row__amount">
+      <mat-label>Số tiền</mat-label>
+      <input matInput type="text" inputmode="numeric" formControlName="amount"
         aria-label="Số tiền" appThousandSeparator (keydown.enter)="onSubmit()" />
       <mat-error *ngIf="expenseForm.get('amount')?.hasError('required')">
         Vui lòng nhập số tiền

@@ -3,6 +3,162 @@
 > Ghi chép quyết định triển khai theo quy ước tại `AGENTS.md`.
 > Các ghi chép về tích hợp CDN ảnh (2026-06-11) nằm ở `docs/implementation-notes.html`.
 
+## 2026-09-22 (tiếp — sửa lỗi phát sinh sau khi áp mockup)
+
+### Decision
+
+Sau khi áp 10 điểm khác biệt so với mockup (mục trước), rà lại bằng ảnh chụp thực tế qua
+`run-web` phát hiện thêm 5 lỗi/điểm chưa cân đối, đã sửa từng cái theo phản hồi trực tiếp
+của người dùng trên ảnh chụp UI thật (không phải theo mockup tĩnh nữa).
+
+### Before
+
+- **Top-bar (CreateBill)**: input "Tên hóa đơn" và nút "Lưu & chia sẻ" lệch hàng —
+  `align-items: flex-end` cộng `margin-bottom: 1.34375em` (số phỏng đoán theo baseline
+  outline-field mặc định) không khớp với field đã bị `.flat-field` override; không có
+  khoảng cách với card "Khoản mục/Thành viên" bên dưới.
+- **Expense-add-row / member-panel__add**: input và nút "+" lệch hàng tương tự; khi bo góc
+  qua `--mdc-outlined-text-field-container-shape` chưa được set, `.mat-mdc-text-field-wrapper`
+  border-radius không có tác dụng thật (viền vẽ bằng SVG notched-outline riêng); khi mat-error
+  xuất hiện (validate lỗi), field cao thêm khiến nút "+" (`align-items:center`, không có
+  `subscriptSizing="dynamic"`) trôi lệch theo — thử `margin-top:20px` (đoán, chưa đo) vẫn sai vì
+  không dựa trên `getBoundingClientRect()` thực tế.
+- **member-panel__submit**: `<form>` mang cả 2 class `inline-add-form member-panel__add` —
+  selector global `.inline-add-form > button { padding: 0 24px !important }` (dành cho nút
+  raised-button "Thêm thành viên" cũ, dài) vô tình áp lên cả nút `mat-mini-fab` 42px mới, ép
+  content-box về 0 → icon "+" biến mất hoàn toàn dù `color`/`opacity` computed đều hợp lệ.
+- **member-avatar**: còn sót ở `.member-cards` (card mobile) và `td.mat-column-name` (bảng
+  desktop) sau khi đã quyết định bỏ avatar khỏi card tổng kết (`result-display`) — không nhất
+  quán giữa các nơi hiển thị tên thành viên.
+- **two-col-layout**: `grid-template-columns: 1.25fr 1fr` (không `minmax(0, …)`) → track bị ép
+  giãn theo min-content của bảng con (`.data-table-scroll table { min-width: 600px }`), đẩy
+  card "Thành viên" tràn ra ngoài `.bill-splitter-container` (max-width 1000px) khi có ≥2 cột
+  khoản mục động.
+- **member-table-scroll**: cột `isPaid`/`actions` không có `width` nhất quán — `actions` khai
+  `width: 48px` nhưng vô tác dụng (bảng `table-layout: auto`, kích thước thật = content 40px +
+  padding cell 12px 16px = 72px); cột khoản mục dùng chung padding `12px 16px` với cột text dù
+  chỉ chứa `app-quantity-selector`; `.quantity-input` rộng 60px dù chỉ cần hiển thị số 0-99
+  (bước 0.5).
+
+### After
+
+- **Top-bar**: `align-items: center` (bỏ `flex-end` + margin hack); thêm
+  `subscriptSizing="dynamic"` cho field tên hoá đơn để field không còn dư khoảng trắng subscript
+  khi trống; `.top-bar { margin-bottom: 22px }` tạo khoảng cách với nội dung bên dưới (khớp gap
+  22px của mockup CreateBill).
+- **`.flat-field`** (`styles.scss`, dùng chung cho 3 field): thêm
+  `--mdc-outlined-text-field-container-shape: var(--border-radius-sm)` để bo góc là biến điều
+  khiển đúng của SVG notched-outline (không phải border-radius trên wrapper); yêu cầu luôn đi
+  kèm `subscriptSizing="dynamic"` trên mọi field dùng class này.
+- **expense-add-row__submit**: `align-items: flex-start` (không phải `center`) +
+  `margin-top: 3px` — con số lấy từ đo thật bằng `getBoundingClientRect()` (khung input 48px,
+  nút 42px → lệch 6px, chia đôi = 3px), không còn trôi theo độ dài mat-error.
+- **member-table Tên thành viên**: dòng `<mat-hint>` cố định (luôn hiện, không phải lỗi) được
+  tách ra khỏi `mat-form-field` thành `<p class="member-panel__hint">` riêng bên dưới cả hàng
+  input+nút — lý do tương tự (hint cũng làm field cao hơn nút, dù `subscriptSizing="dynamic"`).
+- **member-panel__add**: bỏ hẳn class `.inline-add-form` khỏi `<form>` này, tự khai lại
+  `display:flex; align-items:center; gap:8px` + `.mat-mdc-form-field{flex:1;min-width:0}` ngay
+  trong `member-panel__add` — không còn phụ thuộc/dính selector `> button` của class global.
+- **member-avatar**: gỡ khỏi `.member-cards` (mobile) và `td.mat-column-name` (bảng desktop);
+  xoá luôn định nghĩa `.member-avatar` (global, `styles.scss`) vì không còn nơi nào dùng.
+- **two-col-layout**: `grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr)` +
+  `min-width: 0` trên `.expense-form`/`.member-table` — track không còn bị ép giãn theo
+  min-content của bảng con; `.data-table-scroll` tự cuộn ngang bên trong card đúng như thiết
+  kế. Đồng thời tăng `.bill-splitter-container { max-width: 1280px }` (từ 1000px, khớp canvas
+  gốc của mockup CreateBill) để card "Thành viên" có thêm chỗ trước khi phải cuộn.
+- **member-table-scroll**: thêm class `qty-cell` cho th/td cột khoản mục động
+  (`padding: 12px 8px; text-align:center`, hẹp hơn cột text mặc định); gộp
+  `.mat-column-isPaid`/`.mat-column-actions` cùng `width: 64px; padding: 12px 8px;
+  text-align:center` để 2 cột control nhỏ đối xứng nhau (thay vì 74.8px/72px lệch); giảm
+  `.quantity-input { width: 35px }` (từ 60px).
+
+### Reason
+
+Mọi con số/quyết định ở đây đều xuất phát từ **đo thực tế bằng
+`getBoundingClientRect()`/`getComputedStyle()`** qua driver Playwright của skill `run-web`
+(không suy đoán bằng mắt) sau khi người dùng chỉ ra lệch hàng/tràn layout cụ thể trên ảnh chụp
+— vì các lần sửa "đoán số" trước đó (margin-top 20px, margin-bottom 1.34375em) đều sai và phải
+sửa lại lần 2. `.inline-add-form > button` là bài học về việc **class dùng chung không nên gán
+bừa cho phần tử có vai trò khác** (mini-fab 42px khác hẳn raised-button 56px mà rule đó nhắm
+tới) — CSS global scope càng rộng, càng dễ vô tình áp lên phần tử không định nhắm tới.
+
+### Alternatives Considered
+
+- **two-col-layout tràn**: cân nhắc bỏ `max-width` của `.bill-splitter-container` thay vì
+  `minmax(0, …)`. Không chọn vì không sửa nguyên nhân gốc (track vẫn bị ép theo min-content),
+  chỉ đẩy vấn đề thành tràn *toàn trang* thay vì tràn cục bộ, và làm mất giới hạn độ rộng có
+  chủ đích trên màn hình lớn.
+- **member-panel__submit mất icon**: cân nhắc thêm `!important` đè lại `padding` thay vì bỏ
+  class `.inline-add-form`. Không chọn vì vá triệu chứng, không giải quyết việc form này đang
+  mang nhầm 1 class thiết kế cho nút khác hẳn — dễ tái phát nếu sau này còn override nào khác
+  từ `.inline-add-form` áp nhầm vào.
+
+## 2026-09-22
+
+### Decision
+
+So sánh UI hiện tại với mockup "biên nhận" đã duyệt trước đó (artifact
+`claude.ai/artifact/UZsnGSYT43hWR5R1P3xUi4`, 3 artboard: `Bills`, `CreateBill`, `Result`)
+và triển khai 10 điểm khác biệt đã liệt kê với người dùng. Trước khi làm, 2 điểm mockup
+không nói rõ đã được hỏi và người dùng chốt:
+
+- **Avatar-stub ở card "Mỗi người cần trả"** (`result-display`): mockup không có, bản cũ có
+  thêm (vòng tròn chữ cái đầu 36px bên trái) → người dùng chọn **bỏ đi**, làm phẳng đúng
+  mockup thay vì giữ chi tiết thừa.
+- **Đổi Angular Material icon font sang SVG line-icon tuỳ chỉnh** (mockup vẽ tay, hiện tại
+  dùng `mat-icon` ligature): người dùng chọn **giữ nguyên Material icon** — việc đổi toàn bộ
+  icon rủi ro/effort không tương xứng lợi ích thẩm mỹ.
+
+### Before
+
+- **Bills** (`bills.html/.scss`): tiêu đề "Danh sách" 28px/600 căn giữa, không phụ đề; số tiền
+  14px; nút xoá `mat-icon-button color="warn"` (đỏ); gap danh sách 12px.
+- **CreateBill** (`create-bill.html/.scss`): nút "Lưu & chia sẻ" là `mat-fab` nổi cố định
+  `fixed bottom-7 right-7`; ô tên hoá đơn/khoản mục/thành viên dùng
+  `mat-form-field appearance="outline"` mặc định (label nổi trong notch viền); card
+  "Khoản mục" bo `--border-radius-md` (12px)/padding 20px/gap 14px; cột "Thành viên"
+  (`member-table`) không có card bao ngoài hay tiêu đề riêng — chỉ có `.inline-add-form` +
+  `.data-table-scroll` rời rạc, không đối xứng với "Khoản mục"; bảng thành viên không có
+  avatar; nút thêm khoản mục/thành viên là `mat-mini-fab` tròn.
+- **Result** (`result-display.html/.scss`): card "Khoản mục" giới hạn `max-height:480px` cuộn
+  dọc + header/footer sticky; card "Mỗi người cần trả" có `member-amount__stub` (avatar chữ
+  cái đầu) bên trái mỗi dòng.
+
+### After
+
+- **Bills**: tiêu đề "Hoá đơn của bạn" 22px/800 căn trái + phụ đề "N hoá đơn đã lưu · chạm để
+  mở lại"; số tiền 17px/700; nút xoá dùng class `.delete-btn` dùng chung (global, `styles.scss`)
+  màu trung tính `--text-secondary`, đổi đậm hơn khi hover, không còn đỏ; gap danh sách 14px.
+- **CreateBill**: nút lưu chuyển thành `mat-raised-button.btn-gold` nằm trong `.top-bar` cạnh ô
+  tên hoá đơn (không còn FAB nổi); 3 ô nhập chính (tên hoá đơn, thêm khoản mục, thêm thành
+  viên) dùng `floatLabel="always"` + class `.flat-field` (global) để label tĩnh phía trên, viền
+  mảnh, bớt "chrome" Material — vẫn giữ nguyên `mat-form-field`/`FormControl`/`mat-error` nên
+  không mất validation. Card "Khoản mục" bo `--border-radius-lg` (16px)/padding 22px/gap 16px;
+  thêm `.member-panel` (mới, trong `member-table.scss`) làm card bao cột "Thành viên" đối xứng
+  với "Khoản mục" (tiêu đề + icon `groups`, cùng bo góc/padding); bảng thành viên có thêm
+  `.member-avatar` (vòng tròn chữ cái đầu, dùng chung ở cả bảng desktop và card mobile); nút
+  thêm khoản mục/thành viên đổi từ tròn sang vuông bo 8px (`--border-radius-sm`) 42×42.
+- **Result**: bỏ `max-height`/sticky của card "Khoản mục" — hiện đầy đủ không cuộn, bo góc
+  tăng lên `--border-radius-lg`; bỏ `member-amount__stub` — card "Mỗi người cần trả" phẳng như
+  mockup (chỉ tên + số tiền + icon trạng thái).
+
+### Reason
+
+Khớp lại với mockup đã được duyệt ở phiên trước, giảm cảm giác "Material mặc định" (form
+field nổi, FAB tròn) để đúng tinh thần thiết kế "biên nhận giấy" đã chọn cho app. Nút xoá đổi
+màu trung tính vì xoá 1 dòng dữ liệu (khoản mục/thành viên/hoá đơn) là thao tác thường xuyên
+trong luồng dùng, không cần tín hiệu cảnh báo đỏ liên tục — mockup cũng không dùng đỏ ở đây.
+
+### Alternatives Considered
+
+- **Input**: cân nhắc bỏ hẳn `mat-form-field`, viết `<input>` thuần theo đúng pixel mockup
+  (label hoàn toàn tách khỏi viền, không có notch cutout). Không chọn vì sẽ mất
+  validation/`mat-error` có sẵn của Reactive Forms, rủi ro regression cao hơn nhiều so với lợi
+  ích thẩm mỹ — chọn `floatLabel="always"` + override CSS làm giải pháp cân bằng, chấp nhận
+  còn 1 khác biệt nhỏ (label vẫn nằm trên đường viền theo cách vẽ của Material outline, không
+  tách hẳn ra ngoài như mockup).
+- **Avatar-stub tổng kết & icon SVG**: xem phần Decision — đã hỏi người dùng thay vì tự quyết.
+
 ## 2026-09-18
 
 ### Decision

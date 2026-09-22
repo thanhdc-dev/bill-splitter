@@ -19,11 +19,9 @@
 
   .table-container {
     width: 100%;
-    max-height: 480px;
     overflow-x: auto;
-    overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-    border-radius: var(--border-radius-md);
+    border-radius: var(--border-radius-lg);
     border: 1px solid var(--border-color);
     background: var(--surface-color);
     box-shadow: var(--shadow-sm);
@@ -33,32 +31,22 @@
       border-collapse: collapse;
 
       thead th {
-        position: sticky;
-        top: 0;
-        z-index: 1;
-        background-color: var(--surface-muted);
         color: var(--text-secondary);
-        font-weight: 600;
-        font-size: 0.875rem;
+        font-weight: 700;
+        font-size: 0.8125rem;
         text-align: left;
-        padding: 16px 20px;
-        /* Giả viền dưới bằng box-shadow (như cột name sticky trong member-table.scss) vì
-           border thường bị header sticky "che" khi cuộn. */
-        box-shadow: 0 1px 0 0 var(--border-color);
+        padding: 18px 20px 8px;
       }
 
       tbody td {
-        padding: 14px 20px;
+        padding: 0 20px 10px;
         color: var(--text-primary);
-        border-bottom: 1px solid var(--border-subtle);
       }
 
       tfoot td {
-        padding: 16px 20px;
-        background-color: var(--surface-muted);
-        border-top: 2px solid var(--border-color);
-        position: sticky;
-        bottom: 0;
+        padding: 12px 20px 18px;
+        border-top: 1px solid var(--border-color);
+        margin-top: 4px;
       }
 
       .leader-row__value {
@@ -97,28 +85,13 @@
       gap: 16px;
 
       .member-amount {
-        /* Ticket-lite: mượn motif .receipt-ticket nhưng thu nhỏ, không notch, vì nằm
-           trong mat-card (nền --surface-color) — dùng viền mảnh thay cho shadow/hover-lift. */
-        --notch-bg: var(--surface-color);
+        /* Card phẳng như mockup đã duyệt — không avatar/stub, chỉ viền mảnh phân tách. */
         display: flex;
         align-items: stretch;
         border: 1px solid var(--border-color);
         border-radius: var(--border-radius-md);
         background: var(--surface-color);
         overflow: hidden;
-
-        .member-amount__stub {
-          flex: 0 0 auto;
-          width: 36px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: var(--teal-soft);
-          color: var(--teal-dark);
-          font-family: var(--font-mono);
-          font-weight: 700;
-          text-transform: uppercase;
-        }
 
         .member-amount__body {
           flex: 1;

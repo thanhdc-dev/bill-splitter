@@ -3,12 +3,22 @@
   margin: 0 auto;
 }
 
+.list-header {
+  margin-bottom: 24px;
+}
+
 .list-title {
   color: var(--text-primary);
-  margin-bottom: 24px;
-  font-size: 28px;
-  font-weight: 600;
-  text-align: center;
+  margin: 0;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.2px;
+}
+
+.list-subtitle {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: var(--text-secondary);
 }
 
 .list-loading {
@@ -28,7 +38,7 @@
 .bill-wrapper {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
 }
 
 /* .receipt-ticket (styles.scss) cấp: display:flex, border, border-radius, overflow, nền.
@@ -131,7 +141,8 @@
 }
 
 .bill-amount {
-  font-size: 14px;
+  font-size: 17px;
+  font-weight: 700;
   color: var(--teal-dark);
 }
 
@@ -183,6 +194,8 @@
   flex-shrink: 0;
 }
 
+/* .delete-btn dùng chung — xem styles.scss */
+
 // Responsive design
 @media (max-width: 768px) {
   .list-container {
@@ -213,7 +226,7 @@
 
 @media (max-width: 480px) {
   .list-title {
-    font-size: 24px;
+    font-size: 20px;
   }
 
   .bill-content {

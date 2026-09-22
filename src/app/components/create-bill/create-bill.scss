@@ -1,6 +1,7 @@
 .bill-splitter-container {
-  max-width: 1000px;
-  /* Bóp gọn lại cho cân đối */
+  /* Khớp chiều rộng canvas gốc của mockup CreateBill (1280px) — đủ chỗ cho card "Thành viên"
+     trước khi bảng phải cuộn ngang. */
+  max-width: 1280px;
   margin: 0 auto;
   position: relative;
   min-height: 100vh;
@@ -10,6 +11,33 @@
     border: none;
     box-shadow: var(--shadow-sm) !important;
     background-color: var(--surface-color);
+  }
+
+  .top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    flex-wrap: wrap;
+    margin-bottom: 22px;
+
+    &__name {
+      flex: 1;
+      min-width: 220px;
+      margin-bottom: 0;
+    }
+
+    &__save {
+      flex-shrink: 0;
+
+      .mat-icon {
+        margin-right: 4px;
+      }
+
+      &--syncing .mat-icon {
+        animation: rotate 1s linear infinite;
+      }
+    }
   }
 
   .mat-tab-label {
@@ -40,30 +68,17 @@
      render khi !isMobile (xem create-bill.html), nên không cần media query ở đây nữa. */
   .two-col-layout {
     display: grid;
-    grid-template-columns: 1.25fr 1fr;
+    /* minmax(0, …) chứ không phải Nfr trần: mặc định track grid không co nhỏ hơn min-content
+       của phần tử bên trong — bảng thành viên có min-width:600px (member-table.scss) nên track
+       1fr bị ép giãn vượt quá phần chia của nó, tràn ra ngoài .bill-splitter-container. */
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
     gap: 24px;
     align-items: start;
 
     .expense-form,
     .member-table {
       padding-top: 0;
-    }
-  }
-
-  /* Floating Action Buttons */
-  .buttons {
-    z-index: 999;
-
-    button {
-      transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-
-      &:hover {
-        transform: scale(1.1);
-      }
-    }
-
-    .share-button__syncing .mat-icon {
-      animation: rotate 1s linear infinite;
+      min-width: 0;
     }
   }
 
@@ -87,6 +102,18 @@
 
       .icon {
         display: block;
+      }
+    }
+
+    .top-bar {
+      &__name {
+        min-width: 100%;
+      }
+
+      &__save {
+        width: 100%;
+        justify-content: center;
+        margin-bottom: 0;
       }
     }
   }

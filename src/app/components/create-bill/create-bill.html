@@ -1,10 +1,23 @@
 <div class="bill-splitter-container">
   <mat-card>
     <mat-card-content>
-      <mat-form-field appearance="outline" class="w-full">
-        <mat-label>Tên hóa đơn</mat-label>
-        <input matInput [formControl]="nameCtrl" placeholder="Tên hóa đơn, cửa hàng, quán ăn..." />
-      </mat-form-field>
+      <div class="top-bar">
+        <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" class="flat-field top-bar__name">
+          <mat-label>Tên hóa đơn</mat-label>
+          <input matInput [formControl]="nameCtrl" placeholder="Tên hóa đơn, cửa hàng, quán ăn..." />
+        </mat-form-field>
+
+        <!-- Gộp còn 1 CTA duy nhất: share luôn tự lưu trước khi copy link, nên không mất khả
+             năng lưu khi bỏ nút lưu riêng. Đặt ngay trên thanh top-bar (như mockup đã duyệt)
+             thay vì FAB nổi cố định, để không che nội dung khi cuộn trên mobile. -->
+        <button mat-raised-button class="btn-gold top-bar__save" aria-label="Lưu và sao chép link chia sẻ"
+          matTooltip="Lưu và sao chép link chia sẻ" matTooltipPosition="above"
+          [ngClass]="{'top-bar__save--syncing': (isSaving$ | async)}" [disabled]="(isSaving$ | async)"
+          (click)="save(true)">
+          <mat-icon>{{(isSaving$ | async) ? 'sync' : 'share'}}</mat-icon>
+          Lưu &amp; chia sẻ
+        </button>
+      </div>
 
       @if (isMobile) {
       <!-- Dưới 768px: không đủ chỗ cho 2 cột song song, giữ tab như trước. -->
@@ -59,19 +72,9 @@
   <app-result-display></app-result-display>
   <app-bank></app-bank>
   @if (uploadProgress !== null) {
-  <div class="upload-progress fixed bottom-24 right-7" role="status" aria-live="polite">
+  <div class="upload-progress fixed bottom-7 right-7" role="status" aria-live="polite">
     <mat-progress-spinner mode="determinate" [value]="uploadProgress" diameter="40"></mat-progress-spinner>
     <span class="upload-progress__label">{{ uploadProgress }}%</span>
   </div>
   }
-
-  <div class="buttons fixed bottom-7 right-7">
-    <!-- Gộp còn 1 CTA duy nhất: share luôn tự lưu trước khi copy link, nên không mất khả năng
-         lưu khi bỏ nút lưu riêng. -->
-    <button mat-fab class="fab-gold share-button" aria-label="Lưu và sao chép link chia sẻ"
-      matTooltip="Lưu và sao chép link chia sẻ" matTooltipPosition="left"
-      [ngClass]="{'share-button__syncing': (isSaving$ | async)}" [disabled]="(isSaving$ | async)" (click)="save(true)">
-      <mat-icon>{{(isSaving$ | async) ? 'sync' : 'share'}}</mat-icon>
-    </button>
-  </div>
 </div>

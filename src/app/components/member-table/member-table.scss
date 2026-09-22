@@ -2,6 +2,80 @@
   display: block;
 }
 
+/* Khung "card" cho cột Thành viên, song song với .expense-card của khoản mục — theo mockup
+   CreateBill đã duyệt (2 card cân xứng, mỗi card có tiêu đề + icon riêng). */
+.member-panel {
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-lg);
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  &__title {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+
+    mat-icon {
+      color: var(--teal);
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+  }
+
+  /* Tự cấp layout flex thay vì mượn `.inline-add-form` global — selector `.inline-add-form >
+     button` của nó áp `padding: 0 24px !important` lên MỌI nút con trực tiếp (kể cả mini-fab
+     42px này), khiến icon "+" bị bóp về 0 width. Tách hẳn để chỉ style của chính nó. */
+  &__add {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    .mat-mdc-form-field {
+      flex: 1;
+      min-width: 0;
+    }
+  }
+
+  &__hint {
+    margin: -8px 0 0;
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+
+  &__submit {
+    flex-shrink: 0;
+    width: 42px;
+    height: 42px;
+    border-radius: var(--border-radius-sm) !important;
+    background-color: var(--teal) !important;
+    color: #fff !important;
+
+    &[disabled] {
+      background-color: var(--surface-muted) !important;
+      color: var(--text-secondary) !important;
+    }
+  }
+
+  .member-cards,
+  .data-table-scroll {
+    margin: 0;
+  }
+}
+
+@media screen and (max-width: 600px) {
+  .member-panel {
+    padding: 16px;
+  }
+}
+
 /* Layout shell (.inline-add-form, .data-table-scroll) lives in styles.scss. */
 .member-table-scroll table {
   min-width: 600px;
@@ -35,6 +109,13 @@
     display: block;
   }
 
+  /* Cột khoản mục: chỉ chứa quantity-selector căn giữa (154px) — padding riêng hẹp hơn cột
+     text mặc định (12px 16px) để bảng không thừa chỗ, đỡ phải cuộn ngang sớm khi nhiều cột. */
+  .qty-cell {
+    padding: 12px 8px;
+    text-align: center;
+  }
+
   .mat-column-totalAmount {
     width: 120px;
     font-family: var(--font-mono);
@@ -44,17 +125,23 @@
     text-align: right;
   }
 
+  /* isPaid và actions: cùng 1 control nhỏ (checkbox/icon-button 40px) — cho cùng width/padding
+     để 2 cột đối xứng nhau, thay vì "actions" khai width:48px không có tác dụng thật (bảng
+     table-layout:auto luôn lấy content 40px + padding cell làm kích thước thật, không phải
+     con số khai trong CSS). */
+  .mat-column-isPaid,
   .mat-column-actions {
-    width: 48px;
+    width: 64px;
+    padding: 12px 8px;
     text-align: center;
+  }
 
-    button {
-      opacity: 0.6;
-      transition: opacity 0.2s, color 0.2s;
+  .mat-column-actions button {
+    opacity: 0.6;
+    transition: opacity 0.2s, color 0.2s;
 
-      &:hover {
-        opacity: 1;
-      }
+    &:hover {
+      opacity: 1;
     }
   }
 }
