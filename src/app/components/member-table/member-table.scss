@@ -35,7 +35,12 @@
      42px này), khiến icon "+" bị bóp về 0 width. Tách hẳn để chỉ style của chính nó. */
   &__add {
     display: flex;
-    align-items: center;
+    /* flex-start, không phải center: mat-error (validate lỗi) đẩy field cao thêm — center sẽ
+     làm nút "+" trôi lên xuống theo độ dài thông báo lỗi. Nút cao 42px được canh khớp mép trên
+     khung input (48px, `--mat-form-field-container-height` trong flat-field) bằng padding-top
+     thay vì margin — label của mat-form-field nổi ra NGOÀI `.mat-mdc-text-field-wrapper` bằng
+     transform nên không cộng thêm chiều cao ở trên, top của field = top của khung nhìn thấy. */
+    align-items: flex-start;
     gap: 8px;
 
     .mat-mdc-form-field {
