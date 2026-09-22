@@ -2225,3 +2225,53 @@ hưởng mọi nơi dùng `mat-raised-button` (kể cả CTA chính "Lưu & chia
   bị loại vì không sửa gốc, các nút `mat-raised-button` khác trong app (CTA vàng, nút Lưu ở các
   dialog...) vẫn lệch, để lại đúng loại thiếu nhất quán mà người dùng vừa phát hiện, có nguy cơ
   lặp lại vấn đề này ở component mới sau này.
+
+## 2026-09-22
+
+### Decision
+
+Bổ sung mục "Ảnh Chụp Màn Hình" vào `README.md`, dùng 5 ảnh chụp thật từ app (không phải mockup)
+được tạo bằng skill `run-web` (Playwright headless): `bills-list.png`, `create-bill.png`,
+`result-display.png`, `qr-popup.png`, `mobile-view.png`. Lưu tại `docs/screenshots/` (thư mục mới)
+thay vì `public/` hoặc `src/assets/`, vì đây là tài liệu cho người đọc README trên GitHub, không
+phải asset được app tải lúc runtime.
+
+### Before
+
+`README.md` chỉ có mô tả text (Tính Năng, Nền Tảng Công Nghệ, Hướng Dẫn Cài Đặt) — không có hình
+minh hoạ, người đọc phải tự cài và chạy app mới hình dung được giao diện.
+
+### After
+
+- Thư mục mới `docs/screenshots/` chứa 5 file PNG.
+- `README.md` có thêm section "Ảnh Chụp Màn Hình" (bảng 2 cột cho desktop + 1 ảnh mobile riêng)
+  chèn ngay sau phần giới thiệu, trước "Nền Tảng Công Nghệ".
+- Dữ liệu trong ảnh là dữ liệu mẫu, tạo bằng cách mock response `GET /bills`, `GET /bills/:code`,
+  `GET /auth/me` qua `page.route()` của Playwright — không có API backend thật nào bị gọi, không
+  có dữ liệu người dùng thật nào bị lộ.
+
+### Reason
+
+- Route `/bills` và `/setting` có `authGuard`, và route gốc `/` (Create Bill) cần ít nhất vài
+  thành viên/khoản mục mới hiện được phần "Chi tiết chia tiền" — không thể chụp ảnh có ý nghĩa
+  chỉ bằng cách mở app trống. Phải mock auth (`accessToken` giả trong `localStorage`) và mock các
+  endpoint liên quan mới vào được các trang cần chụp.
+- Trang chi tiết hóa đơn (`result-display`, hiển thị qua route `:code` → `BillDetails`) cần đúng
+  shape `BillFindOne` (đọc từ `src/app/models/bill-splitter.model.ts`) mới render đúng; nếu mock
+  sai field, trang lỗi 500 hoặc trắng — đã gặp lỗi này khi thử `nav /create` (khớp nhầm route
+  `:code` thay vì `''`) và khi `fill` số tiền bị nối chuỗi thay vì ghi đè do
+  `thousand-separator` directive không phản ứng với `locator.fill` như input thường — phải đổi
+  sang `click` trực tiếp nút submit (`.expense-add-row__submit`) thay vì `click-text "Thêm"` (nút
+  đó không có text hiển thị, chỉ có `aria-label` + icon).
+
+### Alternatives Considered
+
+- **Dùng ảnh mockup/vẽ tay (Figma, placeholder) thay vì ảnh chụp thật** — bị loại vì README nên
+  phản ánh đúng giao diện hiện tại của app, ảnh mockup dễ lệch khỏi thực tế sau vài lần cập nhật
+  UI và không chứng minh được tính năng thật sự hoạt động.
+- **Lưu screenshot trong `src/assets/` để có thể tái sử dụng trong app** — bị loại vì đây là ảnh
+  chỉ phục vụ tài liệu (README), không cần bundle vào app production, để trong `src/assets/` sẽ
+  làm tăng kích thước build không cần thiết.
+- **Chụp ảnh với dữ liệu thật từ backend đang chạy** — bị loại vì cần một backend + tài khoản
+  thật, không phù hợp để tái lập trong môi trường agent/CI; mock response là cách nhanh, xác định
+  và không phụ thuộc hạ tầng ngoài.

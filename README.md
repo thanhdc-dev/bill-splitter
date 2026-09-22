@@ -16,6 +16,41 @@
 * **Giao Diện Sáng/Tối:** Chọn giao diện Sáng, Tối hoặc Theo hệ thống ngay trên thanh tiêu đề. Lựa chọn được ghi nhớ giữa các lần truy cập.
 * **Tối Ưu Hóa SEO:** Đảm bảo các liên kết chia sẻ hóa đơn có khả năng hiển thị trước (preview) đầy đủ, nổi bật trên các mạng xã hội.
 
+## Ảnh Chụp Màn Hình
+
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <img src="docs/screenshots/bills-list.png" alt="Danh sách hóa đơn" />
+      <br />
+      <sub><b>Danh sách hóa đơn</b> — quản lý các hóa đơn đã lưu</sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="docs/screenshots/create-bill.png" alt="Tạo hóa đơn mới" />
+      <br />
+      <sub><b>Tạo hóa đơn mới</b> — thêm khoản mục, thành viên và chia tiền tự động</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="50%">
+      <img src="docs/screenshots/result-display.png" alt="Kết quả chia tiền" />
+      <br />
+      <sub><b>Kết quả chia tiền</b> — tổng hợp số tiền mỗi người cần trả</sub>
+    </td>
+    <td align="center" width="50%">
+      <img src="docs/screenshots/qr-popup.png" alt="Mã QR thanh toán" />
+      <br />
+      <sub><b>Mã QR thanh toán</b> — quét để chuyển khoản nhanh chóng</sub>
+    </td>
+  </tr>
+</table>
+
+<div align="center">
+  <img src="docs/screenshots/mobile-view.png" alt="Giao diện di động" width="320" />
+  <br />
+  <sub><b>Giao diện di động (PWA)</b> — trải nghiệm mượt mà trên điện thoại</sub>
+</div>
+
 ## Nền Tảng Công Nghệ
 
 * **Framework Frontend:** Angular 20
