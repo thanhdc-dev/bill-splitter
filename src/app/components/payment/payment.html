@@ -7,14 +7,14 @@
       </ng-template>
 
       <mat-card>
-        <app-bank-select class="select-bank mt-4" formControlName="bank" valueField="code"></app-bank-select>
+        <app-bank-select class="select-bank" formControlName="bank" valueField="code"></app-bank-select>
 
-        <mat-form-field appearance="outline" class="account-name mt-4">
+        <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" class="flat-field account-name">
           <mat-label>Họ & Tên</mat-label>
           <input matInput type="text" formControlName="accountName" />
         </mat-form-field>
 
-        <mat-form-field appearance="outline" class="account-number mt-4">
+        <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" class="flat-field account-number">
           <mat-label>Số tài khoản</mat-label>
           <input matInput type="text" class="mono-text" formControlName="accountNumber" />
         </mat-form-field>
@@ -28,17 +28,17 @@
       </ng-template>
 
       <mat-card>
-        <mat-form-field appearance="outline" class="account-name-momo mt-4">
+        <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" class="flat-field account-name-momo">
           <mat-label>Họ & Tên</mat-label>
           <input matInput type="text" formControlName="accountNameMomo" />
         </mat-form-field>
 
-        <mat-form-field appearance="outline" class="phone-number-momo">
+        <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" class="flat-field phone-number-momo">
           <mat-label>Số điện thoại</mat-label>
           <input matInput type="text" class="mono-text" formControlName="phoneNumberMomo" />
         </mat-form-field>
 
-        <mat-form-field appearance="outline" class="account-number-momo">
+        <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" class="flat-field account-number-momo">
           <mat-label>Số tài khoản</mat-label>
           <input matInput type="text" class="mono-text" formControlName="accountNumberMomo" />
         </mat-form-field>

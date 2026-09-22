@@ -7,16 +7,26 @@
   min-width: 350px;
   max-width: 500px;
   padding: 0;
+  /* Dialog surface (`.mat-mdc-dialog-surface`, styles.scss) đã có border + shadow-md riêng —
+     card bên trong không cần thêm 1 lớp border/shadow nữa, tránh viền/bóng đúp. */
+  border: none;
+  box-shadow: none !important;
 }
 
 .qr-image-container {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   align-items: center;
+  gap: 8px;
   padding: 20px;
   background-color: var(--surface-muted);
   border-radius: 8px;
   margin: 16px 0;
+}
+
+.qr-caption {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
 }
 
 .qr-image {
@@ -39,6 +49,12 @@
 mat-card-header {
   position: relative;
   padding: 16px 16px 0 16px;
+}
+
+.close-button {
+  position: absolute;
+  top: 8px;
+  right: 8px;
 }
 
 mat-card-actions {

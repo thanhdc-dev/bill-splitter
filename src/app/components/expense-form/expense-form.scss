@@ -55,7 +55,7 @@
     margin-top: 3px;
     border-radius: var(--border-radius-sm) !important;
     background-color: var(--teal) !important;
-    color: #fff !important;
+    color: var(--on-primary-color) !important;
 
     &[disabled] {
       background-color: var(--surface-muted) !important;

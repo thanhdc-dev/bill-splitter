@@ -179,7 +179,11 @@ h1, h2, h3, h4, h5, h6 {
 .mat-mdc-card {
   border-radius: var(--border-radius-lg) !important;
   box-shadow: var(--shadow-sm) !important;
-  border: 1px solid var(--border-color);
+  /* !important bắt buộc: CSS nội bộ do `mat.theme()` sinh ra (đầu file) có selector cụ thể hơn
+     `.mat-mdc-card` đơn, nên border không !important sẽ bị ghi đè mất — card nào không có
+     override riêng (payment.html) sẽ mất viền trong khi card có override cục bộ (setting,
+     bill-details) vẫn có, gây lệch nhau giữa các trang. */
+  border: 1px solid var(--border-color) !important;
   background-color: var(--surface-color) !important;
   transition: box-shadow 0.3s ease;
 }
@@ -188,7 +192,7 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: var(--shadow-md) !important;
 }
 
-.mat-mdc-button, .mat-mdc-unelevated-button, .mat-mdc-outlined-button {
+.mat-mdc-button, .mat-mdc-unelevated-button, .mat-mdc-outlined-button, .mat-mdc-raised-button {
   border-radius: var(--border-radius-sm) !important;
   font-family: 'Inter', sans-serif !important;
   font-weight: 500 !important;
@@ -428,7 +432,10 @@ h1, h2, h3, h4, h5, h6 {
    use them instead of each keeping its own copy of the same 40 lines.
    --------------------------------------------------------------------------- */
 
-/* The "add something quickly" well above a table */
+/* The "add something quickly" well above a table.
+   Chỉ còn `payment.html` dùng trực tiếp class này (expense-form/member-table đã chuyển sang
+   class riêng) — form đó tự bọc `mat-card` nền `--surface-color`, nên well không cần thêm
+   nền riêng nữa, tránh 2 lớp nền chồng nhau. */
 .inline-add-form {
   display: flex;
   gap: 12px;
@@ -436,7 +443,6 @@ h1, h2, h3, h4, h5, h6 {
   flex-wrap: wrap;
   margin-bottom: 24px;
   padding: 16px;
-  background-color: var(--surface-muted);
   border-radius: var(--border-radius-md);
   border: 1px solid var(--border-color);
 

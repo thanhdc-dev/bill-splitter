@@ -1,17 +1,33 @@
 <mat-card class="qr-popup-card">
   <mat-card-header>
     <mat-card-title>{{ title }}</mat-card-title>
+    <button
+      mat-icon-button
+      class="close-button"
+      aria-label="close dialog"
+      (click)="closeDialog()"
+    >
+      <mat-icon>close</mat-icon>
+    </button>
   </mat-card-header>
 
   <mat-card-content>
     <div class="qr-image-container">
       <img [src]="data.qrImageUrl" alt="QR Code" class="qr-image" #qrImage />
+      <span class="qr-caption">Quét mã để xem chi tiết</span>
     </div>
   </mat-card-content>
 
   <mat-card-actions align="end">
     <button
       mat-stroked-button
+      aria-label="close dialog"
+      (click)="closeDialog()"
+    >
+      Đóng
+    </button>
+    <button
+      mat-raised-button
       color="primary"
       (click)="downloadQRCode()"
       class="download-button"
@@ -19,13 +35,6 @@
     >
       <mat-icon>download</mat-icon>
       Download
-    </button>
-    <button
-      mat-raised-button
-      aria-label="close dialog"
-      (click)="closeDialog()"
-    >
-      Đóng
     </button>
   </mat-card-actions>
 </mat-card>

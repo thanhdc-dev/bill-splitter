@@ -16,27 +16,29 @@
   .top-bar {
     display: flex;
     align-items: center;
-    justify-content: space-between;
     gap: 24px;
-    flex-wrap: wrap;
     margin-bottom: 22px;
 
     &__name {
       flex: 1;
-      min-width: 220px;
       margin-bottom: 0;
     }
+  }
 
-    &__save {
-      flex-shrink: 0;
+  /* Floating Action Button */
+  .buttons {
+    z-index: 999;
 
-      .mat-icon {
-        margin-right: 4px;
+    button {
+      transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+      &:hover {
+        transform: scale(1.1);
       }
+    }
 
-      &--syncing .mat-icon {
-        animation: rotate 1s linear infinite;
-      }
+    .share-button__syncing .mat-icon {
+      animation: rotate 1s linear infinite;
     }
   }
 
@@ -102,18 +104,6 @@
 
       .icon {
         display: block;
-      }
-    }
-
-    .top-bar {
-      &__name {
-        min-width: 100%;
-      }
-
-      &__save {
-        width: 100%;
-        justify-content: center;
-        margin-bottom: 0;
       }
     }
   }

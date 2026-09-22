@@ -16,21 +16,30 @@
           </button>
         </div>
       </div>
-      <p>
-        <strong>Ngân hàng: </strong><span>{{ bankInfo.short_name }} - {{ bankInfo.name }}</span>
-      </p>
-      <p><strong>Họ & tên: </strong><span>{{ bankInfo.accountName }}</span></p>
-      <p>
-        <strong>Số tài khoản: </strong><span>{{ bankInfo.accountNumber }}</span>
-        <button class="copy-btn" (click)="onCopyAccountNumber($event)" title="Copy account number"
-          aria-label="Copy account number">
-          <mat-icon>content_copy</mat-icon>
-        </button>
-      </p>
+      <div class="info-grid">
+        <span class="label">Ngân hàng</span>
+        <span class="value">{{ bankInfo.short_name }} - {{ bankInfo.name }}</span>
+
+        <span class="label">Họ &amp; tên</span>
+        <span class="value">{{ bankInfo.accountName }}</span>
+
+        <span class="label">Số tài khoản</span>
+        <span class="value value--account">
+          <span class="mono-text account-number">{{ bankInfo.accountNumber }}</span>
+          <button class="copy-btn" [class.copy-btn--copied]="isAccountNumberCopied"
+            (click)="onCopyAccountNumber($event)" title="Copy account number"
+            aria-label="Copy account number">
+            <mat-icon>{{ isAccountNumberCopied ? 'check' : 'content_copy' }}</mat-icon>
+          </button>
+        </span>
+      </div>
     </div>
     <div class="right">
       @if(qrCodeUrl) {
-      <img [src]="qrCodeUrl" width="250px" height="250px" alt="QR Code chuyển khoản" />
+      <div class="qr-frame">
+        <img [src]="qrCodeUrl" width="250px" height="250px" alt="QR Code chuyển khoản" />
+        <span class="qr-caption">Quét để chuyển khoản</span>
+      </div>
       }
     </div>
   </div>
@@ -56,20 +65,27 @@
           }
         </div>
       </div>
-      <p>
-        <strong>Họ & tên: </strong><span>{{ bankInfo.accountNameMomo }}</span>
-      </p>
-      <p>
-        <strong>Số điện thoại: </strong><span>{{ bankInfo.phoneNumberMomo }}</span>
-        <button class="copy-btn" (click)="onCopyMomoAccountNumber($event)" title="Copy account number"
-          aria-label="Copy account number">
-          <mat-icon>content_copy</mat-icon>
-        </button>
-      </p>
+      <div class="info-grid">
+        <span class="label">Họ &amp; tên</span>
+        <span class="value">{{ bankInfo.accountNameMomo }}</span>
+
+        <span class="label">Số điện thoại</span>
+        <span class="value value--account">
+          <span class="mono-text account-number">{{ bankInfo.phoneNumberMomo }}</span>
+          <button class="copy-btn" [class.copy-btn--copied]="isMomoNumberCopied"
+            (click)="onCopyMomoAccountNumber($event)" title="Copy account number"
+            aria-label="Copy account number">
+            <mat-icon>{{ isMomoNumberCopied ? 'check' : 'content_copy' }}</mat-icon>
+          </button>
+        </span>
+      </div>
     </div>
     <div class="right">
       @if(qrCodeUrlMomo) {
-      <img [src]="qrCodeUrlMomo" width="250px" height="250px" alt="QR Code momo" />
+      <div class="qr-frame">
+        <img [src]="qrCodeUrlMomo" width="250px" height="250px" alt="QR Code momo" />
+        <span class="qr-caption">Quét để chuyển khoản</span>
+      </div>
       }
     </div>
   </div>

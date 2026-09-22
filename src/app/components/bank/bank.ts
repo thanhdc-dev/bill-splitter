@@ -28,6 +28,8 @@ export class BankComponent implements OnInit {
   qrCodeUrl!: string;
   isShowMomoInfo = false;
   qrCodeUrlMomo!: string;
+  isAccountNumberCopied = false;
+  isMomoNumberCopied = false;
 
   constructor() {
     this.bankInfo$ = this.billSplitterService.bankInfo$;
@@ -71,6 +73,8 @@ export class BankComponent implements OnInit {
         this.snackBar.open('Số tài khoản đã được sao chép!', 'Đóng', {
           duration: 3000,
         });
+        this.isAccountNumberCopied = true;
+        setTimeout(() => (this.isAccountNumberCopied = false), 2000);
       })
       .catch((err) => {
         console.error('Lỗi khi copy:', err);
@@ -85,6 +89,8 @@ export class BankComponent implements OnInit {
         this.snackBar.open('Số điện thoại MOMO đã được sao chép!', 'Đóng', {
           duration: 3000,
         });
+        this.isMomoNumberCopied = true;
+        setTimeout(() => (this.isMomoNumberCopied = false), 2000);
       })
       .catch((err) => {
         console.error('Lỗi khi copy:', err);

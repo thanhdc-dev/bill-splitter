@@ -25,6 +25,24 @@
   }
 }
 
+/* Khoảng cách giữa các field trong từng tab (Ngân hàng/Momo) — nguồn duy nhất, không dùng
+   `mt-4` rải rác trên từng field nữa (từng gây chỗ có chỗ không), giống `.expense-card`/
+   `.member-panel` (cũng gap 16px). */
+mat-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+}
+
+/* Card nằm ngay dưới tab header (Ngân hàng/Momo) nên 2 góc trên phải vuông để liền mạch với
+   thanh tab phía trên — chỉ bo 2 góc dưới. `.mat-mdc-card` global (styles.scss) áp border-radius
+   4 góc bằng !important nên cần :host ::ng-deep + class để đủ specificity ghi đè. */
+:host ::ng-deep .mat-mdc-card {
+  border-top-left-radius: 0 !important;
+  border-top-right-radius: 0 !important;
+}
+
 @media screen and (max-width: 600px) {
   .payment-form {
     padding: 12px;

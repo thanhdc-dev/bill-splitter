@@ -33,3 +33,27 @@
   font-size: 0.85rem;
   color: var(--danger-color);
 }
+
+.button-group {
+  margin-top: 24px;
+}
+
+mat-card {
+  /* Border/shadow/background đã có sẵn từ `.mat-mdc-card` toàn cục (styles.scss) — ở đây chỉ
+     cần layout riêng cho card này. `gap` là nguồn khoảng cách DUY NHẤT giữa các field (không
+     dùng `mt-4` rải rác trên từng field nữa) để tránh chỗ có chỗ không, giống `.expense-card`/
+     `.member-panel` (cũng gap 16px). */
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+}
+
+.select-bank .mat-mdc-select-trigger .bank-info {
+  padding: 0;
+
+  .bank-name {
+    padding-left: 8px;
+    font-weight: 400;
+  }
+}

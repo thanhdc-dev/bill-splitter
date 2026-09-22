@@ -44,10 +44,10 @@ export class Setting implements OnInit {
   ngOnInit(): void {
     this.settingsForm = this.fb.group({
       bankAccount: this.fb.group({
-        bankBin: [''],
+        bankBin: ['', [Validators.required]],
         bankName: [''],
-        accountName: [''],
-        accountNumber: [''],
+        accountName: ['', [Validators.required]],
+        accountNumber: ['', [Validators.required]],
       }),
       momoWallet: this.fb.group({
         accountNumber: [''],

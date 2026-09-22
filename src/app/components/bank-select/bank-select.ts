@@ -1,4 +1,4 @@
-import { Component, Input, forwardRef } from '@angular/core';
+import { Component, Input, computed, forwardRef, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
@@ -52,6 +52,8 @@ export class BankSelectComponent implements ControlValueAccessor {
   @Input() label = 'Chọn ngân hàng';
   /** Trường của ngân hàng được dùng làm giá trị form. */
   @Input() valueField: 'code' | 'bin' = 'bin';
+  /** Hiển thị thông báo lỗi khi chưa chọn ngân hàng. */
+  @Input() required = false;
 
   readonly banks: BankItemLabel[] = BANKS.map((bank) => ({
     ...bank,
@@ -62,6 +64,14 @@ export class BankSelectComponent implements ControlValueAccessor {
   readonly filterCtrl = new FormControl('');
   readonly selectCtrl = new FormControl<string | null>(null);
   readonly filteredBanks: Observable<BankItemLabel[]>;
+  private readonly selectedValue = signal<string | null>(null);
+  readonly selectedBank = computed(() =>
+    this.banks.find(
+      (bank) =>
+        (this.valueField === 'bin' ? bank.bin : bank.code) ===
+        this.selectedValue()
+    )
+  );
 
   private onChange: (value: string | null) => void = () => undefined;
   private onTouched: () => void = () => undefined;
@@ -75,6 +85,7 @@ export class BankSelectComponent implements ControlValueAccessor {
     this.selectCtrl.valueChanges
       .pipe(takeUntilDestroyed())
       .subscribe((value) => {
+        this.selectedValue.set(value);
         this.onChange(value);
         this.onTouched();
       });
@@ -82,6 +93,7 @@ export class BankSelectComponent implements ControlValueAccessor {
 
   writeValue(value: string | null): void {
     this.selectCtrl.setValue(value ?? null, { emitEvent: false });
+    this.selectedValue.set(value ?? null);
   }
 
   registerOnChange(fn: (value: string | null) => void): void {

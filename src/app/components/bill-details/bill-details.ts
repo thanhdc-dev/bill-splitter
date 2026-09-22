@@ -8,6 +8,7 @@ import {
   ViewChild,
   inject,
 } from '@angular/core';
+import { BreakpointObserver } from '@angular/cdk/layout';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -46,6 +47,9 @@ import { LoginDialogComponent } from '../login-dialog/login-dialog';
 import { BillTabControlService } from './bill-tab-control.service';
 import { ImageUploadComponent, ImagePreview } from '../image-upload/image-upload';
 
+/* Cùng ngưỡng với create-bill.ts/member-table.ts — dưới 768px thấy tab, từ 768px thấy layout
+   2 cột, để 2 trang nhất quán về hành vi responsive. */
+const MOBILE_BREAKPOINT = '(max-width: 767px)';
 
 @Component({
   selector: 'app-bill-details',
@@ -80,6 +84,7 @@ export class BillDetails implements OnInit, OnDestroy, AfterViewInit {
   private readonly seoService = inject(SeoService);
   private readonly billTabControlService = inject(BillTabControlService);
   private readonly billAutoSaveService = inject(BillAutoSaveService);
+  private readonly breakpointObserver = inject(BreakpointObserver);
 
   code!: string;
   nameCtrl = new FormControl();
@@ -88,13 +93,15 @@ export class BillDetails implements OnInit, OnDestroy, AfterViewInit {
   isSaving$: Observable<boolean>;
   isChange$: Observable<boolean>;
   counter$: Observable<number>;
-  @ViewChild('tabGroup') tabGroup!: MatTabGroup;
+  @ViewChild('tabGroup') tabGroup?: MatTabGroup;
   sub!: Subscription;
   isEditable = false;
   oldImages: { id: number; storagePath: string }[] = [];
   images: ImagePreview[] = [];
   /** null = không đang upload; 0-100 = % tiến trình của batch upload ảnh hiện tại. */
   uploadProgress: number | null = null;
+  /** Dưới 768px: tab Khoản mục/Thành viên. Từ 768px: 2 cột song song, không có tabGroup. */
+  isMobile = false;
 
 
   constructor() {
@@ -104,6 +111,13 @@ export class BillDetails implements OnInit, OnDestroy, AfterViewInit {
     this.isChange$ = this.billSplitterService.isChange$;
     this.counter$ = this.billAutoSaveService.counter$;
     this.code = this.route.snapshot.paramMap.get('code') ?? '';
+
+    this.breakpointObserver
+      .observe(MOBILE_BREAKPOINT)
+      .pipe(takeUntilDestroyed())
+      .subscribe(({ matches }) => {
+        this.isMobile = matches;
+      });
     this.nameCtrl.valueChanges
       .pipe(
         debounceTime(300), // tránh spam khi người dùng gõ liên tục
@@ -138,7 +152,11 @@ export class BillDetails implements OnInit, OnDestroy, AfterViewInit {
 
   ngAfterViewInit() {
     this.sub = this.billTabControlService.tabChange$.subscribe((index) => {
-      this.tabGroup.selectedIndex = index;
+      // tabGroup chỉ tồn tại ở layout mobile (dưới 768px) hoặc khi isEditable=false (không có
+      // tab nào) — ở layout 2 cột desktop hoặc chế độ chỉ đọc không có tab nào để chuyển tới.
+      if (this.tabGroup) {
+        this.tabGroup.selectedIndex = index;
+      }
     });
   }
 

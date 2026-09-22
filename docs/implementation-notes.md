@@ -3,6 +3,403 @@
 > Ghi chép quyết định triển khai theo quy ước tại `AGENTS.md`.
 > Các ghi chép về tích hợp CDN ảnh (2026-06-11) nằm ở `docs/implementation-notes.html`.
 
+## 2026-09-22 (bo góc `mat-card` trong `app-payment` chỉ ở 2 góc dưới)
+
+### Decision
+
+`mat-card` trong `payment.html` nằm ngay dưới `mat-tab-group` (tab "Ngân hàng"/"Momo"). Style
+global `.mat-mdc-card` (`styles.scss:179`) áp `border-radius: var(--border-radius-lg) !important`
+cho cả 4 góc, khiến 2 góc trên của card cũng bo tròn dù card nằm sát dưới thanh tab — nhìn tách
+rời, không liền mạch với tab header phía trên (tab header vuông). Người dùng yêu cầu: chỉ bo 2
+góc dưới, giữ 2 góc trên vuông.
+
+### Before
+
+`payment.scss` chỉ override `display/flex-direction/gap/padding` cho `mat-card`, không đụng tới
+`border-radius` — card kế thừa nguyên `border-radius` 4 góc từ `.mat-mdc-card` global.
+
+### After
+
+Thêm rule trong `payment.scss`:
+```scss
+:host ::ng-deep .mat-mdc-card {
+  border-top-left-radius: 0 !important;
+  border-top-right-radius: 0 !important;
+}
+```
+Dùng `:host ::ng-deep` + class `.mat-mdc-card` (thay vì chỉ element selector `mat-card`) để đủ
+specificity ghi đè rule global cũng dùng `!important`. Đã build (`ng build`) và chụp màn hình qua
+skill `run-web` xác nhận cả 2 tab (Ngân hàng/Momo) đều vuông 2 góc trên, bo 2 góc dưới.
+
+### Reason
+
+Card là phần nội dung của tab đang active, về mặt thị giác nên liền một khối với tab header phía
+trên (cùng cấp độ container), không tách rời như một card độc lập nổi bên dưới.
+
+### Alternatives Considered
+
+- Bọc `mat-tab-group` + `mat-card` trong 1 container chung rồi bo góc container thay vì card —
+  không chọn vì phải đổi cấu trúc HTML, trong khi chỉ cần override `border-radius` là đủ.
+
+
+## 2026-09-22 (revert CTA "Lưu & chia sẻ" về FAB nổi cố định)
+
+### Decision
+
+Quyết định trước đó cùng ngày (mục bên dưới, commit `ed75892`) đã bỏ FAB nổi
+(`mat-fab.share-button`, `position: fixed bottom-7 right-7`) để thay bằng nút gộp trong
+`.top-bar` cạnh ô "Tên hóa đơn", với lý do tránh che nội dung khi cuộn trên mobile. Người dùng
+yêu cầu đảo ngược: đưa lại FAB nổi cố định góc dưới-phải, vì muốn nhấn "Lưu & chia sẻ" bất cứ
+lúc nào trong lúc nhập liệu dài mà không phải cuộn lên top-bar. Người dùng xác nhận rõ ràng
+chấp nhận đánh đổi che nội dung góc dưới-phải khi cuộn trên mobile.
+
+Áp dụng cho cả `create-bill.html`/`.scss` và `bill-details.html`/`.scss` để giữ 2 trang đồng bộ
+cấu trúc (đã được đồng bộ ở mục bên dưới cùng ngày) — người dùng xác nhận qua AskUserQuestion.
+
+Các lựa chọn phụ đã hỏi và chốt:
+- Top-bar sau khi bỏ nút: chỉ còn ô "Tên hóa đơn" full-width (không giữ chỗ trống).
+- Kiểu FAB: icon-only tròn (`mat-fab`, không dùng extended FAB có nhãn chữ).
+- Chồng lấn với `.upload-progress` (cũng fixed bottom-7 right-7 khi đang upload ảnh): không xử
+  lý, chấp nhận rủi ro hiếm gặp vì 2 trạng thái (đang lưu + đang upload) ít khi trùng nhau.
+
+### Before
+
+`.top-bar` chứa cả ô tên và `<button mat-raised-button class="btn-gold top-bar__save">` (icon +
+nhãn "Lưu & chia sẻ"), không có `.buttons`/`.share-button` fixed nào trong 2 file trên.
+
+### After
+
+- `create-bill.html`/`bill-details.html`: xoá nút khỏi `.top-bar` (chỉ còn ô tên), thêm lại
+  `<div class="buttons fixed bottom-7 right-7"><button mat-fab class="fab-gold share-button">`
+  sau `<app-bank>`, không gate theo `isEditable` ở `bill-details.html` (người xem read-only vẫn
+  cần copy link).
+- `create-bill.scss`/`bill-details.scss`: bỏ `.top-bar__save` và phần responsive tương ứng ở
+  media query 600px; thêm lại block `.buttons { z-index: 999; button { transition/hover scale };
+  .share-button__syncing { animation rotate } }` giống bản gốc trước mockup.
+
+### Reason
+
+Ưu tiên khả năng thao tác "lưu bất cứ lúc nào" trong lúc nhập liệu dài hơn là tránh che nội dung
+— người dùng đánh giá đây là trade-off chấp nhận được vì vùng che chỉ ở góc dưới-phải, thường là
+khoảng trống cuối trang trên mobile, và đây là pattern phổ biến (FAB Material Design).
+
+### Alternatives Considered
+
+- Giữ nút trong `.top-bar` (bản mockup đã duyệt trước đó) — bị loại vì không thoả yêu cầu mới
+  "lưu bất cứ lúc nào không cần cuộn lên top".
+- Extended FAB có nhãn chữ ("Lưu & chia sẻ" thay vì chỉ icon) — người dùng chọn icon-only để gọn
+  hơn, giống bản gốc code trước khi áp mockup.
+
+## 2026-09-22 (đồng bộ toàn bộ layout `bill-details.html` theo `create-bill.html`)
+
+### Decision
+
+Người dùng phát hiện `.bill-splitter-container` có `max-width` khác nhau giữa `bill-details.scss`
+(1000px) và `create-bill.scss` (1280px). Khi so sánh sâu hơn phát hiện đây không chỉ là lệch CSS
+mà lệch cả CẤU TRÚC: `bill-details.html` vẫn giữ layout cũ — luôn hiện 3 tab ("Khoản mục"/
+"Thành viên"/"Thanh toán") ở mọi kích thước màn hình, không có layout 2 cột responsive, và dùng
+2 FAB nổi cố định (share-button + auto-save-button) thay vì 1 nút gộp trên top-bar như
+`create-bill.html` đã áp dụng ở các lượt sửa mockup trước. Đã hỏi và người dùng xác nhận: đồng
+bộ TOÀN BỘ cấu trúc, không chỉ dừng ở style.
+
+### After
+
+- `bill-details.ts`: thêm `BreakpointObserver` + `MOBILE_BREAKPOINT` (`'(max-width: 767px)'`,
+  giống hệt `create-bill.ts`/`member-table.ts`) + field `isMobile`; đổi `@ViewChild('tabGroup')
+  tabGroup!: MatTabGroup` thành optional (`tabGroup?`) và guard `if (this.tabGroup)` trong
+  `ngAfterViewInit` (tabGroup không tồn tại ở layout 2 cột desktop hoặc khi `isEditable=false`).
+- `bill-details.html`: viết lại theo đúng cấu trúc `create-bill.html` — `top-bar` (tên hoá đơn +
+  1 nút "Lưu & chia sẻ" duy nhất, gộp save+share); `@if(isMobile)` → tab 2 mục (Khoản mục/Thành
+  viên), `@else` → `.two-col-layout` 2 cột song song; "Thanh toán" luôn hiện sẵn (`#payment-
+  section`), không còn là tab thứ 3; thêm `.tear-line` trước `result-display`/`bank` (class dùng
+  chung, đã có sẵn ở `styles.scss`). Giữ lại phần bill-details ĐẶC THÙ mà create-bill không có:
+  `@if(isEditable)` bọc quanh tên input (nếu không editable thì hiện text tĩnh) và quanh toàn bộ
+  form khoản mục/thành viên/thanh toán (ẩn hết khi xem hoá đơn không phải của mình); nút "Lưu &
+  chia sẻ" KHÔNG gate theo `isEditable` (người xem read-only vẫn cần copy được link).
+- `bill-details.scss`: viết lại theo đúng `create-bill.scss` (top-bar, `.mat-tab-label`,
+  `.mat-mdc-tab-header`, `.two-col-layout`, keyframe `rotate`, media query 600px, `.upload-
+  progress`), bỏ hẳn block `.buttons`/`.share-button__syncing` cũ (không còn FAB nổi).
+- `bill-details.html`: `uploadProgress` đổi vị trí từ `bottom-[170px]` (từng phải né 2 FAB nổi)
+  về `bottom-7` như `create-bill.html`, vì FAB không còn.
+
+### Không đổi (đã kiểm tra, an toàn)
+
+- `bank.ts:96` `billTabControlService.changeTab(2)` (nút settings trên `<app-bank>`) — index 2
+  giờ không còn tồn tại ở CẢ 2 trang (create-bill lẫn bill-details) vì tab "Thanh toán" đã bị bỏ
+  từ trước ở create-bill; `if (this.tabGroup)` khiến lệnh này là no-op an toàn (chỉ còn tác dụng
+  `window.scrollTo` về đầu trang) — đúng hành vi đã được chấp nhận từ trước ở create-bill, không
+  phải lỗi mới phát sinh.
+- `billAutoSaveService`/`counter$` (đếm ngược tự động lưu) — không phụ thuộc UI button đã xoá,
+  vẫn gọi `this.save()` trực tiếp qua subscription, không bị ảnh hưởng.
+- Bỏ hẳn chỉ báo trực quan "đã lưu/chưa lưu" (icon `cloud_upload`/`cloud_done` trên FAB auto-save
+  cũ) — hệ quả tất yếu của việc gộp còn 1 nút theo đúng pattern `create-bill` (nơi cũng không có
+  chỉ báo này); không thêm lại vì mục tiêu là khớp `create-bill` 100%, không phải giữ tính năng
+  cũ bằng mọi giá.
+
+### Verify
+
+- `tsc --noEmit` sạch.
+- `run-web`: bill hợp lệ + không có `userId` (mặc định `isEditable=true`) → desktop hiện đúng 2
+  cột + thanh toán luôn hiện + top-bar 1 nút; mobile (390px) hiện đúng 2 tab icon-only, chuyển
+  tab mượt (frame chồng hình chỉ là animation giữa chừng, đã xác nhận bằng cách chờ 1000ms).
+  Bill có `userId` khác user hiện tại (mô phỏng xem hoá đơn người khác) → tên hiện text tĩnh,
+  form khoản mục/thành viên/thanh toán bị ẩn hoàn toàn, nhưng `result-display` và `bank` (QR +
+  thông tin ngân hàng) vẫn hiện, nút "Lưu & chia sẻ" vẫn bấm được.
+
+## 2026-09-22 (khoảng cách giữa input + giữa form và nút Lưu ở `/setting` và payment form)
+
+### Decision
+
+Người dùng phản hồi: các input trong form "Thông Tin Thanh Toán" (`setting.html`) bị sát nhau,
+thiếu khoảng cách trên/dưới; sau đó tiếp tục phản hồi nút "Lưu" cũng sát ngay dưới form.
+
+Nguyên nhân khoảng cách input: `setting.html` dùng lẫn lộn 2 cách tạo khoảng cách — class
+`mt-4` (margin-top Tailwind, 16px) gắn rải rác trên MỘT SỐ field, và `gap: 4px` khai trên
+`mat-card` (thêm ở lượt sửa trước, quá nhỏ). Do đặt trong flexbox (`display:flex`), `gap` cộng
+dồn với `margin-top` của field thay vì bị collapse, nhưng vì chỉ 1 vài field có `mt-4` (field
+đầu và field 2 ở tab Ngân hàng có, field 3 và 2 field cuối tab Momo không có) nên khoảng cách
+không đều — chỗ 20px (16+4), chỗ chỉ 4px.
+
+### After
+
+- `setting.scss` — `mat-card { gap: 16px; padding: 20px; }` (tăng từ 4px, thêm padding vì field
+  là con trực tiếp của `mat-card`, không qua `mat-card-content` nên không có padding sẵn); thêm
+  `.button-group { margin-top: 24px; }`.
+- `setting.html` — bỏ hết class `mt-4` rải rác trên từng field, để `gap` của `mat-card` là nguồn
+  khoảng cách DUY NHẤT giữa các field (nhất quán với `.expense-card`/`.member-panel`, cũng dùng
+  gap 16px).
+- `payment.scss`/`payment.html` — áp dụng đúng pattern tương tự (thêm `mat-card { display:flex;
+  flex-direction:column; gap:16px; padding:20px; }`, bỏ `mt-4` trên các field) để đồng bộ 2 form
+  giống hệt nhau như đã sửa border/shadow ở mục trước.
+
+### Verify
+
+- `tsc --noEmit` sạch.
+- Chụp `run-web` cả 2 trang (`/` payment-section và `/setting`): khoảng cách giữa 3 field đều
+  16px, đồng nhất giữa 2 trang; nút "Lưu" ở `/setting` đã có khoảng cách rõ với form phía trên.
+
+## 2026-09-22 (sửa gốc rễ: `.mat-mdc-card` mất viền vì thiếu `!important`)
+
+### Decision
+
+Người dùng phản hồi kèm ảnh chụp: form "Thông Tin Thanh Toán" ở `/setting` vẫn chưa đồng bộ với
+giao diện tương ứng ở trang tạo hoá đơn (`create-bill`), dù đã sửa ở lượt audit trước. Thay vì
+đoán qua đọc code, đo trực tiếp bằng `getComputedStyle` qua `run-web` cho `mat-card` ở cả 2
+trang:
+
+- `#payment-section .mat-mdc-card` (create-bill, **không có** override cục bộ nào): `border-
+  width: 0px` — card KHÔNG có viền thật, dù `styles.scss:179-185` khai `.mat-mdc-card { border:
+  1px solid var(--border-color); ... }` cho MỌI mat-card.
+- `.settings-container mat-card` (setting, **có** override cục bộ tôi thêm ở lượt sửa trước):
+  `border-width: 1px` — có viền.
+
+Nguyên nhân: rule toàn cục ở `styles.scss:182` (cũ) khai `border: 1px solid var(--border-color)`
+KHÔNG có `!important`, trong khi `border-radius`/`box-shadow`/`background-color` cùng khối đều có
+— hàng loạt CSS được `@include mat.theme(...)` sinh ra ở đầu file (Material 3 theming API mới,
+tự sinh style cho mọi component đang dùng) có selector cụ thể hơn `.mat-mdc-card` đơn, nên thắng
+riêng phần `border` (không `!important`) trong khi 3 thuộc tính còn lại (có `!important`) vẫn áp
+dụng bình thường. Card nào có thêm 1 override cục bộ (selector cụ thể hơn nhờ attribute do
+Angular view encapsulation sinh ra, như `mat-card` tôi thêm ở `setting.scss` lượt trước) mới đủ
+đặc hiệu để thắng — nên chỉ những trang tôi từng "vá" cục bộ mới có viền, còn lại (create-bill,
+payment, và có thể còn nơi khác) đều mất viền mà không ai để ý vì box-shadow/bo góc/nền vẫn đúng,
+nhìn qua vẫn giống "card" nhưng thiếu viền mảnh đặc trưng của theme.
+
+### After
+
+- `styles.scss:182` — thêm `!important` vào `border: 1px solid var(--border-color)` của
+  `.mat-mdc-card` (rule gốc, áp dụng cho MỌI card trong app, không cần vá từng nơi nữa).
+- `setting.scss` — bỏ override `border`/`box-shadow`/`background-color` cục bộ trong khối
+  `mat-card {...}` (thêm ở lượt audit trước) vì giờ đã dư thừa, global rule tự lo được; chỉ giữ
+  lại phần layout (`display: flex; flex-direction: column; gap: 4px;`).
+- `bill-details.scss` — GIỮ NGUYÊN override `.mat-mdc-card { border: none; ... }` (không xoá):
+  đây không phải bản sao dư thừa của global rule mà là chủ đích tắt hẳn viền cho card NGOÀI
+  CÙNG của trang, y hệt cách `create-bill.scss:10-14` xử lý card ngoài cùng tương ứng của nó
+  (2 trang cùng vai trò tương đương).
+
+### Verify
+
+- Đo lại `getComputedStyle` sau khi sửa: cả `#payment-section .mat-mdc-card` (create-bill) và
+  `.settings-container mat-card` (setting) đều trả về `borderWidth: 1px`, `borderColor: rgba(28,
+  27, 26, 0.16)` — giống hệt nhau.
+- Chụp ảnh `run-web` 2 trang cạnh nhau: hình dạng viền/bo góc/shadow khớp nhau hoàn toàn.
+- `tsc --noEmit` sạch.
+
+## 2026-09-22 (audit toàn app + sửa các điểm chưa đồng bộ với theme "biên nhận")
+
+### Decision
+
+Chạy 1 agent audit toàn bộ `src/app/components/**` để tìm chỗ lệch chuẩn design system mới
+(class `.flat-field`, nền `--surface-color`/`--surface-muted`, bo góc button, màu CSS variable,
+border/shadow của card, `<app-empty-state>`, màu tab active, `mat-error` đối xứng). Sau khi tự
+đọc code + verify bằng `run-web`, xác nhận sửa 8 điểm và loại 3 điểm agent báo là false
+positive (không sửa, kèm lý do).
+
+### After (đã sửa)
+
+- `bill-details.html:5` — thêm `flat-field`/`floatLabel="always"`/`subscriptSizing="dynamic"`
+  cho input tên hoá đơn (trước đó chỉ `appearance="outline"` trơn, khác `create-bill.html`).
+- `edit-field-dialog.html:4` — thêm `flat-field`/`subscriptSizing="dynamic"` (bỏ
+  `floatLabel="always"` vì field này không có `mat-label`, floating label không có tác dụng).
+- `bill-details.scss` — thêm `border: none; box-shadow: var(--shadow-sm) !important;
+  background-color: var(--surface-color);` cho `.mat-mdc-card`, sao chép đúng pattern đã dùng ở
+  `create-bill.scss:10-14` (2 trang tương đương về vai trò: tạo hoá đơn mới vs xem/sửa hoá đơn
+  đã lưu).
+- `setting.scss` — thêm border/shadow/background tương tự cho `mat-card` (trước đó không có
+  wrapper nào khác cấp cho border như `payment.html` có `.inline-add-form`, nên tự nó phải có).
+- `qr-popup.scss` — thêm `border: none; box-shadow: none !important;` cho `.qr-popup-card`.
+  Lý do: đây là nội dung bên trong `MatDialog`, mà `.mat-mdc-dialog-surface` (global,
+  `styles.scss:244-249`) đã tự có border + shadow-md riêng; giữ nguyên sẽ thành viền/bóng đúp
+  (dialog surface + mat-card lồng bên trong).
+- `expense-form.scss` (`.expense-add-row__submit`) và `member-table.scss`
+  (`.member-panel__submit`) — đổi `color: #fff !important` → `color: var(--on-primary-color)
+  !important` (biến đã có sẵn tại `styles.scss:99`, tránh hardcode).
+- `member-table.scss` — xoá luôn block `&__hint` (CSS chết, không còn phần tử nào dùng sau khi
+  đã gộp hint vào placeholder ở lần sửa trước cùng ngày).
+- `member-table.html` — thêm `<mat-error>` cho `formControlName="name"` khi lỗi `required`
+  (trước đó `expense-form.html` — form "thêm nhanh" cùng cấu trúc — đã có, còn member-table thì
+  không, bất đối xứng).
+
+### Không sửa (agent báo nhưng xác nhận là false positive)
+
+- **`bank.scss:64` `.copy-btn { border-radius: 50% }`**: agent cho là lệch chuẩn "bo nhẹ", nhưng
+  quy tắc "bo nhẹ" (`border-radius-lg`) chỉ áp cho `.mat-mdc-fab`/`.mat-mdc-mini-fab` (nút CTA
+  nổi bật, `styles.scss:198-202`) — không áp cho icon-button nhỏ. Toàn app không override
+  `mat-icon-button` mặc định (vẫn tròn), nên `.copy-btn` tròn là NHẤT QUÁN với các icon-button
+  khác, không phải lệch chuẩn.
+- **`payment.html` nền chồng nền**: agent nghi ngờ `.inline-add-form` (viền, không còn nền mờ
+  sau lần sửa trước) bọc `mat-card` con có thể chồng viền/nền. Kiểm tra lại: `mat-card` con
+  không tự có border/shadow riêng (không override), nên chỉ có đúng 1 lớp viền từ
+  `.inline-add-form` — không phải lỗi. Đã verify lại bằng ảnh chụp `run-web` (không thấy viền
+  đúp).
+- **`create-bill.html`/`bill-details.html` mat-tab-group "thiếu override màu active/inactive"**:
+  agent chỉ đọc code, không chạy app, nên kết luận sai. Thực tế `--mat-sys-primary` được override
+  toàn cục thành teal (`styles.scss:40,49`) nên MỌI `mat-tab-group` trong app (kể cả không có
+  `::ng-deep` riêng) đã tự động có label/underline active màu teal — verify bằng ảnh chụp
+  `run-web` ở `/` (mobile 390px): tab "Khoản mục" active hiện đúng màu teal dù component không
+  override gì thêm. `payment.scss`/`setting.scss` có override riêng vì lý do KHÁC: tab Momo cần
+  màu hồng riêng khi active (`--momo-color`), không phải vì thiếu màu teal mặc định.
+- **`member-table.html:41` `<p class="member-card__hint">Chưa có khoản mục nào để chia.</p>`
+  không dùng `<app-empty-state>`**: xem lại ngữ cảnh — đây là dòng hint nhỏ lồng trong từng
+  `.member-card` (mobile, có thể lặp lại nhiều lần nếu nhiều thành viên), không phải empty-state
+  cấp trang. Dùng `<app-empty-state>` (icon tròn lớn + tiêu đề + mô tả) ở đây sẽ lặp lại nhiều
+  lần trên màn hình, thừa thãi và nặng nề hơn — giữ nguyên đoạn text ngắn là lựa chọn đúng, không
+  sửa.
+
+### Verify
+
+- `tsc --noEmit` sạch sau tất cả thay đổi.
+- `run-web`: chụp lại `/setting` (card có viền), `/` mobile 390px (tab màu teal đúng, lỗi
+  required "Vui lòng nhập tên thành viên" hiện đúng khi bỏ trống).
+- Không verify trực tiếp được `bill-details.scss`/`qr-popup.scss` qua `run-web` (cần mock API
+  lấy chi tiết hoá đơn theo `:code` phức tạp hơn) — 2 thay đổi này sao chép đúng pattern đã verify
+  ở `create-bill.scss`/`.mat-mdc-dialog-surface` nên rủi ro thấp, nhưng nên xem lại bằng mắt khi
+  có dữ liệu thật.
+
+## 2026-09-22 (cải thiện UI/UX form "Thông tin ngân hàng" — Setting/Payment)
+
+### Decision
+
+Sau khi phân tích ảnh chụp form "Thông Tin Thanh Toán" (tab Ngân hàng trong `app-setting`,
+cũng dùng chung `app-bank-select` với `app-payment`), đã xác nhận với người dùng 2 điểm chưa
+rõ trong đặc tả rồi triển khai:
+
+- `accountNumber` (tab Ngân hàng, `setting.ts`): chỉ thêm `Validators.required`, KHÔNG giới
+  hạn định dạng/độ dài (khác với đề xuất ban đầu là ràng buộc pattern số 6-19 ký tự) — người
+  dùng chọn phương án lỏng hơn để tránh chặn nhầm số tài khoản hợp lệ ở ngân hàng ít gặp.
+- `bankBin`, `accountName`, `accountNumber` (tab Ngân hàng): cả 3 đều required — người dùng
+  xác nhận chọn phương án "Recommended".
+
+Ngoài ra, tự quyết định (không đổi business logic nên không cần hỏi thêm):
+- Đồng bộ `appearance="outline"` cho `app-bank-select` (trước đó dùng mặc định `fill`, lệch
+  với 2 input `outline` cạnh nó) — áp dụng chung cho cả `setting.html` và `payment.html` vì
+  cả hai cùng dùng chung component.
+- Thêm `mat-select-trigger` hiển thị logo + tên ngân hàng đã chọn ở trạng thái đóng dropdown
+  (trước đó chỉ options mở ra mới có logo, chọn xong không có phản hồi trực quan).
+- Thêm `@Input() required` cho `BankSelectComponent` để hiển thị `mat-error` riêng khi chưa
+  chọn ngân hàng, chỉ bật ở `setting.html` (không bật ở `payment.html` vì form đó cho phép để
+  trống ngân hàng khi tạo hoá đơn, không muốn đổi hành vi ngoài phạm vi yêu cầu).
+
+### Before
+
+- `bank-select.html`: `<mat-form-field class="bank-select">` (appearance mặc định `fill`),
+  không có `mat-select-trigger`, không có input `required`.
+- `setting.ts`: `bankBin`, `accountName`, `accountNumber` không có validator nào.
+
+### After
+
+- `bank-select.ts`: thêm `@Input() required`, thêm `selectedValue` signal + `selectedBank`
+  computed để render trigger.
+- `bank-select.html`: `appearance="outline"`, thêm khối `<mat-select-trigger>` hiển thị
+  logo+tên khi đã chọn, thêm `<mat-error>` khi `required=true` và control invalid.
+- `setting.ts`: `bankBin`/`accountName`/`accountNumber` đều `[Validators.required]`.
+- `setting.html`: truyền `[required]="true"` cho `app-bank-select`, thêm `mat-error` cho
+  `accountName`/`accountNumber`.
+- `setting.scss`: thêm `gap` giữa các field trong `mat-card` để nhóm trực quan rõ hơn, style
+  nhỏ cho `.select-bank` trigger.
+- Đã build (`tsc --noEmit`) không lỗi và verify bằng `run-web` (chọn ngân hàng → trigger hiện
+  logo/tên; bấm Lưu khi trống → hiện đúng 2 mat-error + hint tổng).
+
+### Reason
+
+Ảnh chụp gốc cho thấy 3 field trong cùng 1 form nhưng có 2 kiểu form-field khác nhau (fill vs
+outline), không có phản hồi trực quan sau khi chọn ngân hàng, và không có validation nào cho
+tab Ngân hàng dù tab Momo đã có — gây thiếu nhất quán trải nghiệm và không rõ trường bắt buộc.
+
+### Alternatives Considered
+
+- Ràng buộc `accountNumber` bằng pattern số + độ dài 6-19 ký tự: người dùng từ chối vì lo chặn
+  nhầm định dạng hợp lệ ở ngân hàng ít phổ biến.
+- Để 3 field vẫn optional, chỉ sửa phần giao diện (appearance, spacing, trigger): người dùng
+  chọn phương án required thay vì phương án này.
+- Bật `required` cho `bankBin` luôn ở `payment.html`: không chọn, vì sẽ đổi hành vi cho phép bỏ
+  trống ngân hàng khi tạo hoá đơn — ngoài phạm vi được xác nhận.
+
+### Bổ sung cùng ngày — đồng bộ màu viền `.flat-field` với theme "biên nhận"
+
+Sau khi xem lại, các field vừa sửa (`bank-select`, `account-name`, `account-number`, cả 2 tab
+Ngân hàng/Momo ở cả `setting.html` và `payment.html`) vẫn dùng viền/label mặc định của
+Material outline — khác màu/kiểu với `.flat-field` đã dùng ở top-bar (`create-bill.html`),
+`member-table.html`, `expense-form.html` (viền `--border-color`, label tĩnh phía trên, focus
+màu teal, định nghĩa tại `styles.scss:497-533`). Đã thêm class `flat-field` +
+`floatLabel="always"` + `subscriptSizing="dynamic"` cho toàn bộ field còn lại ở 2 file trên để
+nhất quán với phần còn lại của app — không phải quyết định kiến trúc mới, chỉ là áp dụng đúng
+class dùng chung đã có sẵn. Verify lại bằng `run-web`: màu viền, vị trí label khớp; phát hiện
+1 frame chồng hình giữa lúc chuyển tab Ngân hàng/Momo khi sleep 300ms — xác nhận chỉ là hiệu ứng
+animation của `mat-tab-group` chưa kết thúc (không phải lỗi layout), chụp lại sau 1000ms cho
+thấy giao diện ổn định bình thường.
+
+### Bổ sung cùng ngày — bỏ `background-color` của `.inline-add-form`
+
+Theo phản hồi trực tiếp của người dùng khi xem lại `bank-select.html`: bỏ
+`background-color: var(--surface-muted)` khỏi `.inline-add-form` (`styles.scss:432`). Trước
+khi sửa đã kiểm tra: `expense-form.html`/`member-table.html` — 2 nơi comment còn nhắc tới class
+này — thực ra đã đổi sang class riêng (`expense-add-row`, `member-panel__add`) từ đợt áp mockup
+trước, không còn dùng `.inline-add-form` trực tiếp; chỉ `payment.html` còn dùng class này. Vì
+`payment.html` tự bọc nội dung trong `mat-card` (nền `--surface-color`), nền mờ của
+`.inline-add-form` tạo hiệu ứng "nền chồng nền" (khối be mờ bao ngoài card trắng) — đúng vấn đề
+đã nêu trong lần phân tích UI/UX ban đầu. Xác nhận an toàn (không phá layout `expense-form`/
+`member-table`) bằng cách grep toàn bộ usage trước khi sửa, và verify lại bằng ảnh chụp
+`run-web` ở `/` (trang tạo hoá đơn) — nền be mờ đã biến mất, chỉ còn 1 lớp nền trắng.
+
+### Bổ sung cùng ngày — gộp `.member-panel__hint` vào placeholder
+
+Theo yêu cầu người dùng: chuyển nội dung `<p class="member-panel__hint">Nhập nhiều tên cùng
+lúc bằng cách ngăn cách bởi dấu phẩy</p>` (`member-table.html`) thành `placeholder` của input
+"Tên thành viên", rồi xoá thẻ `<p>` đó. Mục đích: cột "Khoản mục" (`expense-form.html`, không
+có dòng hint tương tự) và cột "Thành viên" lệch chiều cao ở empty state vì dòng hint chiếm thêm
+~20px. Không có CSS riêng cho `.member-panel__hint` trong `member-table.scss` nên không phải
+dọn thêm gì. Verify bằng ảnh chụp `run-web` ở trang tạo hoá đơn (`/`): 2 card "Khoản mục" và
+"Thành viên" đã cân chiều cao ở trạng thái rỗng.
+
+### Bổ sung cùng ngày — rút gọn placeholder input "Tên thành viên"
+
+Placeholder "Nhập nhiều tên cùng lúc bằng cách ngăn cách bởi dấu phẩy" quá dài, bị cắt chữ
+trong input (thấy rõ ở ảnh chụp `run-web` trước đó: chỉ hiện "...ngăn cách b"). Đã đưa 4 lựa
+chọn cho người dùng (ví dụ cụ thể / diễn giải ngắn / diễn giải sát nghĩa gốc / bỏ hẳn), người
+dùng chọn dùng ví dụ cụ thể. Đổi thành `placeholder="VD: Tèo, Tý, Tủn"` tại `member-table.html`
+— ngắn, không bị cắt, và ví dụ cụ thể giúp hiểu ngay quy ước dùng dấu phẩy mà không cần đọc câu
+giải thích dài.
+
 ## 2026-09-22 (tiếp — sửa lỗi phát sinh sau khi áp mockup)
 
 ### Decision
@@ -1159,3 +1556,186 @@ kỹ thuật (dark mode, breakpoint, override Material...).
   trong ảnh chụp khi làm theo thiết kế mới (ô nhỏ lại, không còn `mat-label` che bớt phần viền),
   và fix chỉ tốn vài dòng (đổi `reset()` → `resetForm()`) nên sửa luôn thay vì để lại một sai
   lệch mới với mockup (mockup không có trạng thái lỗi đỏ dai dẳng).
+
+## 2026-09-22 (cải thiện UI card `app-bank`: grid label-value, nhấn mạnh số tài khoản, feedback copy, khung QR)
+
+### Decision
+
+Người dùng gửi ảnh chụp card "Thông tin ngân hàng" và hỏi đề xuất cải thiện giao diện. Sau khi
+xem `bank.html`/`bank.scss`, đề xuất 3 điểm và người dùng đồng ý thực hiện cả 3: (1) đưa 3 dòng
+"Ngân hàng/Họ tên/Số tài khoản" từ `<p><strong>` sang layout dạng bảng 2 cột (label - value) để
+căn thẳng hàng, số tài khoản in đậm + font mono để dễ đọc/copy hơn; (2) nút copy đổi icon thành
+`check` tạm thời (2s) sau khi copy thành công, thay vì chỉ dựa vào snackbar; (3) bọc khung nền
+(`--surface-muted`) quanh ảnh QR kèm caption "Quét để chuyển khoản" để nhóm QR thành 1 khối rõ
+ràng hơn thay vì ảnh trơ trọi.
+
+Không thêm logo ngân hàng như gợi ý ban đầu — `BankInfoItem`/`BankItem` (`bank.model.ts`) không
+có field logo/icon URL nào, thêm vào sẽ vượt phạm vi 1 lần chỉnh UI đơn thuần.
+
+### Before
+
+- `bank.html`: mỗi dòng thông tin là 1 thẻ `<p><strong>Label: </strong><span>Value</span></p>`
+  riêng lẻ, không căn cột; số tài khoản cùng cỡ chữ với các dòng khác; nút copy luôn hiện icon
+  `content_copy` tĩnh; ảnh QR (`<img>`) đặt trực tiếp trong `.right`, không có khung/caption.
+- `bank.ts`: `onCopyAccountNumber`/`onCopyMomoAccountNumber` chỉ mở snackbar, không có state phản
+  hồi trên chính nút bấm.
+- `bank.scss`: `.left` dùng `flex-direction: column` + `gap` cho từng `<p>`; `.right` chỉ style
+  `img` (border, max-width).
+
+### After
+
+- `bank.html`: 2 khối info (ngân hàng, Momo) đổi sang `<div class="info-grid">` gồm các cặp
+  `span.label` / `span.value`; dòng số tài khoản/số điện thoại dùng `span.value--account` bọc
+  `span.mono-text.account-number` (tái dùng class `.mono-text` có sẵn ở `styles.scss` — đã được
+  ghi chú "dùng cho số tài khoản/số điện thoại, KHÔNG in đậm như tiền" — nên chỉ thêm bold+size
+  qua `.account-number` cục bộ, không sửa class global) + nút copy `[class.copy-btn--copied]`
+  đổi `<mat-icon>` giữa `content_copy` và `check` theo state. Ảnh QR bọc trong `div.qr-frame` +
+  `span.qr-caption`.
+- `bank.ts`: thêm 2 field `isAccountNumberCopied`/`isMomoNumberCopied`; trong `.then()` của
+  `navigator.clipboard.writeText(...)` set `true` rồi `setTimeout(() => ... = false, 2000)` để
+  icon tự trở lại sau 2s (không cần thêm `ChangeDetectorRef` vì component đang ở default zone).
+- `bank.scss`: `.left` bỏ style cũ của từng `<p>`, chuyển style vào `.info-grid` (CSS grid
+  `auto 1fr`, `.label` bold màu `--text-primary`, `.account-number` tăng size + bold); thêm
+  `.qr-frame` (nền `--surface-muted`, border, radius, giống pattern card-trong-card đã dùng ở
+  nơi khác trong app) và `.qr-caption`; thêm modifier `.copy-btn--copied` đổi màu icon sang
+  `--primary-color`; sửa media query mobile để nhắm `.info-grid`/`.account-number` thay vì
+  `.left` (do đã đổi cấu trúc).
+- Verify: `ng serve` + skill `run-web`, chụp cả desktop (1280px) và mobile (390px) sau khi chọn
+  ngân hàng + điền số tài khoản/Momo trên `create-bill`. Xác nhận: grid label-value thẳng hàng,
+  số tài khoản nổi bật rõ, khung QR có caption, layout mobile xếp QR lên trên hợp lý. Không test
+  được icon `check` thật qua Playwright headless vì `navigator.clipboard.writeText` bị chặn bởi
+  policy sandbox của Chromium headless (`NotAllowedError: Write permission denied`) — đây là hạn
+  chế môi trường test, không phải lỗi code; logic set/reset boolean qua `setTimeout` đơn giản và
+  đã soát lại bằng mắt.
+
+### Reason
+
+Người dùng chủ động hỏi góp ý UI cho 1 component cụ thể (không phải yêu cầu sửa bug), agent đề
+xuất theo nguyên tắc UX chung (phân cấp thông tin, feedback tức thời cho hành động, nhóm trực
+quan phần tử liên quan) và người dùng duyệt toàn bộ trước khi triển khai.
+
+### Alternatives Considered
+
+- **Thêm logo ngân hàng cạnh tên** — bị loại vì không có dữ liệu logo trong model, sẽ cần thêm
+  field mới + nguồn ảnh, vượt phạm vi 1 lần chỉnh CSS/layout.
+- **Dùng animation/transition phức tạp hơn cho nút copy** (vd. scale, ripple riêng) — chọn cách
+  đơn giản nhất (đổi icon + màu, tự reset sau 2s) vì đã có Material ripple mặc định trên
+  `mat-icon-button`... (thực ra `copy-btn` là `<button>` thường, không phải `mat-icon-button`,
+  nhưng đổi thành mat-icon-button sẽ đổi hành vi hiện tại — giữ nguyên `<button>` thường để không
+  đổi phạm vi ngoài yêu cầu).
+
+## 2026-09-22 (cải thiện UI dialog `qr-popup`: nút đóng nhanh, caption QR, cân đối trọng số action)
+
+### Decision
+
+Tiếp tục mạch cải thiện UI trước đó (`app-bank`), người dùng chọn dòng `qr-image-container` trong
+`qr-popup.html` và hỏi đề xuất cải thiện giao diện. Agent đề xuất 3 điểm, người dùng đồng ý triển
+khai cả 3: (1) thêm nút đóng nhanh dạng icon `close` ở góc phải header, bên cạnh nút "Đóng" đã có
+sẵn ở actions (không bỏ nút cũ — dialog QR có thể được thao tác trên mobile nơi nút icon góc trên
+thuận tay hơn); (2) thêm caption "Quét mã để xem chi tiết" dưới ảnh QR, nhất quán với caption vừa
+thêm ở `app-bank`; (3) đảo trọng số 2 nút action — "Download" (hành động chính) đổi từ
+`mat-stroked-button` sang `mat-raised-button color="primary"`, "Đóng" (hành động phụ) đổi từ
+`mat-raised-button` sang `mat-stroked-button`, đồng thời đổi thứ tự DOM (Đóng trước, Download sau)
+để nút chính nằm cuối cùng bên phải theo `align="end"` — đúng quy ước thường gặp (hành động chính
+ở vị trí dễ bấm nhất, thường là ngoài cùng bên phải).
+
+### Before
+
+- `qr-popup.html`: `mat-card-header` chỉ có `mat-card-title`, không có nút đóng nào ở header.
+  `.qr-image-container` chỉ chứa `<img>`, không có caption. `mat-card-actions` có "Download"
+  (`mat-stroked-button color="primary"`) đứng trước, "Đóng" (`mat-raised-button`, không màu) đứng
+  sau.
+- `qr-popup.scss`: `.qr-image-container` là `flex` hàng ngang căn giữa, không có style cho
+  caption. `mat-card-header { position: relative; ... }` đã có sẵn (chưa dùng tới) — có vẻ để
+  dành cho việc định vị tuyệt đối 1 phần tử con sau này.
+
+### After
+
+- `qr-popup.html`: thêm `<button mat-icon-button class="close-button" aria-label="close dialog"
+  (click)="closeDialog()"><mat-icon>close</mat-icon></button>` ngay trong `mat-card-header`, tái
+  dùng lại đúng hàm `closeDialog()` mà nút "Đóng" ở dưới đang gọi (không thêm state/logic mới).
+  Thêm `<span class="qr-caption">Quét mã để xem chi tiết</span>` sau `<img>` trong
+  `.qr-image-container`. Đảo thứ tự + đổi variant 2 nút action: "Đóng" (`mat-stroked-button`,
+  không màu) đứng trước, "Download" (`mat-raised-button color="primary"`) đứng sau.
+- `qr-popup.scss`: `.qr-image-container` đổi `flex-direction: column` + `gap: 8px` để chứa thêm
+  caption theo chiều dọc dưới ảnh (giữ nguyên `align-items: center`). Thêm `.qr-caption` (font
+  nhỏ, màu `--text-secondary`, giống `.qr-caption` vừa thêm ở `bank.scss`). Thêm `.close-button`
+  dùng `position: absolute; top: 8px; right: 8px;` — tận dụng đúng `position: relative` đã có sẵn
+  trên `mat-card-header` từ trước.
+- Verify: `ng serve` + skill `run-web` — dựng lại luồng tạo hoá đơn thật (thêm khoản mục, thành
+  viên, gán khối lượng tiêu thụ, chọn ngân hàng + điền số tài khoản) để `<app-bank>` và nút
+  "Hiện QR ngân hàng" xuất hiện đủ điều kiện (`isShowBankInfo`), sau đó bấm mở `qr-popup` thật qua
+  `result-display.showQRPopup()`. Chụp ảnh xác nhận: nút X hiện đúng vị trí góc phải header,
+  caption hiện dưới QR, Download đã đổi màu primary/raised còn Đóng đổi thành stroked; bấm nút X
+  đóng dialog thành công (dialog biến mất khỏi DOM).
+
+### Reason
+
+Người dùng chủ động hỏi góp ý UI cho dialog QR sau khi vừa duyệt cách làm tương tự ở `app-bank`,
+áp dụng cùng nguyên tắc: nhất quán ngôn ngữ thiết kế (caption dưới QR), thêm lối thoát nhanh cho
+dialog (chuẩn UX phổ biến), và đúng phân cấp thị giác cho hành động chính/phụ.
+
+### Alternatives Considered
+
+- **Bỏ hẳn nút "Đóng" ở actions sau khi đã có nút X** — cân nhắc nhưng giữ lại vì đây là dialog
+  QR có thể dùng trên mobile, có nút đóng ở cả 2 vị trí (góc trên quen thuộc + actions rõ ràng)
+  không phải anti-pattern nghiêm trọng, và người dùng không yêu cầu bỏ; giữ để không thu hẹp vùng
+  bấm ngoài ý muốn.
+- **Định vị nút X bằng flex/justify-content thay vì absolute** — bị loại vì sẽ phải bọc thêm 1
+  `<div>` quanh title, trong khi `mat-card-header` đã có sẵn `position: relative` (dấu hiệu được
+  chuẩn bị trước cho đúng mục đích này), dùng `position: absolute` đơn giản hơn và không đổi cấu
+  trúc DOM ngoài việc thêm nút.
+
+## 2026-09-22 (fix global: `.mat-mdc-raised-button` thiếu trong rule bo góc `border-radius-sm`)
+
+### Decision
+
+Người dùng phát hiện qua ảnh chụp `qr-popup`: nút "Download" (bo tròn hẳn, pill) và nút "Đóng"
+(bo góc vuông vức hơn) có hình dạng khác nhau dù cùng nằm trong 1 `mat-card-actions`. Điều tra
+`styles.scss:195` thấy rule `border-radius: var(--border-radius-sm) !important` chỉ áp cho
+`.mat-mdc-button, .mat-mdc-unelevated-button, .mat-mdc-outlined-button` — thiếu
+`.mat-mdc-raised-button` (class mà `mat-raised-button` sinh ra), nên MỌI nút `mat-raised-button`
+trong toàn app (không riêng `qr-popup`) đang giữ nguyên bo tròn pill mặc định của Material 3,
+lệch với style "biên nhận" (bo góc nhẹ `--border-radius-sm` = 8px) áp dụng nhất quán ở mọi nơi
+khác. Đã hỏi người dùng chọn giữa sửa cục bộ (chỉ `qr-popup.scss`) hoặc sửa global — người dùng
+chọn sửa global vì đây rõ ràng là thiếu sót trong rule dùng chung, không phải khác biệt có chủ
+đích.
+
+### Before
+
+```scss
+.mat-mdc-button, .mat-mdc-unelevated-button, .mat-mdc-outlined-button {
+  border-radius: var(--border-radius-sm) !important;
+  ...
+}
+```
+
+### After
+
+```scss
+.mat-mdc-button, .mat-mdc-unelevated-button, .mat-mdc-outlined-button, .mat-mdc-raised-button {
+  border-radius: var(--border-radius-sm) !important;
+  ...
+}
+```
+
+- Verify: `getComputedStyle` qua `run-web` xác nhận cả "Đóng" và "Download" trong `qr-popup` đều
+  trả về `border-radius: 8px`. Kiểm tra thêm nút CTA vàng "Lưu & chia sẻ" (`mat-raised-button` +
+  `.btn-gold`, dùng ở `create-bill`/`bill-details`) — cũng đổi từ pill sang bo góc 8px, đã chụp
+  ảnh xác nhận cả light lẫn dark mode đều nhất quán, không có nút nào bị lệch nền/màu do đổi
+  border-radius.
+
+### Reason
+
+Rule border-radius-sm là ngôn ngữ hình ảnh chung "biên nhận giấy" áp cho toàn bộ nút trong app;
+thiếu 1 loại button (`raised`) trong danh sách selector là một lỗ hổng ở rule dùng chung, ảnh
+hưởng mọi nơi dùng `mat-raised-button` (kể cả CTA chính "Lưu & chia sẻ"), không phải giới hạn ở
+`qr-popup`. Sửa global giải quyết tận gốc thay vì phải lặp lại 1 override cục bộ mỗi khi
+`mat-raised-button` xuất hiện ở component mới.
+
+### Alternatives Considered
+
+- **Chỉ override cục bộ trong `qr-popup.scss`** (`.download-button { border-radius: ... }`) —
+  bị loại vì không sửa gốc, các nút `mat-raised-button` khác trong app (CTA vàng, nút Lưu ở các
+  dialog...) vẫn lệch, để lại đúng loại thiếu nhất quán mà người dùng vừa phát hiện, có nguy cơ
+  lặp lại vấn đề này ở component mới sau này.

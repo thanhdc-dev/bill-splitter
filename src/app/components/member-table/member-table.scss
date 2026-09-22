@@ -44,19 +44,13 @@
     }
   }
 
-  &__hint {
-    margin: -8px 0 0;
-    font-size: 12px;
-    color: var(--text-secondary);
-  }
-
   &__submit {
     flex-shrink: 0;
     width: 42px;
     height: 42px;
     border-radius: var(--border-radius-sm) !important;
     background-color: var(--teal) !important;
-    color: #fff !important;
+    color: var(--on-primary-color) !important;
 
     &[disabled] {
       background-color: var(--surface-muted) !important;

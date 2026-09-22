@@ -7,14 +7,16 @@
   <form [formGroup]="memberForm" (ngSubmit)="onSubmit()" class="member-panel__add">
     <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" class="flat-field">
       <mat-label>Tên thành viên</mat-label>
-      <input matInput formControlName="name" placeholder="Nhập tên thành viên..." (keydown.enter)="onSubmit()" />
+      <input matInput formControlName="name" placeholder="VD: Tèo, Tý, Tủn" (keydown.enter)="onSubmit()" />
+      <mat-error *ngIf="memberForm.get('name')?.hasError('required')">
+        Vui lòng nhập tên thành viên
+      </mat-error>
     </mat-form-field>
     <button mat-mini-fab type="submit" class="member-panel__submit" aria-label="Thêm thành viên"
       [disabled]="!memberForm.valid">
       <mat-icon>add</mat-icon>
     </button>
   </form>
-  <p class="member-panel__hint">Nhập nhiều tên cùng lúc bằng cách ngăn cách bởi dấu phẩy</p>
 
   @if (!members.length) {
 <app-empty-state

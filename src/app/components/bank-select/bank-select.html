@@ -1,6 +1,14 @@
-<mat-form-field class="bank-select">
+<mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" class="flat-field bank-select">
   <mat-label>{{ label }}</mat-label>
   <mat-select [formControl]="selectCtrl">
+    @if (selectedBank(); as bank) {
+    <mat-select-trigger>
+      <div class="bank-info">
+        <img [src]="bank.logo" width="24" [alt]="bank.short_name" />
+        <span class="bank-name">{{ bank.label }}</span>
+      </div>
+    </mat-select-trigger>
+    }
     <mat-option>
       <ngx-mat-select-search
         [formControl]="filterCtrl"
@@ -17,4 +25,7 @@
     </mat-option>
     }
   </mat-select>
+  @if (required) {
+  <mat-error>Vui lòng chọn ngân hàng</mat-error>
+  }
 </mat-form-field>
