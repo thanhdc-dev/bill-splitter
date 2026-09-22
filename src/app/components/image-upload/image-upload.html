@@ -60,8 +60,12 @@
       <div
         class="preview-item"
         *ngFor="let image of images; let i = index"
+        role="button"
+        tabindex="0"
+        [attr.aria-label]="'Xem ảnh ' + (i + 1)"
         (click)="openPreview(i)"
-        (keydown)="openPreview(i)"
+        (keydown.enter)="openPreview(i)"
+        (keydown.space)="$event.preventDefault(); openPreview(i)"
       >
         <img 
           *ngIf="image.storagePath"
@@ -111,29 +115,5 @@
       </div>
     </div>
 
-    <!-- Modal xem chi tiết ảnh -->
-    @if (previewIndex !== null) {
-    <div
-      class="image-modal"
-      (click)="closePreview()"
-      (keydown)="closePreview()"
-    >
-      <div
-        class="image-modal-content"
-        (click)="$event.stopPropagation()"
-        (keydown)="$event.stopPropagation()"
-      >
-        <img
-          [src]="getLightboxUrl(images[previewIndex])"
-          class="image-modal-img"
-          [alt]="'img-full-' + previewIndex"
-        />
-
-        <button class="close-modal-btn" (click)="closePreview()" type="button">
-          &times;
-        </button>
-      </div>
-    </div>
-    }
   </div>
 </div>

@@ -1,14 +1,14 @@
 <h2 mat-dialog-title>{{ label }}</h2>
 
 <mat-dialog-content>
-  <mat-form-field appearance="outline" class="w-full">
-    <input matInput type="text" *ngIf="type === 'amount'" appThousandSeparator [(ngModel)]="value" />
-    <input matInput type="number" *ngIf="type === 'number'" [(ngModel)]="value" />
+  <mat-form-field appearance="outline" subscriptSizing="dynamic" class="flat-field w-full">
+    <input matInput type="text" class="mono-amount" *ngIf="type === 'amount'" appThousandSeparator [(ngModel)]="value" />
+    <input matInput type="number" class="mono-amount" *ngIf="type === 'number'" [(ngModel)]="value" />
     <input matInput type="text" *ngIf="type === 'text'" [(ngModel)]="value" />
   </mat-form-field>
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">
-  <button mat-button (click)="cancel()">Cancel</button>
-  <button mat-raised-button color="primary" (click)="save()">Save</button>
+  <button mat-button aria-label="cancel" (click)="cancel()">Hủy</button>
+  <button mat-raised-button color="primary" aria-label="save" (click)="save()">Lưu</button>
 </mat-dialog-actions>

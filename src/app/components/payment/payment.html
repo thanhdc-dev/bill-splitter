@@ -1,5 +1,4 @@
-<mat-divider></mat-divider>
-<form [formGroup]="bankForm" class="payment-form">
+<form [formGroup]="bankForm" class="inline-add-form payment-form">
   <mat-tab-group class="w-full">
     <mat-tab>
       <ng-template mat-tab-label>
@@ -8,32 +7,16 @@
       </ng-template>
 
       <mat-card>
-        <mat-form-field class="select-bank mt-4">
-          <mat-label>Chọn ngân hàng</mat-label>
-          <mat-select formControlName="bank">
-            <mat-option>
-              <ngx-mat-select-search [formControl]="itemFilterCtrl"
-                [placeholderLabel]="'Nhập mã hoặc tên để tìm kiếm'"></ngx-mat-select-search>
-            </mat-option>
-            <mat-option *ngFor="let item of filteredItems | async" [value]="item.code">
-              <div class="bank-info">
-                <div>
-                  <img [src]="item.logo" width="70" alt="logo" />
-                </div>
-                <div class="bank-name">{{ item.label }}</div>
-              </div>
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
+        <app-bank-select class="select-bank" formControlName="bank" valueField="code"></app-bank-select>
 
-        <mat-form-field appearance="outline" class="account-name mt-4">
+        <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" class="flat-field account-name">
           <mat-label>Họ & Tên</mat-label>
           <input matInput type="text" formControlName="accountName" />
         </mat-form-field>
 
-        <mat-form-field appearance="outline" class="account-number mt-4">
+        <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" class="flat-field account-number">
           <mat-label>Số tài khoản</mat-label>
-          <input matInput type="text" formControlName="accountNumber" />
+          <input matInput type="text" class="mono-text" formControlName="accountNumber" />
         </mat-form-field>
       </mat-card>
     </mat-tab>
@@ -45,19 +28,19 @@
       </ng-template>
 
       <mat-card>
-        <mat-form-field appearance="outline" class="account-name-momo mt-4">
+        <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" class="flat-field account-name-momo">
           <mat-label>Họ & Tên</mat-label>
           <input matInput type="text" formControlName="accountNameMomo" />
         </mat-form-field>
 
-        <mat-form-field appearance="outline" class="phone-number-momo">
+        <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" class="flat-field phone-number-momo">
           <mat-label>Số điện thoại</mat-label>
-          <input matInput type="text" formControlName="phoneNumberMomo" />
+          <input matInput type="text" class="mono-text" formControlName="phoneNumberMomo" />
         </mat-form-field>
 
-        <mat-form-field appearance="outline" class="account-number-momo">
+        <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" class="flat-field account-number-momo">
           <mat-label>Số tài khoản</mat-label>
-          <input matInput type="text" formControlName="accountNumberMomo" />
+          <input matInput type="text" class="mono-text" formControlName="accountNumberMomo" />
         </mat-form-field>
       </mat-card>
     </mat-tab>

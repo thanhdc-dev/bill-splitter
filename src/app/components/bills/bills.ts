@@ -1,10 +1,12 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { BillSplitterService } from '../../services/bill-splitter.service';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatButtonModule } from '@angular/material/button';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { EmptyStateComponent } from '../empty-state/empty-state';
 import { MatDialog } from '@angular/material/dialog';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog';
 import { firstValueFrom } from 'rxjs';
@@ -13,11 +15,22 @@ interface Bill {
   code: string;
   name: string;
   createdAt: string;
+  data: {
+    totalAmount: number;
+    members: { id: string }[];
+  };
 }
 
 @Component({
   selector: 'app-bills',
-  imports: [CommonModule, MatIconModule, MatButtonModule],
+  imports: [
+    CommonModule,
+    MatIconModule,
+    MatButtonModule,
+    MatProgressSpinnerModule,
+    RouterLink,
+    EmptyStateComponent,
+  ],
   templateUrl: './bills.html',
   styleUrl: './bills.scss',
 })
@@ -28,13 +41,27 @@ export class Bills implements OnInit {
   private readonly billSplitterService = inject(BillSplitterService);
 
   bills: Bill[] = [];
+  /** Tách "đang tải" / "lỗi" / "không có hóa đơn nào" để không hiện nhầm empty state. */
+  isLoading = true;
+  hasError = false;
 
   ngOnInit() {
     this.loadData();
   }
 
   async loadData() {
-    this.bills = await this.billSplitterService.getBills();
+    this.isLoading = true;
+    this.hasError = false;
+    try {
+      this.bills = await this.billSplitterService.getBills();
+    } catch (err) {
+      // Không có dữ liệu vì lỗi mạng là chuyện khác hẳn với "chưa có hóa đơn nào".
+      console.error('Lỗi khi tải danh sách hóa đơn:', err);
+      this.bills = [];
+      this.hasError = true;
+    } finally {
+      this.isLoading = false;
+    }
   }
 
   onItemClick(code: string): void {
@@ -60,6 +87,16 @@ export class Bills implements OnInit {
   formatDate(dateString: string): string {
     const date = new Date(dateString);
     return date.toLocaleDateString('vi-VN');
+  }
+
+  /** Ngày trong tháng cho "cuống vé" — vd "12". */
+  getStubDay(dateString: string): string {
+    return new Date(dateString).getDate().toString().padStart(2, '0');
+  }
+
+  /** Tháng viết tắt cho "cuống vé" — vd "thg 9". */
+  getStubMonth(dateString: string): string {
+    return `thg ${new Date(dateString).getMonth() + 1}`;
   }
 
   async onDelete(event: Event, billCode: string) {

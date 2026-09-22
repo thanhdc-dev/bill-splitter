@@ -8,7 +8,9 @@
   padding: 20px 0;
 }
 
-.google-btn {
+.google-btn,
+.passkey-btn,
+.zalo-btn {
   width: 100%;
   padding: 12px;
   margin: 10px 0;
@@ -18,21 +20,9 @@
   gap: 10px;
 }
 
-.google-btn mat-icon {
-  margin: 0;
-}
-
-.passkey-btn {
-  width: 100%;
-  padding: 12px;
-  margin: 10px 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-}
-
-.passkey-btn mat-icon {
+.google-btn mat-icon,
+.passkey-btn mat-icon,
+.zalo-btn mat-icon {
   margin: 0;
 }
 

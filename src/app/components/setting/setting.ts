@@ -1,18 +1,13 @@
 import { Component, inject, OnInit } from '@angular/core';
 import {
   FormBuilder,
-  FormControl,
   FormGroup,
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { map, Observable, startWith } from 'rxjs';
-import { BankItem } from '../../models';
-import { BANKS, USER_SETTING_KEYS } from '../../constants';
-import { NgxMatSelectSearchModule } from 'ngx-mat-select-search';
+import { USER_SETTING_KEYS } from '../../constants';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTabsModule } from '@angular/material/tabs';
@@ -23,14 +18,10 @@ import { SettingsData } from '../../interfaces';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ActivatedRoute } from '@angular/router';
 import { PasskeyManager } from '../passkey-manager/passkey-manager';
+import { BankSelectComponent } from '../bank-select/bank-select';
 
 /** Vị trí tab "Bảo mật" trong mat-tab-group của màn hình cài đặt */
 const SECURITY_TAB_INDEX = 2;
-
-interface BankItemLabel extends BankItem {
-  label: string;
-  logo: string;
-}
 
 @Component({
   selector: 'app-setting',
@@ -39,8 +30,7 @@ interface BankItemLabel extends BankItem {
     ReactiveFormsModule,
     MatFormFieldModule,
     MatInputModule,
-    MatSelectModule,
-    NgxMatSelectSearchModule,
+    BankSelectComponent,
     MatIconModule,
     MatTabsModule,
     MatCardModule,
@@ -56,17 +46,8 @@ export class Setting implements OnInit {
   private readonly userService = inject(UserService);
   private readonly route = inject(ActivatedRoute);
 
-  settingsForm!: FormGroup;
-  banks: BankItemLabel[] = BANKS.map((bank) => {
-    return {
-      ...bank,
-      label: `${bank.short_name} - ${bank.name}`,
-      logo: `/images/bank-logo/${bank.code}.webp`,
-    };
-  });
-  itemFilterCtrl = new FormControl();
-  filteredItems: Observable<BankItemLabel[]>;
   selectedTabIndex = 0;
+  settingsForm!: FormGroup;
 
   get isSecurityTab(): boolean {
     return this.selectedTabIndex === SECURITY_TAB_INDEX;
@@ -74,13 +55,6 @@ export class Setting implements OnInit {
 
   get pageTitle(): string {
     return this.isSecurityTab ? 'Bảo Mật' : 'Thông Tin Thanh Toán';
-  }
-
-  constructor() {
-    this.filteredItems = this.itemFilterCtrl.valueChanges.pipe(
-      startWith(''),
-      map((value) => this._filterItems(value))
-    );
   }
 
   ngOnInit(): void {
@@ -91,10 +65,10 @@ export class Setting implements OnInit {
 
     this.settingsForm = this.fb.group({
       bankAccount: this.fb.group({
-        bankBin: [''],
+        bankBin: ['', [Validators.required]],
         bankName: [''],
-        accountName: [''],
-        accountNumber: [''],
+        accountName: ['', [Validators.required]],
+        accountNumber: ['', [Validators.required]],
       }),
       momoWallet: this.fb.group({
         accountNumber: [''],
@@ -125,13 +99,6 @@ export class Setting implements OnInit {
           ...momoWallet,
         },
       };
-      const bankBin = settingsData.bankAccount?.bankBin;
-      if (bankBin) {
-        const selectedBank = this.banks.find(({ bin }) => bin === bankBin);
-        if (selectedBank) {
-          this.itemFilterCtrl.setValue(selectedBank.label);
-        }
-      }
       this.settingsForm.patchValue(settingsData);
     });
   }
@@ -157,10 +124,4 @@ export class Setting implements OnInit {
     return this.settingsForm.get('momoWallet') as FormGroup;
   }
 
-  private _filterItems(value: string): BankItemLabel[] {
-    const filterValue = value.toLowerCase();
-    return this.banks.filter((item) =>
-      item.label.toLowerCase().includes(filterValue)
-    );
-  }
 }

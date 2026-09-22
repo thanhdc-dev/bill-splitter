@@ -1,0 +1,26 @@
+<div class="lightbox">
+  <button
+    mat-icon-button
+    class="lightbox__close"
+    aria-label="Đóng"
+    (click)="close()"
+    cdkFocusInitial
+  >
+    <mat-icon>close</mat-icon>
+  </button>
+
+  @if (hasMultiple) {
+  <button mat-icon-button class="lightbox__nav lightbox__nav--prev" aria-label="Ảnh trước" (click)="prev()">
+    <mat-icon>chevron_left</mat-icon>
+  </button>
+  }
+
+  <img [src]="currentUrl" class="lightbox__image" [alt]="'Ảnh ' + (index + 1) + ' / ' + data.images.length" />
+
+  @if (hasMultiple) {
+  <button mat-icon-button class="lightbox__nav lightbox__nav--next" aria-label="Ảnh tiếp theo" (click)="next()">
+    <mat-icon>chevron_right</mat-icon>
+  </button>
+  <div class="lightbox__counter">{{ index + 1 }} / {{ data.images.length }}</div>
+  }
+</div>

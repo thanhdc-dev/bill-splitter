@@ -1,17 +1,17 @@
 :host ::ng-deep .mat-mdc-tab {
   .mdc-tab__text-label {
     // Inactive tab label color
-    color: #555;
+    color: var(--text-secondary);
   }
 
   &.mdc-tab--active .mdc-tab__text-label {
     // Active tab label color
-    color: #1976d2 !important;
+    color: var(--primary-color) !important;
   }
 
   &.mdc-tab--active.momo .mdc-tab__text-label {
     // Active tab label color
-    color: #e60076 !important;
+    color: var(--momo-color) !important;
   }
 }
 
@@ -21,17 +21,39 @@
 }
 
 .settings-title {
-  color: #2c3e50;
+  color: var(--text-primary);
   margin-bottom: 24px;
   font-size: 28px;
   font-weight: 600;
   text-align: center;
 }
 
-.settings-wrapper {
+.form-error-hint {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--danger-color);
+}
+
+.button-group {
+  margin-top: 24px;
+}
+
+mat-card {
+  /* Border/shadow/background đã có sẵn từ `.mat-mdc-card` toàn cục (styles.scss) — ở đây chỉ
+     cần layout riêng cho card này. `gap` là nguồn khoảng cách DUY NHẤT giữa các field (không
+     dùng `mt-4` rải rác trên từng field nữa) để tránh chỗ có chỗ không, giống `.expense-card`/
+     `.member-panel` (cũng gap 16px). */
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
   padding: 20px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  background-color: #f9f9f9;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+}
+
+.select-bank .mat-mdc-select-trigger .bank-info {
+  padding: 0;
+
+  .bank-name {
+    padding-left: 8px;
+    font-weight: 400;
+  }
 }

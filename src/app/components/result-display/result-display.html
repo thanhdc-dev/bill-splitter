@@ -1,105 +1,102 @@
 <mat-card class="result-card">
   <mat-card-header>
     <mat-card-title>
-      <div class="flex justify-between items-center">
-        <h2>Chi tiết chia tiền</h2>
-        @if (isEditable()) {
-        <button mat-icon-button aria-label="settings" (click)="onSettingClick()">
-          <mat-icon>settings</mat-icon>
-        </button>
-        }
-      </div>
+      <h2>Chi tiết chia tiền</h2>
     </mat-card-title>
   </mat-card-header>
   <mat-card-content>
     <ng-container *ngIf="(expenses$ | async) as expenses">
       <ng-container *ngIf="(members$ | async) as members">
+        @if (!expenses.length) {
+        <app-empty-state
+          icon="calculate"
+          title="Chưa có gì để chia"
+          description="Thêm khoản mục và thành viên ở phía trên, phần chia tiền sẽ tự động hiện ra ở đây."
+        ></app-empty-state>
+        } @else {
         <div class="table-container">
-          <table mat-table [dataSource]="expenses" class="mat-elevation-z8">
-            <!-- Name Column -->
-            <ng-container matColumnDef="name">
-              <th mat-header-cell *matHeaderCellDef scope="col">Khoản mục</th>
-              <td mat-cell *matCellDef="let expense">{{expense.name}}</td>
-              <td mat-footer-cell *matFooterCellDef>
-                <strong>Tổng cộng</strong>
-              </td>
-            </ng-container>
-
-            <!-- Amount Column -->
-            <ng-container matColumnDef="amount">
-              <th mat-header-cell *matHeaderCellDef scope="col">Số tiền</th>
-              <td mat-cell *matCellDef="let expense">
-                {{expense.amount | currency: 'VND': 'symbol' : '1.0-0' : 'vi'}}
-              </td>
-              <td mat-footer-cell *matFooterCellDef>
-                <strong>{{getTotalAmount(expenses) | currency: 'VND': 'symbol' :
-                  '1.0-0' : 'vi'}}</strong>
-              </td>
-            </ng-container>
-
-            <!-- Participants Column -->
-            <ng-container matColumnDef="participants">
-              <th mat-header-cell *matHeaderCellDef scope="col">
-                Người tham gia
-              </th>
-              <td mat-cell *matCellDef="let expense">
-                <div class="w-max">{{getParticipants(expense, members)}}</div>
-              </td>
-              <td mat-footer-cell *matFooterCellDef></td>
-            </ng-container>
-
-            <!-- Per Person Column -->
-            <ng-container matColumnDef="perPerson">
-              <th mat-header-cell *matHeaderCellDef scope="col">
-                Mỗi người trả
-              </th>
-              <td mat-cell *matCellDef="let expense">
-                {{calculatePerPerson(expense.amount,
-                getParticipantCount(expense, members)) | currency: 'VND':
-                'symbol' : '1.0-0' : 'vi'}}
-              </td>
-              <td mat-footer-cell *matFooterCellDef></td>
-            </ng-container>
-
-            <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
-            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-            <tr mat-footer-row *matFooterRowDef="displayedColumns; sticky: true"></tr>
+          <table class="expense-receipt-table">
+            <thead>
+              <tr>
+                <th scope="col">Khoản mục</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let expense of expenses">
+                <td>
+                  <div class="leader-row">
+                    <span class="leader-row__label">{{expense.name}}</span>
+                    <span class="leader-row__fill" aria-hidden="true"></span>
+                    <span class="leader-row__value mono-amount">
+                      {{expense.amount | currency: 'VND': 'symbol' : '1.0-0' : 'vi'}}
+                    </span>
+                  </div>
+                  <div class="expense-meta">
+                    @if (getParticipantCount(expense, members) > 0) {
+                    <span class="expense-meta__participants">Tham gia: {{getParticipants(expense, members)}}</span>
+                    <span class="expense-meta__sep">·</span>
+                    <span class="mono-amount expense-meta__per-person">
+                      {{calculatePerPerson(expense.amount, getParticipantCount(expense, members)) | currency: 'VND': 'symbol' : '1.0-0' : 'vi'}}/người
+                    </span>
+                    } @else {
+                    <span class="expense-meta__warning">Chưa có ai tham gia khoản mục này</span>
+                    }
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr>
+                <td>
+                  <div class="leader-row leader-row--total">
+                    <span class="leader-row__label"><strong>Tổng cộng</strong></span>
+                    <span class="leader-row__fill" aria-hidden="true"></span>
+                    <strong class="leader-row__value mono-amount">
+                      {{getTotalAmount(expenses) | currency: 'VND': 'symbol' : '1.0-0' : 'vi'}}
+                    </strong>
+                  </div>
+                </td>
+              </tr>
+            </tfoot>
           </table>
         </div>
+        }
 
         @if (members.length) {
         <div class="member-summary">
           <h3>Tổng tiền mỗi người cần trả:</h3>
           <div class="member-amounts">
-            <div *ngFor="let member of members; index as index" class="member-amount">
-              <span class="member-name">{{member.name}}</span>
-              <div class="amount-section">
-                <span class="amount">{{formatUserAmount(member.totalAmount) | currency: 'VND':
-                  'symbol' : '1.0-0' : 'vi'}}</span>
-                @if(member.isPaid) {
-                <div class="status-icon paid" title="Đã thanh toán">
-                  <mat-icon>check</mat-icon>
-                </div>
-                } @else {
-                <div class="flex gap-2 ml-2">
-                  @if(isShowBankInfo) {
-                  <div class="status-icon">
-                    <button mat-icon-button (click)="showQRPopup(member)" (keyup.enter)="showQRPopup(member)"
-                      aria-label="Show QR code" matTooltip="Hiện QR ngân hàng">
-                      <mat-icon>qr_code</mat-icon>
-                    </button>
+            <div *ngFor="let member of members; index as index" class="member-amount" [class.member-amount--paid]="member.isPaid">
+              <div class="member-amount__body">
+                <span class="member-name">{{member.name}}</span>
+                <div class="amount-section">
+                  <span class="amount mono-amount">{{formatUserAmount(member.totalAmount) | currency: 'VND':
+                    'symbol' : '1.0-0' : 'vi'}}</span>
+                  @if(member.isPaid) {
+                  <output class="status-icon paid" aria-label="Đã thanh toán" title="Đã thanh toán">
+                    <mat-icon aria-hidden="true">check</mat-icon>
+                  </output>
+                  } @else {
+                  <div class="flex gap-2 ml-2">
+                    @if(isShowBankInfo) {
+                    <div class="status-icon">
+                      <button mat-icon-button (click)="showQRPopup(member)" (keyup.enter)="showQRPopup(member)"
+                        aria-label="Show QR code" matTooltip="Hiện QR ngân hàng">
+                        <mat-icon>qr_code</mat-icon>
+                      </button>
+                    </div>
+                    }
+                    @if(isShowMomoInfo) {
+                    <div class="status-icon p-1">
+                      <button mat-icon-button (click)="showMomoQRPopup(member)" (keyup.enter)="showMomoQRPopup(member)"
+                        aria-label="Show Momo QR code" matTooltip="Hiện QR Momo">
+                        <img class="w-full h-full object-cover" alt="momo" src="/images/bank-logo/momo.webp" />
+                      </button>
+                    </div>
+                    }
                   </div>
                   }
-                  @if(isShowMomoInfo) {
-                  <div class="status-icon p-1">
-                    <button mat-icon-button (click)="showMomoQRPopup(member)" (keyup.enter)="showMomoQRPopup(member)"
-                      aria-label="Show Momo QR code" matTooltip="Hiện QR Momo">
-                      <img class="w-full h-full object-cover" alt="momo" src="/images/bank-logo/momo.webp" />
-                    </button>
-                  </div>
-                  }
                 </div>
-                }
               </div>
             </div>
           </div>

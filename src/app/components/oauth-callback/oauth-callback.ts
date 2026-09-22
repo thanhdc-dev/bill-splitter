@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, DestroyRef, OnInit, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ActivatedRoute, Router } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -23,9 +24,10 @@ export class OauthCallback implements OnInit {
   private readonly snackBar = inject(MatSnackBar);
   private readonly billSplitterService = inject(BillSplitterService);
   private readonly passkeyService = inject(PasskeyService);
+  private readonly destroyRef = inject(DestroyRef);
 
   ngOnInit(): void {
-    this.route.queryParams.subscribe((params) => {
+    this.route.queryParams.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
       const code = params['code'];
       const state = params['state'];
       const error = params['error'];

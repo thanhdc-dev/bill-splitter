@@ -1,7 +1,9 @@
 import { Component, EventEmitter, inject, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatDialog } from '@angular/material/dialog';
 import { ImageCdnUrlService } from '../../core/cdn/image-cdn-url.service';
+import { ImageLightboxComponent } from '../image-lightbox/image-lightbox';
 
 /**
  * Đại diện cho một ảnh trong component.
@@ -28,8 +30,7 @@ export interface ImagePreview {
 export class ImageUploadComponent {
   public readonly snackBar = inject(MatSnackBar);
   public readonly cdn = inject(ImageCdnUrlService);
-
-  previewIndex: number | null = null;
+  private readonly dialog = inject(MatDialog);
 
   @Input() isEditable = true;
   @Input() maxFiles = 5;
@@ -156,15 +157,18 @@ export class ImageUploadComponent {
   }
 
   openPreview(index: number): void {
-    this.previewIndex = index;
-  }
-
-  closePreview(): void {
-    this.previewIndex = null;
+    this.dialog.open(ImageLightboxComponent, {
+      panelClass: 'image-lightbox-panel',
+      maxWidth: '95vw',
+      data: {
+        images: this.images.map((image) => this.getLightboxUrl(image)),
+        startIndex: index,
+      },
+    });
   }
 
   /** URL chất lượng cao cho lightbox preview */
-  getLightboxUrl(image: ImagePreview): string {
+  private getLightboxUrl(image: ImagePreview): string {
     if (image.storagePath) {
       return this.cdn.fullSize(image.storagePath);
     }

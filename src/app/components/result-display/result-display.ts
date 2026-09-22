@@ -1,7 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AsyncPipe, CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
-import { MatTableModule } from '@angular/material/table';
 import { BillSplitterService } from '../../services/bill-splitter.service';
 import { ExpenseItem, Member } from '../../models/bill-splitter.model';
 import { Observable } from 'rxjs';
@@ -10,9 +10,9 @@ import { QrPopupComponent } from '../qr-popup/qr-popup';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { removeVietnameseTones, roundedToThousand } from '../../shared/helpers';
 import { BankInfoItem } from '../../models/bank.model';
-import { BillTabControlService } from '../bill-details/bill-tab-control.service';
 import { MatButtonModule } from '@angular/material/button';
 import { QRService } from '../../services';
+import { EmptyStateComponent } from '../empty-state/empty-state';
 
 @Component({
   selector: 'app-result-display',
@@ -21,27 +21,23 @@ import { QRService } from '../../services';
     CommonModule,
     AsyncPipe,
     MatCardModule,
-    MatTableModule,
     MatIconModule,
     MatDialogModule,
     MatButtonModule,
+    EmptyStateComponent,
   ],
   templateUrl: './result-display.html',
   styleUrls: ['./result-display.scss'],
 })
 export class ResultDisplayComponent implements OnInit {
   private readonly dialog = inject(MatDialog);
-  private readonly billTabControlService = inject(BillTabControlService);
   private readonly billSplitterService = inject(BillSplitterService);
   private readonly qrService = inject(QRService);
 
   billName$: Observable<string>;
   billName = '';
-  expenses: ExpenseItem[] = [];
   expenses$: Observable<ExpenseItem[]>;
-  members: Member[] = [];
   members$: Observable<Member[]>;
-  displayedColumns: string[] = ['name', 'amount', 'participants', 'perPerson'];
   bankInfo$: Observable<BankInfoItem>;
   bankInfo!: BankInfoItem;
   isShowBankInfo = false;
@@ -49,19 +45,17 @@ export class ResultDisplayComponent implements OnInit {
 
   constructor() {
     this.billName$ = this.billSplitterService.name$;
-    this.billName$.subscribe((billName) => {
+    // `billName` chỉ dùng trong showQRPopup/showMomoQRPopup (không qua template),
+    // nên vẫn cần subscribe thủ công ở đây - huỷ theo lifecycle component.
+    this.billName$.pipe(takeUntilDestroyed()).subscribe((billName) => {
       this.billName = billName;
     });
+    // expenses$/members$ chỉ được đọc qua `| async` trong template.
     this.expenses$ = this.billSplitterService.expenses$;
-    this.expenses$.subscribe((expenses) => {
-      this.expenses = expenses;
-    });
     this.members$ = this.billSplitterService.members$;
-    this.members$.subscribe((members) => {
-      this.members = members;
-    });
+
     this.bankInfo$ = this.billSplitterService.bankInfo$;
-    this.bankInfo$.subscribe((bankInfo) => {
+    this.bankInfo$.pipe(takeUntilDestroyed()).subscribe((bankInfo) => {
       if (bankInfo) {
         this.bankInfo = bankInfo;
         this.fetchIsShowBankInfo();
@@ -93,8 +87,8 @@ export class ResultDisplayComponent implements OnInit {
     }, 0);
   }
 
-  calculatePerPerson(amount: number, participantCount: number): number {
-    return amount / participantCount;
+  calculatePerPerson(amount: number, participantCount: number): number | null {
+    return participantCount > 0 ? amount / participantCount : null;
   }
 
   getTotalAmount(expenses: ExpenseItem[]): number {
@@ -159,15 +153,6 @@ export class ResultDisplayComponent implements OnInit {
         qrImageDownloadUrl,
       },
     });
-  }
-
-  onSettingClick() {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    this.billTabControlService.changeTab(1); // giả sử tab Setting có index là 1
-  }
-
-  isEditable() {
-    return this.billSplitterService.isEditable();
   }
 
   fetchIsShowBankInfo() {

@@ -1,33 +1,67 @@
-import { Injectable } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
+import { Injectable, computed, effect, signal } from '@angular/core';
 
-@Injectable({
-  providedIn: 'root'
-})
+export type ThemeMode = 'light' | 'dark';
+
+const STORAGE_KEY = 'theme';
+const DARK_CLASS = 'dark';
+
+/**
+ * Quản lý giao diện Sáng / Tối.
+ *
+ * Người dùng mới: chốt theo `prefers-color-scheme` của hệ thống ngay lần đầu
+ * và lưu vào localStorage — từ đó về sau không còn theo dõi thay đổi của hệ
+ * thống nữa, chỉ đổi khi người dùng tự bấm nút.
+ *
+ * Chỉ bật/tắt class `.dark` trên <html>; toàn bộ màu do `color-scheme` trong
+ * styles.scss quyết định (Material 3 emit token dưới dạng `light-dark()`).
+ *
+ * Lần render đầu tiên do đoạn script nhỏ trong index.html lo, để tránh nháy
+ * trắng trước khi Angular bootstrap xong.
+ */
+@Injectable({ providedIn: 'root' })
 export class ThemeService {
-  private readonly isDarkMode = new BehaviorSubject<boolean>(false);
-  public isDarkMode$ = this.isDarkMode.asObservable();
+  private readonly modeSignal = signal<ThemeMode>(readStoredMode());
+
+  readonly mode = this.modeSignal.asReadonly();
+  readonly isDark = computed(() => this.modeSignal() === 'dark');
 
   constructor() {
-    const savedTheme = localStorage.getItem('theme');
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-
-    this.setDarkMode(savedTheme === 'dark' || (!savedTheme && prefersDark));
+    effect(() => {
+      document.documentElement.classList.toggle(DARK_CLASS, this.isDark());
+    });
   }
 
-  setDarkMode(isDark: boolean): void {
-    this.isDarkMode.next(isDark);
+  setMode(mode: ThemeMode): void {
+    this.modeSignal.set(mode);
+    persistMode(mode);
+  }
 
-    if (isDark) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
+  toggle(): void {
+    this.setMode(this.modeSignal() === 'dark' ? 'light' : 'dark');
+  }
+}
+
+function readStoredMode(): ThemeMode {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored === 'light' || stored === 'dark') {
+      return stored;
     }
+  } catch {
+    // bỏ qua, dùng mặc định
   }
 
-  toggleDarkMode(): void {
-    this.setDarkMode(!this.isDarkMode.value);
+  const mode: ThemeMode = window.matchMedia('(prefers-color-scheme: dark)').matches
+    ? 'dark'
+    : 'light';
+  persistMode(mode);
+  return mode;
+}
+
+function persistMode(mode: ThemeMode): void {
+  try {
+    localStorage.setItem(STORAGE_KEY, mode);
+  } catch {
+    // Chế độ riêng tư có thể chặn localStorage — vẫn đổi được trong phiên hiện tại.
   }
 }

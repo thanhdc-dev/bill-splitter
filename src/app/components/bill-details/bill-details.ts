@@ -1,4 +1,5 @@
 import { CommonModule } from '@angular/common';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   AfterViewInit,
   Component,
@@ -7,6 +8,7 @@ import {
   ViewChild,
   inject,
 } from '@angular/core';
+import { BreakpointObserver } from '@angular/cdk/layout';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -15,6 +17,8 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatTabGroup, MatTabsModule } from '@angular/material/tabs';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { ExpenseFormComponent } from '../expense-form/expense-form';
 import { MemberTableComponent } from '../member-table/member-table';
 import { ResultDisplayComponent } from '../result-display/result-display';
@@ -43,6 +47,9 @@ import { LoginDialogComponent } from '../login-dialog/login-dialog';
 import { BillTabControlService } from './bill-tab-control.service';
 import { ImageUploadComponent, ImagePreview } from '../image-upload/image-upload';
 
+/* Cùng ngưỡng với create-bill.ts/member-table.ts — dưới 768px thấy tab, từ 768px thấy layout
+   2 cột, để 2 trang nhất quán về hành vi responsive. */
+const MOBILE_BREAKPOINT = '(max-width: 767px)';
 
 @Component({
   selector: 'app-bill-details',
@@ -62,6 +69,8 @@ import { ImageUploadComponent, ImagePreview } from '../image-upload/image-upload
     BankComponent,
     PaymentComponent,
     ImageUploadComponent,
+    MatProgressSpinnerModule,
+    MatTooltipModule,
   ],
   templateUrl: './bill-details.html',
   styleUrl: './bill-details.scss',
@@ -75,6 +84,7 @@ export class BillDetails implements OnInit, OnDestroy, AfterViewInit {
   private readonly seoService = inject(SeoService);
   private readonly billTabControlService = inject(BillTabControlService);
   private readonly billAutoSaveService = inject(BillAutoSaveService);
+  private readonly breakpointObserver = inject(BreakpointObserver);
 
   code!: string;
   nameCtrl = new FormControl();
@@ -83,11 +93,15 @@ export class BillDetails implements OnInit, OnDestroy, AfterViewInit {
   isSaving$: Observable<boolean>;
   isChange$: Observable<boolean>;
   counter$: Observable<number>;
-  @ViewChild('tabGroup') tabGroup!: MatTabGroup;
+  @ViewChild('tabGroup') tabGroup?: MatTabGroup;
   sub!: Subscription;
   isEditable = false;
   oldImages: { id: number; storagePath: string }[] = [];
   images: ImagePreview[] = [];
+  /** null = không đang upload; 0-100 = % tiến trình của batch upload ảnh hiện tại. */
+  uploadProgress: number | null = null;
+  /** Dưới 768px: tab Khoản mục/Thành viên. Từ 768px: 2 cột song song, không có tabGroup. */
+  isMobile = false;
 
 
   constructor() {
@@ -97,11 +111,19 @@ export class BillDetails implements OnInit, OnDestroy, AfterViewInit {
     this.isChange$ = this.billSplitterService.isChange$;
     this.counter$ = this.billAutoSaveService.counter$;
     this.code = this.route.snapshot.paramMap.get('code') ?? '';
+
+    this.breakpointObserver
+      .observe(MOBILE_BREAKPOINT)
+      .pipe(takeUntilDestroyed())
+      .subscribe(({ matches }) => {
+        this.isMobile = matches;
+      });
     this.nameCtrl.valueChanges
       .pipe(
         debounceTime(300), // tránh spam khi người dùng gõ liên tục
         distinctUntilChanged(),
         filter((value) => value !== null && value !== undefined),
+        takeUntilDestroyed(),
       )
       .subscribe((name) => {
         this.billSplitterService.updateName(name);
@@ -110,6 +132,7 @@ export class BillDetails implements OnInit, OnDestroy, AfterViewInit {
     this.counter$.pipe(
         distinctUntilChanged(),
         filter((value) => value !== null && value !== undefined),
+        takeUntilDestroyed(),
       ).subscribe((counter) => {
       if (counter === 0) {
         const isChange = this.billSplitterService.getIsChange();
@@ -129,7 +152,11 @@ export class BillDetails implements OnInit, OnDestroy, AfterViewInit {
 
   ngAfterViewInit() {
     this.sub = this.billTabControlService.tabChange$.subscribe((index) => {
-      this.tabGroup.selectedIndex = index;
+      // tabGroup chỉ tồn tại ở layout mobile (dưới 768px) hoặc khi isEditable=false (không có
+      // tab nào) — ở layout 2 cột desktop hoặc chế độ chỉ đọc không có tab nào để chuyển tới.
+      if (this.tabGroup) {
+        this.tabGroup.selectedIndex = index;
+      }
     });
   }
 
@@ -203,9 +230,17 @@ export class BillDetails implements OnInit, OnDestroy, AfterViewInit {
         const oldFileIds = this.billSplitterService.getFileIds();
         const newImages = this.images.filter(({ id }) => !id).map(img => img.file!).filter(Boolean);
         if (newImages.length) {
-          const newFiles = await this.billSplitterService.uploadImages(newImages);
-          const newFileIds = newFiles.map((file) => file.id);
-          this.billSplitterService.setFileIds([...oldFileIds, ...newFileIds]);
+          this.uploadProgress = 0;
+          try {
+            const newFiles = await this.billSplitterService.uploadImages(
+              newImages,
+              (percent) => (this.uploadProgress = percent)
+            );
+            const newFileIds = newFiles.map((file) => file.id);
+            this.billSplitterService.setFileIds([...oldFileIds, ...newFileIds]);
+          } finally {
+            this.uploadProgress = null;
+          }
         }
       }
       this.billSplitterService

@@ -1,21 +1,74 @@
 <div class="list-container">
-  <h2 class="list-title">Danh sách</h2>
+  <div class="list-header">
+    <h2 class="list-title">Hoá đơn của bạn</h2>
+    @if (!isLoading && !hasError && bills.length) {
+    <p class="list-subtitle">{{ bills.length }} hoá đơn đã lưu · chạm để mở lại</p>
+    }
+  </div>
 
+  @if (isLoading) {
+  <div class="list-loading" role="status" aria-live="polite">
+    <mat-spinner diameter="40"></mat-spinner>
+    <p>Đang tải danh sách hóa đơn...</p>
+  </div>
+  }
+
+  @else if (hasError) {
+  <app-empty-state
+    icon="cloud_off"
+    title="Không tải được danh sách"
+    description="Có lỗi khi kết nối tới máy chủ. Kiểm tra kết nối mạng rồi thử lại."
+  >
+    <button mat-raised-button color="primary" (click)="loadData()">
+      <mat-icon>refresh</mat-icon>
+      Thử lại
+    </button>
+  </app-empty-state>
+  }
+
+  @else if (!bills.length) {
+  <app-empty-state
+    icon="receipt_long"
+    title="Chưa có hóa đơn nào được chia sẻ"
+    description="Những hóa đơn bạn lưu và chia sẻ sẽ xuất hiện ở đây để mở lại hoặc gửi cho bạn bè."
+  >
+    <button mat-raised-button color="primary" routerLink="/">
+      <mat-icon>add</mat-icon>
+      Tạo hóa đơn mới
+    </button>
+  </app-empty-state>
+  }
+
+  @else {
   <div class="bill-wrapper">
     <div
-      *ngFor="let item of bills; index as index"
-      class="bill"
-      [tabindex]="index"
+      *ngFor="let item of bills"
+      class="bill receipt-ticket"
+      role="button"
+      tabindex="0"
+      [title]="formatDate(item.createdAt)"
       (click)="onItemClick(item.code)"
-      (keydown)="onItemClick(item.code)"
+      (keydown.enter)="onItemClick(item.code)"
+      (keydown.space)="$event.preventDefault(); onItemClick(item.code)"
     >
+      <div class="bill-stub receipt-ticket__stub">
+        <span class="bill-stub__day">{{ getStubDay(item.createdAt) }}</span>
+        <span class="bill-stub__month">{{ getStubMonth(item.createdAt) }}</span>
+      </div>
+
       <div class="bill-content">
         <div class="bill-info">
           <div class="bill-header">
-            <span class="bill-code">{{ item.code }}</span>
-            <span class="bill-date">{{ formatDate(item.createdAt) }}</span>
+            <h3 class="bill-name">{{ item.name }}</h3>
+            <span class="bill-code">#{{ item.code }}</span>
           </div>
-          <h3 class="bill-name">{{ item.name }}</h3>
+
+          <div class="bill-meta">
+            <span class="bill-amount mono-amount">{{ item.data.totalAmount | currency: 'VND': 'symbol' : '1.0-0' : 'vi' }}</span>
+            <span class="bill-member-count">
+              <mat-icon>groups</mat-icon>{{ item.data.members.length }} người
+            </span>
+          </div>
         </div>
 
         <div class="actions">
@@ -28,10 +81,9 @@
             <mat-icon>content_copy</mat-icon>
           </button>
           <button
-            class="ml-2"
+            class="delete-btn"
             mat-icon-button
-            aria-label="remove"
-            color="warn"
+            aria-label="Xoá hóa đơn"
             (click)="onDelete($event, item.code)"
           >
             <mat-icon>delete</mat-icon>
@@ -40,4 +92,5 @@
       </div>
     </div>
   </div>
+  }
 </div>

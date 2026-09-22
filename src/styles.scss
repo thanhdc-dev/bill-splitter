@@ -1,23 +1,168 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-@import '@angular/material/prebuilt-themes/indigo-pink.css';
+@use '@angular/material' as mat;
+
+/* Plain CSS @import must stay the first emitted rule, so it sits above mat.theme(). */
 @import './tailwind.css';
 
+/* Material 3 theme. `theme-type: color-scheme` (the default for a palette) emits every
+   token as light-dark(), so the whole component library follows the `color-scheme`
+   property below — no separate dark stylesheet needed.
+
+   Angular Material's public Sass API only ships a fixed set of pre-generated M3 palettes
+   (azure, violet, rose...) — it does not expose a function to build a new palette from an
+   arbitrary hex at build time. `mat.theme()` is kept with `$azure-palette` purely so every
+   other M3 "sys" token (elevation, shape, motion, state, typography) gets generated
+   correctly; a SEPARATE rule further below overrides just the *primary* role tokens that
+   this app's components actually consume via `color="primary"` (button, fab, tab, select,
+   checkbox...) with the app's own teal, so azure never actually renders anywhere. */
+html {
+  @include mat.theme((color: mat.$azure-palette,
+      typography: (brand: 'Inter, "Helvetica Neue", sans-serif',
+        plain: 'Inter, "Helvetica Neue", sans-serif',
+      ),
+      density: 0,
+    ));
+
+  & {
+    color-scheme: light;
+  }
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
+/* Rebrand primary: MUST be its own rule, not appended inside the `html { @include
+   mat.theme(...); }` block above. `mat.theme()` expands into declarations interleaved with
+   nested rules, and Sass's "mixed declarations" handling can reorder trailing plain
+   declarations in that same block ahead of the mixin's own — so a `--mat-sys-primary`
+   written there can silently lose to the mixin's azure value in the compiled CSS despite
+   being later in the source (confirmed via computed style: it stayed azure). A fully
+   separate `html {}` rule, plus `!important` as a second guarantee, avoids that. */
+html {
+  --mat-sys-primary: #1B6B72 !important;
+  --mat-sys-on-primary: #FFFFFF !important;
+  --mat-sys-primary-container: #E3EFEE !important;
+  --mat-sys-on-primary-container: #123F44 !important;
+}
+
+/* M3 dark scheme lightens the "primary" tone and darkens "on-primary" (inverted from
+   light mode) so text/icons drawn straight in primary color stay readable on dark bg. */
+html.dark {
+  --mat-sys-primary: #6FBFC4 !important;
+  --mat-sys-on-primary: #00363A !important;
+  --mat-sys-primary-container: #1B3A3D !important;
+  --mat-sys-on-primary-container: #9FDEE2 !important;
+}
+
+/* ---------------------------------------------------------------------------
+   App tokens.
+
+   Hai lớp:
+   - "raw": giá trị hex literal — nguồn sự thật của bảng màu mới (lấy cảm hứng từ tiền Việt
+     Nam: teal như tờ 500k, vàng đồng như tờ 10-20k), không suy ra từ --mat-sys-* nữa vì màu
+     giờ là tuỳ chọn riêng, không phải palette M3 có sẵn.
+   - "role": giữ nguyên tên biến cũ (--primary-color, --bg-color...) trỏ sang raw mới, để mọi
+     component đang dùng var(--primary-color) v.v. tự động đổi màu mà không cần sửa từng file.
+   --------------------------------------------------------------------------- */
 :root {
-  --primary-color: #3f51b5;
-  --bg-color: #f8fafc; /* Rất nhạt, gần trắng */
-  --surface-color: #ffffff;
-  --text-primary: #0f172a;
-  --text-secondary: #64748b;
+  /* Raw */
+  --ink: #1C1B1A;
+  --ink-soft: #6E6862;
+  --paper: #F7F3EC;
+  --surface-raw: #FFFFFF;
+  --surface-muted-raw: #F1ECE1;
+  --surface-strong-raw: #EAE3D5;
+  --border-raw: rgba(28, 27, 26, 0.16);
+  --border-subtle-raw: rgba(28, 27, 26, 0.08);
+
+  --teal: #1B6B72;
+  --teal-dark: #123F44;
+  --teal-soft: #E3EFEE;
+  --gold: #B8722E;
+  --gold-dark: #7A4A1D;
+  --gold-soft: #F5E6D3;
+  --green: #2F7D4F;
+  --green-soft: #E1F0E5;
+
+  /* Chỉ dùng cho số tiền/số lượng (xem .mono-amount ở phần override Material bên dưới) */
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+
+  /* Role */
+  --bg-color: var(--paper);
+  --surface-color: var(--surface-raw);
+  /* Muted backgrounds: table headers, inline form wells, card footers */
+  --surface-muted: var(--surface-muted-raw);
+  --surface-strong: var(--surface-strong-raw);
+
+  --text-primary: var(--ink);
+  --text-secondary: var(--ink-soft);
+
+  --primary-color: var(--teal);
+  --on-primary-color: #FFFFFF;
+  /* Soft "container" của primary — KHÔNG đổi thành gold để tránh side-effect ngầm ở những
+     nơi đang dùng biến này (badge, hover dropzone...). Gold có biến riêng --gold-soft-*,
+     chỉ dành cho CTA chính (xem Pha 1/3). */
+  --accent-soft-bg: var(--teal-soft);
+  --accent-soft-fg: var(--teal-dark);
+  --gold-soft-bg: var(--gold-soft);
+  --gold-soft-fg: var(--gold-dark);
+  --danger-color: var(--mat-sys-error);
+  /* Momo brand pink - kept as a literal because it is a brand colour, not a theme role */
+  --momo-color: #d81b60;
+
+  /* Status: "đã thanh toán" */
+  --success-bg: var(--green-soft);
+  --success-fg: var(--green);
+
+  /* Lines */
+  --border-color: var(--border-raw);
+  --border-subtle: var(--border-subtle-raw);
+
+  --overlay-color: rgb(0 0 0 / 50%);
+  --scrollbar-thumb: var(--border-raw);
+  --scrollbar-thumb-hover: var(--ink-soft);
+
   --border-radius-lg: 16px;
   --border-radius-md: 12px;
   --border-radius-sm: 8px;
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
-  --border-color: #e2e8f0;
 }
 
-html, body {
+html.dark {
+  /* "Giấy" tối thay vì đen thuần — giữ tinh thần ấm của bản sáng thay vì xám lạnh mặc định. */
+  --ink: #F3F0EA;
+  --ink-soft: #B8B2A9;
+  --paper: #17140F;
+  --surface-raw: #211D17;
+  --surface-muted-raw: #2A2419;
+  --surface-strong-raw: #332C1F;
+  --border-raw: rgba(243, 240, 234, 0.16);
+  --border-subtle-raw: rgba(243, 240, 234, 0.08);
+
+  /* --teal giữ nguyên (nền fill: FAB, ticket-stub với chữ trắng — không phụ thuộc theme).
+     --teal-dark/--teal-soft đổi vì đây là màu dùng làm CHỮ/NỀN NHẠT, cần đảo tông để đọc
+     được trên nền tối. Tương tự cho gold/green. */
+  --teal-dark: #9FDEE2;
+  --teal-soft: #1B3A3D;
+  --gold: #C98A42;
+  --gold-dark: #F0C99A;
+  --gold-soft: #3A2A18;
+  --green: #86efac;
+  --green-soft: #14532d;
+
+  --momo-color: #f472b6;
+
+  /* Shadows have to be heavier because there is less contrast against the background. */
+  --overlay-color: rgb(0 0 0 / 65%);
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.45), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.35);
+}
+
+html,
+body {
   height: 100%;
   margin: 0;
   background-color: var(--bg-color);
@@ -27,7 +172,8 @@ html, body {
 }
 
 /* Typography Overrides */
-.mat-typography, h1, h2, h3, h4, h5, h6 {
+.mat-typography,
+h1, h2, h3, h4, h5, h6 {
   font-family: 'Inter', "Helvetica Neue", sans-serif !important;
 }
 
@@ -35,7 +181,11 @@ html, body {
 .mat-mdc-card {
   border-radius: var(--border-radius-lg) !important;
   box-shadow: var(--shadow-sm) !important;
-  border: 1px solid var(--border-color);
+  /* !important bắt buộc: CSS nội bộ do `mat.theme()` sinh ra (đầu file) có selector cụ thể hơn
+     `.mat-mdc-card` đơn, nên border không !important sẽ bị ghi đè mất — card nào không có
+     override riêng (payment.html) sẽ mất viền trong khi card có override cục bộ (setting,
+     bill-details) vẫn có, gây lệch nhau giữa các trang. */
+  border: 1px solid var(--border-color) !important;
   background-color: var(--surface-color) !important;
   transition: box-shadow 0.3s ease;
 }
@@ -44,7 +194,7 @@ html, body {
   box-shadow: var(--shadow-md) !important;
 }
 
-.mat-mdc-button, .mat-mdc-unelevated-button, .mat-mdc-outlined-button {
+.mat-mdc-button, .mat-mdc-unelevated-button, .mat-mdc-outlined-button, .mat-mdc-raised-button {
   border-radius: var(--border-radius-sm) !important;
   font-family: 'Inter', sans-serif !important;
   font-weight: 500 !important;
@@ -52,12 +202,80 @@ html, body {
 }
 
 .mat-mdc-fab, .mat-mdc-mini-fab {
-  box-shadow: var(--shadow-md) !important;
+  /* Ít shadow hơn mặc định Material — viền mảnh + màu là điểm nhấn chính, không phải shadow nổi. */
+  box-shadow: var(--shadow-sm) !important;
   border-radius: var(--border-radius-lg) !important; /* Bo góc hơn là bo tròn hẳn */
 }
 
 .mat-mdc-form-field-outline {
   border-radius: var(--border-radius-sm) !important;
+}
+
+/* Dialog panel cho ImageLightboxComponent: ảnh cần đứng tự do trên overlay
+   tối, không phải trong khung card trắng mặc định của MatDialog. */
+.image-lightbox-panel .mat-mdc-dialog-container .mdc-dialog__surface {
+  background: transparent;
+  box-shadow: none;
+  overflow: visible;
+}
+
+.image-lightbox-panel .mat-mdc-dialog-container {
+  --mdc-dialog-container-color: transparent;
+}
+
+/* Material 3 không còn sinh class .mat-warn / .mat-primary như M2, nên
+   `color="warn"` mất tác dụng. Nút phá hủy vẫn cần tín hiệu đỏ. */
+.mat-mdc-icon-button[color="warn"],
+.mat-mdc-button[color="warn"],
+.mat-mdc-raised-button[color="warn"] {
+  --mdc-icon-button-icon-color: var(--mat-sys-error);
+  --mat-icon-button-state-layer-color: var(--mat-sys-error);
+  --mdc-text-button-label-text-color: var(--mat-sys-error);
+  color: var(--mat-sys-error);
+}
+
+/* Overlay Material (mat-select panel, mat-autocomplete...) render ra ngoài DOM của component,
+   vào .cdk-overlay-container — không override được từ style riêng của từng component
+   (vd bank-select.scss), phải làm ở đây. */
+.mat-mdc-option:hover:not(.mdc-list-item--disabled),
+.mat-mdc-option.mat-mdc-option-active,
+.mat-mdc-option[aria-selected="true"]:not(.mdc-list-item--disabled) {
+  background-color: var(--accent-soft-bg) !important;
+}
+
+.mat-mdc-option[aria-selected="true"]:not(.mdc-list-item--disabled) .mdc-list-item__primary-text {
+  color: var(--accent-soft-fg);
+}
+
+.mat-mdc-dialog-surface {
+  border-radius: var(--border-radius-lg) !important;
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-md) !important;
+  background-color: var(--surface-color) !important;
+}
+
+/* CTA vàng đồng — CHỈ dành cho đúng 1 hành động chính toàn app trên mỗi màn hình (vd "Lưu &
+   chia sẻ"). Mọi nút khác giữ teal qua color="primary" như mặc định, không thêm class này. */
+.fab-gold.mat-mdc-fab,
+.btn-gold.mat-mdc-raised-button,
+.btn-gold.mat-mdc-unelevated-button,
+.btn-gold.mat-mdc-outlined-button {
+  background-color: var(--gold) !important;
+  color: #fff !important;
+  border-color: var(--gold) !important;
+}
+
+/* Focus ring rõ ràng trên mọi nút — quan trọng hơn khi nền đổi sang teal/gold thay vì primary
+   xanh Material mặc định, cần tự kiểm tra lại độ tương phản. */
+.mat-mdc-button:focus-visible,
+.mat-mdc-raised-button:focus-visible,
+.mat-mdc-unelevated-button:focus-visible,
+.mat-mdc-outlined-button:focus-visible,
+.mat-mdc-icon-button:focus-visible,
+.mat-mdc-fab:focus-visible,
+.mat-mdc-mini-fab:focus-visible {
+  outline: 2px solid var(--text-primary);
+  outline-offset: 2px;
 }
 
 /* Scrollbar Customization for a cleaner look */
@@ -69,11 +287,11 @@ html, body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: var(--scrollbar-thumb);
   border-radius: 10px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: var(--scrollbar-thumb-hover);
 }
 
 .pointer {
@@ -84,7 +302,244 @@ html, body {
   width: 100%;
 }
 
-// Media queries for mobile
+/* ---------------------------------------------------------------------------
+   Redesign motifs — "biên nhận giấy" (docs/ui-redesign-plan.md, Pha 1).
+
+   Global vì đây là ngôn ngữ hình ảnh chung của cả app, không riêng 1 component.
+   --------------------------------------------------------------------------- */
+
+/* Số tiền/số lượng — CHỈ dùng cho nội dung số, không dùng cho label/text thường. */
+.mono-amount {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+/* Biến thể căn phải, dùng trong bảng/danh sách để số dễ so sánh theo cột. */
+.mono-amount--table {
+  display: block;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* Số tài khoản/số điện thoại — mono nhưng KHÔNG in đậm như tiền, tránh nhầm là số tiền. */
+.mono-text {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* "Cuống vé" — dùng cho item danh sách hoá đơn, member-card, ticket-lite trong kết quả chia
+   tiền. 2 notch tròn (::before/::after trên .receipt-ticket__stub) giả lập lỗ đục ngay tại
+   điểm nối giữa stub và thân, bằng cách vẽ hình tròn cùng màu NỀN PHÍA SAU card
+   (--notch-bg, mặc định = --bg-color). Nơi đặt receipt-ticket trên nền khác (trong mat-card,
+   trong dialog...) phải tự override --notch-bg cho khớp, nếu không notch sẽ lộ viền sai màu. */
+.receipt-ticket {
+  --notch-bg: var(--bg-color);
+  position: relative;
+  display: flex;
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  overflow: hidden;
+}
+
+.receipt-ticket__stub {
+  position: relative;
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 10px 14px;
+  background: var(--teal);
+  color: #fff;
+
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    right: -7px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--notch-bg);
+  }
+
+  &::before {
+    top: -7px;
+  }
+
+  &::after {
+    bottom: -7px;
+  }
+}
+
+/* "Đường chấm dẫn" kiểu thực đơn/biên nhận — nối tên khoản mục với số tiền trong cùng 1 hàng,
+   thay cho border-bottom đặc của bảng thường. */
+.leader-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.leader-row__label {
+  white-space: nowrap;
+}
+
+.leader-row__fill {
+  flex: 1;
+  height: 0;
+  margin-bottom: 3px;
+  border-bottom: 2px dotted var(--border-color);
+}
+
+.leader-row__value {
+  white-space: nowrap;
+}
+
+/* "Đường xé" — ranh giới giữa vùng nhập liệu và vùng tổng kết thanh toán. Dùng chung quy ước
+   --notch-bg như .receipt-ticket. */
+.tear-line {
+  --notch-bg: var(--bg-color);
+  position: relative;
+  height: 0;
+  margin: 24px 0;
+  border-top: 2px dashed var(--border-color);
+
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    top: -7px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--notch-bg);
+  }
+
+  &::before {
+    left: -7px;
+  }
+
+  &::after {
+    right: -7px;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Shared layout primitives.
+
+   Global (not component-scoped) so expense-form / member-table / payment can all
+   use them instead of each keeping its own copy of the same 40 lines.
+   --------------------------------------------------------------------------- */
+
+/* The "add something quickly" well above a table.
+   Chỉ còn `payment.html` dùng trực tiếp class này (expense-form/member-table đã chuyển sang
+   class riêng) — form đó tự bọc `mat-card` nền `--surface-color`, nên well không cần thêm
+   nền riêng nữa, tránh 2 lớp nền chồng nhau. */
+.inline-add-form {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+  padding: 16px;
+  border-radius: var(--border-radius-md);
+  border: 1px solid var(--border-color);
+
+  .mat-mdc-form-field {
+    flex: 1;
+    min-width: 180px;
+  }
+
+  > button {
+    height: 56px;
+    padding: 0 24px !important;
+    border-radius: var(--border-radius-sm) !important;
+    font-weight: 600;
+  }
+}
+
+/* Horizontally scrollable data table wrapper */
+.data-table-scroll {
+  width: calc(100% - 2px);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: var(--border-radius-md);
+  border: 1px solid var(--border-color);
+  background: var(--surface-color);
+
+  table {
+    width: 100%;
+  }
+
+  th.mat-header-cell {
+    background-color: var(--surface-muted);
+    color: var(--text-secondary);
+    font-weight: 600;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  td.mat-cell {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-subtle);
+    color: var(--text-primary);
+  }
+}
+
+/* Nút xoá trung tính — dùng ở danh sách hoá đơn, bảng thành viên. Xoá 1 dòng dữ liệu ở đây
+   không phải hành động phá hủy cần cảnh báo đỏ liên tục như mockup đã duyệt; chỉ rõ hơn khi
+   hover/focus. */
+.delete-btn {
+  --mdc-icon-button-icon-color: var(--text-secondary);
+  --mat-icon-button-state-layer-color: var(--text-primary);
+  color: var(--text-secondary);
+
+  &:hover {
+    color: var(--text-primary);
+  }
+}
+
+/* Ô nhập phẳng theo mockup "biên nhận": nhãn tĩnh phía trên khung, viền mảnh, không có gạch
+   chân/nổi nền của Material appearance mặc định. Dùng với
+   `appearance="outline" floatLabel="always"` trên mat-form-field. */
+.flat-field {
+  /* --mdc-outlined-text-field-container-shape điều khiển bo góc THẬT của khung (vẽ bằng SVG
+     notched-outline) — border-radius trên .mat-mdc-text-field-wrapper không có tác dụng vì
+     wrapper đó không tự vẽ viền. Luôn dùng kèm `subscriptSizing="dynamic"` trên mat-form-field
+     (bỏ khoảng trắng dành cho hint/error khi trống) để chiều cao khớp 42-46px như mockup, nếu
+     không phần dưới ẩn vẫn chiếm chỗ và làm nút cạnh bên (mini-fab) lệch tâm so với khung. */
+  --mdc-outlined-text-field-container-shape: var(--border-radius-sm);
+  --mat-form-field-container-height: 46px;
+  --mat-form-field-container-vertical-padding: 12px;
+
+  .mdc-notched-outline__leading,
+  .mdc-notched-outline__notch,
+  .mdc-notched-outline__trailing {
+    border-color: var(--border-color) !important;
+    border-width: 1px !important;
+  }
+
+  .mdc-notched-outline__notch {
+    border-left: none;
+  }
+
+  &.mat-focused .mdc-notched-outline__leading,
+  &.mat-focused .mdc-notched-outline__notch,
+  &.mat-focused .mdc-notched-outline__trailing {
+    border-color: var(--teal) !important;
+  }
+
+  .mdc-floating-label {
+    font-size: 12px !important;
+    font-weight: 600;
+    color: var(--text-secondary) !important;
+    letter-spacing: 0.2px;
+  }
+}
+
 @media screen and (max-width: 600px) {
   .mat-mdc-form-field {
     width: 100%;
@@ -101,5 +556,23 @@ html, body {
 
   .mat-mdc-card-content {
     padding: 0 !important;
+  }
+
+  .inline-add-form {
+    padding: 12px;
+
+    .mat-mdc-form-field {
+      width: 100%;
+      min-width: unset;
+    }
+
+    > button {
+      width: 100%;
+      height: 48px;
+    }
+  }
+
+  .data-table-scroll {
+    border-radius: var(--border-radius-sm);
   }
 }

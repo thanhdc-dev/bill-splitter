@@ -1,7 +1,8 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpEventType, HttpResponse } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { firstValueFrom } from 'rxjs';
+import { filter, map } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import {
   BillFindAll,
@@ -102,6 +103,17 @@ export class BillSplitterService {
     this.markAsChanged();
   }
 
+  /** Chèn lại khoản mục đã xoá vào đúng vị trí cũ — dùng cho "Hoàn tác". */
+  restoreExpense(expense: ExpenseItem, index: number): void {
+    this.expenses.update((exps) => {
+      const copy = [...exps];
+      copy.splice(index, 0, expense);
+      return copy;
+    });
+    this.recalculateTotalAmounts();
+    this.markAsChanged();
+  }
+
   getExpenses(): ExpenseItem[] {
     return this.expenses();
   }
@@ -126,6 +138,17 @@ export class BillSplitterService {
 
   removeMember(id: string): void {
     this.members.update((mems) => mems.filter((m) => m.id !== id));
+    this.recalculateTotalAmounts();
+    this.markAsChanged();
+  }
+
+  /** Chèn lại thành viên đã xoá vào đúng vị trí cũ — dùng cho "Hoàn tác". */
+  restoreMember(member: Member, index: number): void {
+    this.members.update((mems) => {
+      const copy = [...mems];
+      copy.splice(index, 0, member);
+      return copy;
+    });
     this.recalculateTotalAmounts();
     this.markAsChanged();
   }
@@ -425,7 +448,14 @@ export class BillSplitterService {
     return this.fileIds();
   }
 
-  async uploadImages(files: File[]): Promise<{ id: number; storagePath: string }[]> {
+  /**
+   * `onProgress` báo % tổng thể của cả request (0-100), không tách theo từng file
+   * vì cả batch đi trong một multipart request duy nhất.
+   */
+  async uploadImages(
+    files: File[],
+    onProgress?: (percent: number) => void
+  ): Promise<{ id: number; storagePath: string }[]> {
     const URL = `${environment.apiUrl}/${this.endPoint}/upload-images`;
     const formData = new FormData();
 
@@ -433,8 +463,30 @@ export class BillSplitterService {
       formData.append('files', file);
     });
 
-    return firstValueFrom(this.http.post(URL, formData)) as Promise<
-      { id: number; storagePath: string }[]
-    >;
+    if (!onProgress) {
+      return firstValueFrom(this.http.post(URL, formData)) as Promise<
+        { id: number; storagePath: string }[]
+      >;
+    }
+
+    const request$ = this.http.post(URL, formData, {
+      reportProgress: true,
+      observe: 'events',
+    });
+
+    return firstValueFrom(
+      request$.pipe(
+        filter((event) => {
+          if (event.type === HttpEventType.UploadProgress) {
+            if (event.total) {
+              onProgress(Math.round((100 * event.loaded) / event.total));
+            }
+            return false;
+          }
+          return event.type === HttpEventType.Response;
+        }),
+        map((event) => (event as HttpResponse<{ id: number; storagePath: string }[]>).body)
+      )
+    ) as Promise<{ id: number; storagePath: string }[]>;
   }
 }

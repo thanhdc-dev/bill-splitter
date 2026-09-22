@@ -1,56 +1,102 @@
 .bill-splitter-container {
-  max-width: 1000px;
+  /* Khớp create-bill.scss — 2 trang cùng vai trò tương đương (tạo mới vs xem/sửa đã lưu), nên
+     dùng chung 1 canvas width. */
+  max-width: 1280px;
   margin: 0 auto;
   position: relative;
   min-height: 100vh;
 
+  /* Card container for the main inputs */
+  >.mat-mdc-card {
+    border: none;
+    box-shadow: var(--shadow-sm) !important;
+    background-color: var(--surface-color);
+  }
+
+  .top-bar {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    margin-bottom: 22px;
+
+    &__name {
+      flex: 1;
+      margin-bottom: 0;
+
+      &--readonly {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-primary);
+      }
+    }
+  }
+
+  /* Floating Action Button */
+  .buttons {
+    z-index: 999;
+
+    button {
+      transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+      &:hover {
+        transform: scale(1.1);
+      }
+    }
+
+    .share-button__syncing .mat-icon {
+      animation: rotate 1s linear infinite;
+    }
+  }
+
   .mat-tab-label {
     margin-bottom: 0;
+    font-weight: 500;
+    font-size: 0.95rem;
 
     .icon {
       display: none;
     }
   }
 
-  .mat-mdc-card {
+  .mat-mdc-tab-header {
     margin-bottom: 16px;
+    border-bottom: 1px solid var(--border-color);
   }
 
   .expense-form,
   .member-table,
   .payment,
   .result-display {
-    padding-top: 10px;
-    padding-bottom: 10px;
+    padding-top: 20px;
+    padding-bottom: 20px;
   }
 
-  .buttons {
-    z-index: 999;
+  /* Từ 768px: Khoản mục | Thành viên song song, khỏi bấm qua lại giữa 2 tab liên tục — chỉ
+     render khi !isMobile (xem bill-details.html), nên không cần media query ở đây nữa. */
+  .two-col-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+    gap: 24px;
+    align-items: start;
 
-    .mat-icon {
-      animation: none;
-    }
-
-    &.share-button__syncing .mat-icon {
-      animation: rotate 1s linear infinite;
+    .expense-form,
+    .member-table {
+      padding-top: 0;
+      min-width: 0;
     }
   }
 
   @keyframes rotate {
     from {
-      transform: rotate(360deg);
+      transform: rotate(0deg);
     }
 
     to {
-      transform: rotate(0deg);
+      transform: rotate(360deg);
     }
   }
 
   @media screen and (max-width: 600px) {
-    .mat-mdc-card {
-      margin-bottom: 12px;
-    }
-
     .mat-tab-label {
       font-size: 1rem;
 
@@ -62,5 +108,24 @@
         display: block;
       }
     }
+
+  }
+}
+
+.upload-progress {
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  box-shadow: var(--shadow-md);
+
+  &__label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-secondary);
   }
 }

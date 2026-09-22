@@ -13,37 +13,27 @@
         </ng-template>
 
         <mat-card>
-          <mat-form-field class="select-bank mt-4">
-            <mat-label>Chọn ngân hàng</mat-label>
-            <mat-select formControlName="bankBin">
-              <mat-option>
-                <ngx-mat-select-search
-                  [formControl]="itemFilterCtrl"
-                  [placeholderLabel]="'Nhập mã hoặc tên để tìm kiếm'"
-                ></ngx-mat-select-search>
-              </mat-option>
-              <mat-option
-                *ngFor="let item of filteredItems | async"
-                [value]="item.bin"
-              >
-                <div class="bank-info">
-                  <div>
-                    <img [src]="item.logo" width="70" alt="logo" />
-                  </div>
-                  <div class="bank-name">{{ item.label }}</div>
-                </div>
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
+          <app-bank-select
+            class="select-bank"
+            formControlName="bankBin"
+            valueField="bin"
+            [required]="true"
+          ></app-bank-select>
 
-          <mat-form-field appearance="outline" class="account-name">
+          <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" class="flat-field account-name">
             <mat-label>Họ & Tên</mat-label>
             <input matInput type="text" formControlName="accountName" />
+            <mat-error *ngIf="bankAccountForm.get('accountName')?.hasError('required')">
+              Vui lòng nhập họ & tên
+            </mat-error>
           </mat-form-field>
 
-          <mat-form-field appearance="outline" class="account-number">
+          <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" class="flat-field account-number">
             <mat-label>Số tài khoản</mat-label>
             <input matInput type="text" formControlName="accountNumber" />
+            <mat-error *ngIf="bankAccountForm.get('accountNumber')?.hasError('required')">
+              Vui lòng nhập số tài khoản
+            </mat-error>
           </mat-form-field>
         </mat-card>
       </mat-tab>
@@ -55,17 +45,20 @@
         </ng-template>
 
         <mat-card>
-          <mat-form-field appearance="outline" class="account-name-momo mt-4">
+          <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" class="flat-field account-name-momo">
             <mat-label>Họ & Tên</mat-label>
             <input matInput type="text" formControlName="accountName" />
           </mat-form-field>
 
-          <mat-form-field appearance="outline" class="phone-number-momo">
+          <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" class="flat-field phone-number-momo">
             <mat-label>Số điện thoại</mat-label>
-            <input matInput type="text" formControlName="phoneNumber" />
+            <input matInput type="text" formControlName="phoneNumber" placeholder="0912345678" />
+            <mat-error *ngIf="momoWalletForm.get('phoneNumber')?.hasError('pattern')">
+              Số điện thoại không hợp lệ
+            </mat-error>
           </mat-form-field>
 
-          <mat-form-field appearance="outline" class="account-number-momo">
+          <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" class="flat-field account-number-momo">
             <mat-label>Số tài khoản</mat-label>
             <input matInput type="text" formControlName="accountNumber" />
           </mat-form-field>
@@ -86,13 +79,15 @@
     </mat-tab-group>
 
     @if (!isSecurityTab) {
-    <div class="button-group flex justify-end">
+    <div class="button-group flex flex-col items-end gap-2">
+      @if (settingsForm.invalid && settingsForm.touched) {
+      <p class="form-error-hint">Vui lòng kiểm tra lại các trường có lỗi ở trên</p>
+      }
       <button
         mat-raised-button
         color="primary"
         class="save-button"
         type="submit"
-        [disabled]="settingsForm.invalid"
       >
         Lưu
       </button>

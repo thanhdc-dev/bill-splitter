@@ -4,8 +4,9 @@
   right: 0;
   left: 0;
   transform: translateX(0);
-  background: white;
-  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.15);
+  background: var(--surface-color);
+  border-top: 1px solid var(--border-color);
+  box-shadow: var(--shadow-lg);
   z-index: 1000;
   animation: slideUp 0.3s ease-out;
 
@@ -16,8 +17,9 @@
     left: 50%;
     transform: translateX(-50%);
     max-width: 500px;
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    border-radius: var(--border-radius-md);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-lg);
   }
 }
 
@@ -41,7 +43,7 @@
     font-size: 32px;
     width: 32px;
     height: 32px;
-    color: var(--primary-color, #1976d2);
+    color: var(--primary-color, var(--primary-color));
 
     @media (max-width: 767px) {
       font-size: 28px;
@@ -62,7 +64,7 @@
 
   .prompt-title {
     font-size: 16px;
-    color: #333;
+    color: var(--text-primary);
 
     @media (max-width: 767px) {
       font-size: 14px;
@@ -71,7 +73,7 @@
 
   .prompt-description {
     font-size: 14px;
-    color: #666;
+    color: var(--text-secondary);
     margin-top: 2px;
 
     @media (max-width: 767px) {
@@ -90,7 +92,7 @@
   button {
     &.close-btn {
       mat-icon {
-        color: var(--primary-color, #fff);
+        color: var(--primary-color, var(--surface-color));
       }
     }
 
@@ -113,21 +115,6 @@
   to {
     transform: translateY(0);
     opacity: 1;
-  }
-}
-
-// Dark mode support
-@media (prefers-color-scheme: dark) {
-  .install-prompt {
-    background: #2d2d2d;
-
-    .prompt-title {
-      color: #fff;
-    }
-
-    .prompt-description {
-      color: #aaa;
-    }
   }
 }
 

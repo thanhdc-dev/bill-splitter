@@ -3,9 +3,9 @@
   margin: 24px auto;
   padding: 1rem;
   background: var(--surface-color);
-  border-radius: var(--border-radius-lg);
+  border-radius: var(--border-radius-md);
   border: 1px solid var(--border-color);
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-sm);
 }
 
 h3 {
@@ -13,7 +13,7 @@ h3 {
   font-size: 1.125rem;
   font-weight: 600;
   color: var(--text-primary);
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--border-subtle);
   padding-bottom: 12px;
 }
 
@@ -29,13 +29,33 @@ h3 {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 12px;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 12px;
+  row-gap: 10px;
+  align-items: center;
   font-size: 1rem;
   color: var(--text-secondary);
 
-  strong {
-    color: var(--text-primary);
+  .label {
     font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+  }
+
+  .value--account {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .account-number {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
   }
 }
 
@@ -43,24 +63,38 @@ h3 {
   min-width: 250px;
   text-align: center;
   border-radius: var(--border-radius-md);
+}
+
+.qr-frame {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  background: var(--surface-muted);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
 
   img {
     max-width: 100%;
     height: auto;
-    border-radius: var(--border-radius-sm);
-    box-shadow: var(--shadow-sm);
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--border-color);
+  }
+
+  .qr-caption {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
   }
 }
 
 .container-edit {
   margin-top: 24px;
   padding-top: 16px;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--border-subtle);
 }
 
 .copy-btn {
-  background: #f1f5f9;
+  background: var(--surface-muted);
   border: none;
   padding: 6px;
   border-radius: 50%;
@@ -70,7 +104,11 @@ h3 {
   margin-left: 12px;
 
   &:hover {
-    background: #e2e8f0;
+    background: var(--border-color);
+    color: var(--primary-color);
+  }
+
+  &--copied {
     color: var(--primary-color);
   }
 }
@@ -91,8 +129,12 @@ h3 {
     padding: 12px;
   }
 
-  .left {
-    gap: 8px;
+  .info-grid {
+    row-gap: 6px;
     font-size: 0.9rem;
+
+    .account-number {
+      font-size: 1rem;
+    }
   }
 }

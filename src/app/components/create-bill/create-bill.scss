@@ -1,6 +1,7 @@
 .bill-splitter-container {
-  max-width: 1000px;
-  /* Bóp gọn lại cho cân đối */
+  /* Khớp chiều rộng canvas gốc của mockup CreateBill (1280px) — đủ chỗ cho card "Thành viên"
+     trước khi bảng phải cuộn ngang. */
+  max-width: 1280px;
   margin: 0 auto;
   position: relative;
   min-height: 100vh;
@@ -10,6 +11,35 @@
     border: none;
     box-shadow: var(--shadow-sm) !important;
     background-color: var(--surface-color);
+  }
+
+  .top-bar {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    margin-bottom: 22px;
+
+    &__name {
+      flex: 1;
+      margin-bottom: 0;
+    }
+  }
+
+  /* Floating Action Button */
+  .buttons {
+    z-index: 999;
+
+    button {
+      transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+      &:hover {
+        transform: scale(1.1);
+      }
+    }
+
+    .share-button__syncing .mat-icon {
+      animation: rotate 1s linear infinite;
+    }
   }
 
   .mat-tab-label {
@@ -36,20 +66,21 @@
     padding-bottom: 20px;
   }
 
-  /* Floating Action Buttons */
-  .buttons {
-    z-index: 999;
+  /* Từ 768px: Khoản mục | Thành viên song song, khỏi bấm qua lại giữa 2 tab liên tục — chỉ
+     render khi !isMobile (xem create-bill.html), nên không cần media query ở đây nữa. */
+  .two-col-layout {
+    display: grid;
+    /* minmax(0, …) chứ không phải Nfr trần: mặc định track grid không co nhỏ hơn min-content
+       của phần tử bên trong — bảng thành viên có min-width:600px (member-table.scss) nên track
+       1fr bị ép giãn vượt quá phần chia của nó, tràn ra ngoài .bill-splitter-container. */
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+    gap: 24px;
+    align-items: start;
 
-    button {
-      transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-
-      &:hover {
-        transform: scale(1.1);
-      }
-    }
-
-    .share-button__syncing .mat-icon {
-      animation: rotate 1s linear infinite;
+    .expense-form,
+    .member-table {
+      padding-top: 0;
+      min-width: 0;
     }
   }
 
@@ -75,5 +106,22 @@
         display: block;
       }
     }
+  }
+}
+.upload-progress {
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  box-shadow: var(--shadow-md);
+
+  &__label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-secondary);
   }
 }

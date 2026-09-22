@@ -1,0 +1,9 @@
+{
+  "name": "run-web-driver",
+  "private": true,
+  "description": "Playwright REPL driver for /run-skill on this project. Not part of the app build.",
+  "type": "module",
+  "dependencies": {
+    "playwright": "1.63.0"
+  }
+}
