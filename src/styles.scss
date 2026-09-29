@@ -278,6 +278,24 @@ h1, h2, h3, h4, h5, h6 {
   outline-offset: 2px;
 }
 
+/* Brand-consistent text selection color instead of the browser's default blue. */
+::selection {
+  background-color: var(--accent-soft-bg);
+  color: var(--accent-soft-fg);
+}
+
+/* Respect the OS-level "reduce motion" setting — collapse all transitions/animations
+   to near-instant instead of removing them outright, so state changes (hover, focus,
+   dialogs) still register visually without the motion. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* Scrollbar Customization for a cleaner look */
 ::-webkit-scrollbar {
   width: 6px;

@@ -1,15 +1,27 @@
 import { Routes } from '@angular/router';
-import { OauthCallback } from './components/oauth-callback/oauth-callback';
-import { Bills } from './components/bills/bills';
 import { authGuard } from './guards/auth-guard';
-import { CreateBill } from './components/create-bill/create-bill';
-import { BillDetails } from './components/bill-details/bill-details';
-import { Setting } from './components/setting/setting';
 
 export const routes: Routes = [
-  { path: 'setting', component: Setting, canActivate: [authGuard] },
-  { path: 'bills', component: Bills, canActivate: [authGuard] },
-  { path: 'auth/callback', component: OauthCallback },
-  { path: '', component: CreateBill },
-  { path: ':code', component: BillDetails },
+  {
+    path: 'setting',
+    loadComponent: () => import('./components/setting/setting').then((m) => m.Setting),
+    canActivate: [authGuard],
+  },
+  {
+    path: 'bills',
+    loadComponent: () => import('./components/bills/bills').then((m) => m.Bills),
+    canActivate: [authGuard],
+  },
+  {
+    path: 'auth/callback',
+    loadComponent: () => import('./components/oauth-callback/oauth-callback').then((m) => m.OauthCallback),
+  },
+  {
+    path: '',
+    loadComponent: () => import('./components/create-bill/create-bill').then((m) => m.CreateBill),
+  },
+  {
+    path: ':code',
+    loadComponent: () => import('./components/bill-details/bill-details').then((m) => m.BillDetails),
+  },
 ];

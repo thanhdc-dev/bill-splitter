@@ -2275,3 +2275,81 @@ minh hoạ, người đọc phải tự cài và chạy app mới hình dung đ�
 - **Chụp ảnh với dữ liệu thật từ backend đang chạy** — bị loại vì cần một backend + tài khoản
   thật, không phù hợp để tái lập trong môi trường agent/CI; mock response là cách nhanh, xác định
   và không phụ thuộc hạ tầng ngoài.
+
+---
+
+## 2026-09-29
+
+### Decision
+
+Kiểm tra `checklist_frontend.md` (thẩm mỹ/A11y/hiệu năng/mobile) và sửa các mục không PASS
+tìm được, gồm 5 quyết định:
+
+1. **`::selection` và `prefers-reduced-motion`**: thêm trực tiếp vào `styles.scss` (global),
+   dùng lại token màu `--accent-soft-bg/--accent-soft-fg` sẵn có thay vì tạo màu mới; motion
+   giảm bằng cách rút ngắn `animation-duration`/`transition-duration` về gần 0 thay vì `!important
+   none` để tránh làm mất tín hiệu trạng thái (hover/focus/dialog) hoàn toàn.
+2. **Logo header đổi từ `<h1 routerLink>` sang `<h1><a routerLink>...</a></h1>`**: `<h1>` gắn
+   `routerLink` + `tabindex` ngầm không phải phần tử tương tác thật (không có `href`, không nhận
+   Enter/Space theo chuẩn), và focus ring mặc định của trình duyệt cho nó gần như vô hình trên
+   nền trắng — trong khi các nút Material cạnh bên có ring 2px rõ ràng. Đổi sang `<a>` bên trong
+   `<h1>` để giữ heading cho SEO nhưng có phần tử link thật, đồng thời thêm rule `focus-visible`
+   riêng khớp phong cách các nút khác.
+3. **FAB "Lưu & chia sẻ" (`create-bill`, `bill-details`) ẩn đến khi cuộn quá 120px** (directive
+   mới `RevealOnScroll`, `src/app/directives/reveal-on-scroll.ts`): trên mobile, trang đủ ngắn
+   để tab "Ngân hàng/Momo" đã nằm trong khung nhìn ban đầu (`bottom-7 right-7` fixed trùng toạ độ
+   với tab "Momo", đã xác nhận bằng `getBoundingClientRect()` chứ không chỉ suy đoán từ ảnh chụp
+   toàn trang — ảnh fullPage có thể nhân bản sai vị trí phần tử `fixed`). Vượt phạm vi quyết định
+   2026-09-22 (chỉ chấp nhận che nội dung *khi cuộn*), vì ở đây che ngay từ lúc tải trang, đè lên
+   một tab bấm được. Ẩn theo ngưỡng cuộn là cách rẻ nhất không phụ thuộc thứ tự/độ dài nội dung
+   phía trên nó — vẫn giữ nguyên hành vi che nội dung khi cuộn sâu như quyết định cũ.
+4. **Routes chuyển sang `loadComponent` (lazy)** trong `app.routes.ts`: trước đó `Setting`,
+   `Bills`, `CreateBill`, `BillDetails`, `OauthCallback` đều import thẳng, gộp chung 1 bundle
+   `main.js` ~1.1MB. Sau khi lazy-load, `main.js` giảm còn ~38.7KB, mỗi route tách chunk riêng
+   (đã xác nhận bằng log build của `ng serve`).
+5. **Không tự động hoá Lighthouse/đo contrast**: môi trường headless hiện tại không chạy được
+   Lighthouse thật; các mục cần đo bằng công cụ (contrast chính xác, CLS thực tế, điểm số
+   Lighthouse mobile) để lại trong TODO ở trạng thái "cần đo thủ công", không tự ý gán PASS/FAIL.
+
+### Before
+
+- Không có rule `::selection` hay `prefers-reduced-motion` nào trong `src/`.
+- `app.html`: `<h1 class="pointer" routerLink="/" aria-label="Home page">` — heading tự đóng vai
+  link.
+- `create-bill.html` / `bill-details.html`: `<div class="buttons fixed bottom-7 right-7">` luôn
+  hiển thị full opacity ngay từ lúc render.
+- `app.routes.ts`: import trực tiếp toàn bộ component route ở đầu file, không `loadComponent`.
+
+### After
+
+- `styles.scss`: thêm block `::selection` và `@media (prefers-reduced-motion: reduce)`.
+- `app.html`/`app.scss`: `<h1><a class="pointer logo-link" routerLink="/" ...></a></h1>` +
+  `.logo-link:focus-visible { outline: 2px solid var(--text-primary); ... }`.
+- `src/app/directives/reveal-on-scroll.ts` (mới): directive `appRevealOnScroll`, toggle class
+  `is-visible` theo `window.scrollY > 120`. Áp dụng ở `create-bill.html`/`bill-details.html`
+  (`appRevealOnScroll` trên `.buttons`) + CSS `opacity 0 → 1` tương ứng trong
+  `create-bill.scss`/`bill-details.scss`.
+- `app.routes.ts`: toàn bộ route dùng `loadComponent: () => import(...).then(m => m.X)`.
+
+### Reason
+
+- Focus ring rõ ràng + semantic HTML đúng chuẩn là 2 mục checklist A11y bắt buộc, và vi phạm ở
+  logo là điểm vào đầu tiên bằng bàn phím trên trang (Tab đầu tiên).
+- FAB đè tab "Momo" chặn thao tác chạm thật (đã verify bằng toạ độ `getBoundingClientRect`, không
+  chỉ dựa ảnh chụp — ảnh `fullPage` có gotcha nhân bản phần tử `fixed` đã ghi trong
+  `.claude/skills/run-web/SKILL.md`).
+- Lazy-load route là cách rẻ nhất giảm "unused JS" tải ban đầu mà không đổi hành vi ứng dụng.
+
+### Alternatives Considered
+
+- **Chừa "gutter" bên phải thanh tab (`padding-right` trên `.mat-mdc-tab-header`) để né FAB** — đã
+  thử với `padding-right: 88px` rồi `130px`, nhưng Angular Material co cụm tab theo tỷ lệ và ở mức
+  đủ lớn để né FAB thì tab "Momo" bị đẩy ra ngoài, ẩn hẳn (không hiện pagination arrow) — mất hẳn
+  một tab, tệ hơn bug gốc. Bị loại, chuyển sang ẩn FAB theo ngưỡng cuộn.
+- **Xoá `outline: none` build sẵn của trình duyệt và tự vẽ ring cho `<h1>` mà không đổi sang
+  `<a>`** — bị loại vì không giải quyết gốc vấn đề semantic (`<h1>` không phải phần tử tương tác
+  thật, không có `href`, không thao tác được bằng cách "mở tab mới"/screen reader không announce
+  là link).
+- **Chuẩn hoá contrast bằng cách tự tính từ CSS variables** — cân nhắc nhưng không dùng vì kém
+  chính xác hơn Lighthouse/axe thật (không mô phỏng đúng anti-aliasing, overlay, opacity chồng
+  lớp); để mục này ở trạng thái "cần đo thủ công" thay vì tự ý kết luận PASS.
