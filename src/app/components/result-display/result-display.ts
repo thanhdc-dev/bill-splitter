@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectorRef, ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AsyncPipe, CurrencyPipe } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
@@ -15,6 +15,7 @@ import { QRService } from '../../services';
 import { EmptyStateComponent } from '../empty-state/empty-state';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-result-display',
   standalone: true,
   imports: [
@@ -33,6 +34,7 @@ export class ResultDisplayComponent implements OnInit {
   private readonly dialog = inject(MatDialog);
   private readonly billSplitterService = inject(BillSplitterService);
   private readonly qrService = inject(QRService);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   billName$: Observable<string>;
   billName = '';
@@ -60,6 +62,8 @@ export class ResultDisplayComponent implements OnInit {
         this.bankInfo = bankInfo;
         this.fetchIsShowBankInfo();
         this.fetchIsShowMomoInfo();
+        // OnPush: cờ hiển thị QR được gán ngoài template/async pipe nên phải đánh dấu thủ công.
+        this.cdr.markForCheck();
       }
     });
   }

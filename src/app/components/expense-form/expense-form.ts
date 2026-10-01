@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -21,6 +21,7 @@ import { EditFieldDialogComponent } from '../edit-field-dialog/edit-field-dialog
 import { EmptyStateComponent } from '../empty-state/empty-state';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-expense-form',
   standalone: true,
   imports: [

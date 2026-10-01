@@ -2500,3 +2500,28 @@ Người dùng có token không còn phải nhìn màn hình trắng chờ API a
 - **Giữ `await` trong initializer**: an toàn nhất nhưng giữ nguyên độ trễ khởi động.
 - **Chuyển `AuthService` sang signal + `computed isEditable`**: sạch hơn nhưng phải sửa nhiều nơi và nên làm cùng đợt OnPush/zoneless; hoãn.
 - **Rủi ro còn lại**: mọi nơi MỚI đọc `isLoggedIn()` đồng bộ ngay lúc khởi tạo sẽ thấy `false` trong vài trăm ms đầu — phải dùng `whenReady()`. `bank.ts` đọc `isEditable()` trong template nên tự cập nhật khi auth xong.
+
+## 2026-10-01 (đợt 6)
+
+### Decision
+
+Bật `ChangeDetectionStrategy.OnPush` cho `expense-form` và `result-display`.
+
+### Before
+
+Hai component dùng change detection mặc định (chạy lại mỗi tick của zone.js).
+
+### After
+
+- `expense-form`: chỉ thêm `OnPush`. Dữ liệu vào qua `| async` (`expenses$`, `members$`) và event handler → không cần đánh dấu thủ công.
+- `result-display`: `OnPush` + `ChangeDetectorRef.markForCheck()` trong subscribe của `bankInfo$`, vì `isShowBankInfo`/`isShowMomoInfo` được gán ngoài template/async pipe.
+- Kiểm tra bằng trình duyệt: thêm 2 khoản mục + 1 thành viên → danh sách và tổng tiền (350.000 ₫) cập nhật; xoá → 250.000 ₫; "Hoàn tác" → khôi phục; mở bill có `bankInfo` → nút QR hiện (đường `markForCheck`).
+
+### Reason
+
+Hai component này render lại nhiều nhất (mỗi lần gõ/đổi khoản mục) nhưng đầu vào đều đi qua observable/event, nên OnPush không đổi hành vi mà bỏ được các lượt kiểm tra thừa.
+
+### Alternatives Considered
+
+- **Chuyển `isShowBankInfo`/`isShowMomoInfo` thành `computed` signal**: gọn hơn `markForCheck` nhưng đụng cả `bankInfo` (đang gán lẻ trong `ngOnInit`/subscribe); để dành đợt chuyển signal toàn bộ.
+- **Bật OnPush cho `member-table`, `bill-details`, `create-bill`, `bank`, `payment`, `bills`** : chưa làm, các component này gán state trực tiếp trong `subscribe`/promise nên cần refactor từng cái.
