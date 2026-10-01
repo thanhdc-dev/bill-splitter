@@ -1,10 +1,17 @@
 
-import { Component, OnInit, inject } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  OnInit,
+  inject,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatCardModule } from '@angular/material/card';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { debounceTime, distinctUntilChanged, filter, Observable } from 'rxjs';
 import { BankInfoItem } from '../../models/bank.model';
+import { AuthService } from '../../services/auth.service';
 import { BillSplitterService } from '../../services/bill-splitter.service';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -12,6 +19,7 @@ import { BillTabControlService } from '../bill-details/bill-tab-control.service'
 import { QRService } from '../../services';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-bank',
   imports: [MatCardModule, MatButtonModule, MatIconModule],
   templateUrl: './bank.html',
@@ -22,6 +30,8 @@ export class BankComponent implements OnInit {
   private readonly billTabControlService = inject(BillTabControlService);
   private readonly billSplitterService = inject(BillSplitterService);
   private readonly qrService = inject(QRService);
+  private readonly authService = inject(AuthService);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   bankInfo$: Observable<BankInfoItem>;
   bankInfo!: BankInfoItem;
@@ -47,8 +57,13 @@ export class BankComponent implements OnInit {
           this.fetchIsShowMomoInfo();
           this.getQrCodeUrl();
           this.getQrCodeUrlMomo();
+          // OnPush: các trường QR/hiển thị được gán trong subscribe (đã debounce).
+          this.cdr.markForCheck();
         }
       });
+
+    // isEditable() phụ thuộc phiên đăng nhập, vốn khôi phục bất đồng bộ lúc khởi động.
+    this.authService.user$.pipe(takeUntilDestroyed()).subscribe(() => this.cdr.markForCheck());
   }
 
   ngOnInit(): void {
@@ -74,7 +89,11 @@ export class BankComponent implements OnInit {
           duration: 3000,
         });
         this.isAccountNumberCopied = true;
-        setTimeout(() => (this.isAccountNumberCopied = false), 2000);
+        this.cdr.markForCheck();
+        setTimeout(() => {
+          this.isAccountNumberCopied = false;
+          this.cdr.markForCheck();
+        }, 2000);
       })
       .catch((err) => {
         console.error('Lỗi khi copy:', err);
@@ -90,7 +109,11 @@ export class BankComponent implements OnInit {
           duration: 3000,
         });
         this.isMomoNumberCopied = true;
-        setTimeout(() => (this.isMomoNumberCopied = false), 2000);
+        this.cdr.markForCheck();
+        setTimeout(() => {
+          this.isMomoNumberCopied = false;
+          this.cdr.markForCheck();
+        }, 2000);
       })
       .catch((err) => {
         console.error('Lỗi khi copy:', err);

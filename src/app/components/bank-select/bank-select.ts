@@ -1,4 +1,13 @@
-import { Component, Input, computed, forwardRef, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  Input,
+  computed,
+  forwardRef,
+  inject,
+  signal,
+} from '@angular/core';
 import { AsyncPipe } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
@@ -29,6 +38,7 @@ export interface BankItemLabel extends BankItem {
  * `code`, Cài đặt lưu `bin` — nên trường dùng làm giá trị được truyền qua `valueField`.
  */
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-bank-select',
   standalone: true,
   imports: [
@@ -49,6 +59,8 @@ export interface BankItemLabel extends BankItem {
   ],
 })
 export class BankSelectComponent implements ControlValueAccessor {
+  private readonly cdr = inject(ChangeDetectorRef);
+
   @Input() label = 'Chọn ngân hàng';
   /** Trường của ngân hàng được dùng làm giá trị form. */
   @Input() valueField: 'code' | 'bin' = 'bin';
@@ -94,6 +106,7 @@ export class BankSelectComponent implements ControlValueAccessor {
   writeValue(value: string | null): void {
     this.selectCtrl.setValue(value ?? null, { emitEvent: false });
     this.selectedValue.set(value ?? null);
+    this.cdr.markForCheck();
   }
 
   registerOnChange(fn: (value: string | null) => void): void {
@@ -110,6 +123,7 @@ export class BankSelectComponent implements ControlValueAccessor {
     } else {
       this.selectCtrl.enable({ emitEvent: false });
     }
+    this.cdr.markForCheck();
   }
 
   private filterBanks(value: string): BankItemLabel[] {

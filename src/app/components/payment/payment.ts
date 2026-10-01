@@ -1,5 +1,12 @@
 
-import { Component, DestroyRef, OnInit, inject } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  DestroyRef,
+  OnInit,
+  inject,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatDividerModule } from '@angular/material/divider';
@@ -17,6 +24,7 @@ import { MatCardModule } from '@angular/material/card';
 import { BankSelectComponent } from '../bank-select/bank-select';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-payment',
   standalone: true,
   imports: [
@@ -38,6 +46,7 @@ export class PaymentComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly billSplitterService = inject(BillSplitterService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   bankInfo$: Observable<BankInfoItem>;
   bankForm: FormGroup;
@@ -66,6 +75,8 @@ export class PaymentComponent implements OnInit {
       if (bankInfo) {
         this.bankInfo = bankInfo;
         this.bankForm.patchValue({ ...bankInfo }, { emitEvent: false });
+        // OnPush: patchValue không phát sự kiện nên view phải được đánh dấu thủ công.
+        this.cdr.markForCheck();
       }
     });
   }

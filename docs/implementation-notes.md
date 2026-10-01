@@ -2576,3 +2576,29 @@ Hai component (lớn nhất app) dùng change detection mặc định. Các trư
 
 - **Chuyển `isMobile`/`uploadProgress`/`isEditable` sang signal**: loại bỏ `markForCheck` thủ công nhưng phải sửa template và tương tác với `ngModel`/`formControl`; để dành khi làm zoneless.
 - **Chưa kiểm thử**: tiến trình upload ảnh thật (cần backend/R2) và luồng lưu bill (autosave counter) — chỉ rà soát code, chưa chạy thật.
+
+## 2026-10-01 (đợt 9)
+
+### Decision
+
+Bật `OnPush` cho `bank`, `payment`, `bank-select`; đánh dấu thủ công những trường gán ngoài template.
+
+### Before
+
+Ba component dùng change detection mặc định.
+
+### After
+
+- `bank`: `markForCheck()` trong subscribe `bankInfo$` (đã debounce 1s) và quanh cờ `isAccountNumberCopied`/`isMomoNumberCopied` (gán trong promise + `setTimeout`). Thêm subscribe `AuthService.user$` → `markForCheck()` vì template gọi `isEditable()` phụ thuộc phiên đăng nhập, mà phiên được khôi phục bất đồng bộ (xem đợt 5).
+- `payment`: `markForCheck()` sau `bankForm.patchValue(..., { emitEvent: false })`.
+- `bank-select` (ControlValueAccessor): `markForCheck()` trong `writeValue` và `setDisabledState`.
+- Kiểm tra bằng trình duyệt: tạo bill → chọn ngân hàng (54 lựa chọn), nhập tên/số tài khoản → `app-bank` hiện QR sau debounce và `result-display` hiện nút QR; mở bill có thông tin Momo: chủ bill thấy nút cài đặt Momo, khách thì không.
+
+### Reason
+
+`bank`/`payment` nằm trong form chính nên bị kiểm tra lại trên mọi tương tác; OnPush cắt phần kiểm tra thừa.
+
+### Alternatives Considered
+
+- **Bỏ gọi `isEditable()` trong template, đổi sang `computed` signal**: sạch hơn subscribe `user$` nhưng `isEditable()` đọc cả `userId` (field thường) lẫn auth; để dành đợt chuyển signal.
+- **Chưa kiểm thử**: nút sao chép (cần quyền clipboard của trình duyệt headless) — chỉ rà soát code.
