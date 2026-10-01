@@ -2602,3 +2602,28 @@ Ba component dùng change detection mặc định.
 
 - **Bỏ gọi `isEditable()` trong template, đổi sang `computed` signal**: sạch hơn subscribe `user$` nhưng `isEditable()` đọc cả `userId` (field thường) lẫn auth; để dành đợt chuyển signal.
 - **Chưa kiểm thử**: nút sao chép (cần quyền clipboard của trình duyệt headless) — chỉ rà soát code.
+
+## 2026-10-01 (đợt 10)
+
+### Decision
+
+Bật `OnPush` cho `quantity-selector` và `image-upload`.
+
+### Before
+
+Hai component dùng change detection mặc định. `quantity-selector` được render lặp lại trong mỗi ô của bảng thành viên (`members × expenses`), nên bị kiểm tra lại với mọi thay đổi ở nơi khác.
+
+### After
+
+- `image-upload`: chỉ thêm `OnPush`. State (`images`, `dragOver`) chỉ đổi trong event handler của chính component hoặc qua `@Input` (setter `imageStoragePaths`), cả hai đều tự đánh dấu dirty.
+- `quantity-selector`: `OnPush` + `markForCheck()` trong `writeValue` và `setDisabledState` (do là `ControlValueAccessor`, giá trị có thể được form ghi từ bên ngoài). Cách dùng hiện tại (`[value]` + `(valueChange)`) không phụ thuộc hai hàm này nhưng giữ để an toàn khi dùng với form control.
+- Kiểm tra bằng trình duyệt: bấm tăng/giảm → 0.5 → 1 → 0.5 và tổng tiền ở `result-display` đổi theo; thêm ảnh (giả lập chọn file PNG) → 1 ảnh preview; xoá → 0.
+
+### Reason
+
+`quantity-selector` là component lặp nhiều nhất trong app nên lợi ích OnPush lớn nhất ở đây.
+
+### Alternatives Considered
+
+- **Không chạm `quantity-selector`**: an toàn nhất nhưng bỏ qua nơi tốn kiểm tra nhiều nhất.
+- **Chưa kiểm thử**: dùng `quantity-selector` qua `formControl` (hiện chưa có chỗ nào dùng), kéo-thả ảnh thật, lightbox ảnh.

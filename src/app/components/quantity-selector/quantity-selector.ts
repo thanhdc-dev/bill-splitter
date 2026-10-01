@@ -1,5 +1,14 @@
 
-import { Component, EventEmitter, forwardRef, Input, Output } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  EventEmitter,
+  Input,
+  Output,
+  forwardRef,
+  inject,
+} from '@angular/core';
 import { NG_VALUE_ACCESSOR } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -7,6 +16,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-quantity-selector',
   imports: [
     MatIconModule,
@@ -25,6 +35,8 @@ import { MatInputModule } from '@angular/material/input';
   ],
 })
 export class QuantitySelector {
+  private readonly cdr = inject(ChangeDetectorRef);
+
   @Input() value = 0;
   @Input() min = 0;
   @Input() max = 99;
@@ -88,6 +100,8 @@ export class QuantitySelector {
 
   writeValue(value: number): void {
     this.value = value || 0;
+    // OnPush: giá trị được form ghi từ bên ngoài, không đi qua @Input/event của component.
+    this.cdr.markForCheck();
   }
 
   registerOnChange(fn: (value: number) => void): void {
@@ -100,5 +114,6 @@ export class QuantitySelector {
 
   setDisabledState(isDisabled: boolean): void {
     this.disabled = isDisabled;
+    this.cdr.markForCheck();
   }
 }
