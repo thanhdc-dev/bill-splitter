@@ -2444,3 +2444,30 @@ Loại 2 request chặn render sang bên thứ ba (DNS/TLS + CSS) và cho phép 
 - **`quantity-selector`**: loại khỏi OnPush vì là `ControlValueAccessor` nhận giá trị qua `writeValue`.
 - **Chạy timer auto-save ngoài zone**: chỉ có lợi khi app zoneless/OnPush toàn bộ (async pipe cần tick để render); hiện timer chỉ chạy khi có thay đổi chưa lưu nên chi phí nhỏ. Hoãn.
 - **Initializer không chặn bootstrap** và **zoneless**: chưa được xác nhận; `bill-details`/`create-bill`/`bill-splitter.service` đọc `isLoggedIn()`/`getUserId()` đồng bộ nên có nguy cơ race. Hoãn.
+
+## 2026-10-01 (đợt 4)
+
+### Decision
+
+Nén ảnh tĩnh trong `public/` (thumbnail OG và icon PWA) bằng Pillow, giữ nguyên tỷ lệ và kích thước hiển thị của icon.
+
+### Before
+
+- `thumbnail.webp`: 1536×1024, 452 kB.
+- `icons/icon-512x512.png`: 97 kB; `icons/icon-192x192.png`: 19 kB (RGBA, 32-bit).
+
+### After
+
+- `thumbnail.webp`: 1200×800 (vẫn tỷ lệ 3:2), WebP quality 85, ~57 kB.
+- `icon-512x512.png`: ~12 kB; `icon-192x192.png`: ~4 kB (quantize 256 màu, giữ alpha, dither Floyd–Steinberg). Sai khác trung bình so với bản gốc 0.67/255, so sánh bằng mắt không thấy khác biệt.
+
+### Reason
+
+Ảnh là phần nặng nhất trong `public/` ngoài logo ngân hàng; service worker cache cả hai nhóm file này. Nén lossy mức nhẹ giảm ~85–90% dung lượng mà không đổi giao diện.
+
+### Alternatives Considered
+
+- **Đổi thumbnail sang 1200×630 (chuẩn og:image)**: bị loại vì cắt khác tỷ lệ gốc 3:2, có thể làm mất nội dung ở mép trên/dưới; 1200×800 vẫn hiển thị tốt trên `summary_large_image`.
+- **Chỉ tối ưu PNG lossless (`optimize=True`)**: icon 512 chỉ giảm 97 → 95 kB, không đáng kể.
+- **Cài `sharp`/`pngquant`**: không cần, Pillow đã có sẵn và đủ dùng; tránh thêm dependency cho việc chạy một lần.
+- **Logo (`logo.png`, `favicon.png`) và logo ngân hàng**: giữ nguyên, đã nhỏ (≤4 kB) hoặc đã là WebP.
