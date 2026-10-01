@@ -1,6 +1,6 @@
-import { inject, Injectable, OnDestroy } from '@angular/core';
+import { inject, Injectable, NgZone, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
-import { BehaviorSubject, Subject, Subscription, timer } from 'rxjs';
+import { BehaviorSubject, Observable, Subject, Subscription, timer } from 'rxjs';
 import { filter, map, switchMap, takeUntil, takeWhile, tap } from 'rxjs/operators';
 import { BillSplitterService } from './bill-splitter.service';
 
@@ -10,6 +10,7 @@ import { BillSplitterService } from './bill-splitter.service';
 export class BillAutoSaveService implements OnDestroy {
   private readonly router = inject(Router);
   private readonly billSplitterService = inject(BillSplitterService);
+  private readonly ngZone = inject(NgZone);
   
   private monitorSub?: Subscription;
   private readonly counterSubject = new BehaviorSubject<number>(0);
@@ -41,14 +42,32 @@ export class BillAutoSaveService implements OnDestroy {
         switchMap(() => {
           // Bắt đầu một timer phát sinh mỗi 1 giây (1000ms), 
           // Timer này sẽ bị tự động hủy và tạo mới lại vòng lặp nếu isChange$ phát dữ liệu mới.
-          return timer(0, 1000).pipe(
+          // Chạy ngoài zone: các tick trung gian không ai render (counter$ chỉ được lắng nghe để
+          // lưu khi về 0) nên không cần kích hoạt change detection mỗi giây.
+          return this.timerOutsideZone(0, 1000).pipe(
             map((i) => this.SAVE_DELAY - i),
-            tap((remaining) => this.counterSubject.next(remaining)),
+            tap((remaining) => this.emitCounter(remaining)),
             takeWhile((remaining) => remaining > 0),
             takeUntil(this.cancel$)
           );
         })
       ).subscribe();
+    }
+  }
+
+  /** `timer()` có `setInterval` bên dưới được đăng ký ngoài NgZone. */
+  private timerOutsideZone(dueTime: number, period: number): Observable<number> {
+    return new Observable<number>((subscriber) =>
+      this.ngZone.runOutsideAngular(() => timer(dueTime, period).subscribe(subscriber)),
+    );
+  }
+
+  /** Chỉ vào lại zone khi đếm về 0, vì đó là lúc người nghe thực sự lưu bill và cập nhật UI. */
+  private emitCounter(remaining: number) {
+    if (remaining <= 0) {
+      this.ngZone.run(() => this.counterSubject.next(remaining));
+    } else {
+      this.counterSubject.next(remaining);
     }
   }
 }

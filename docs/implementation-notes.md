@@ -2627,3 +2627,29 @@ Hai component dùng change detection mặc định. `quantity-selector` được
 
 - **Không chạm `quantity-selector`**: an toàn nhất nhưng bỏ qua nơi tốn kiểm tra nhiều nhất.
 - **Chưa kiểm thử**: dùng `quantity-selector` qua `formControl` (hiện chưa có chỗ nào dùng), kéo-thả ảnh thật, lightbox ảnh.
+
+## 2026-10-01 (đợt 11)
+
+### Decision
+
+Bộ đếm ngược auto-save (`BillAutoSaveService`) chạy ngoài NgZone, chỉ vào lại zone khi đếm về 0.
+
+### Before
+
+`switchMap(() => timer(0, 1000).pipe(... tap(remaining => counterSubject.next(remaining)) ...))` được đăng ký trong zone → mỗi giây (tối đa 4 lần cho mỗi lần thay đổi) kích hoạt một lượt change detection toàn app. `counter$` không được dùng trong template nào; chỉ `bill-details` subscribe để gọi `save()` khi `counter === 0`.
+
+### After
+
+- `timerOutsideZone()`: bọc `timer(0, 1000)` trong `new Observable(... ngZone.runOutsideAngular(...))`.
+- `emitCounter()`: `remaining > 0` phát ngoài zone; `remaining <= 0` phát qua `ngZone.run(...)` để `save()` và việc cập nhật UI sau đó (snackbar, `init()`) chạy trong zone như trước.
+- Kiểm tra bằng trình duyệt (API giả): hook `setInterval` ghi `Zone.current.name`: bản cũ `angular`/`angular`, bản mới `<root>`/`<root>`. Auto-save vẫn chạy sau thay đổi: snackbar "Hóa đơn đã được lưu!" và 3 request tới `/bills/abc123` (GET đầu, PUT lưu, GET tải lại sau lưu).
+
+### Reason
+
+Các tick trung gian không phục vụ hiển thị nên không cần change detection; giảm các lượt kiểm tra thừa trong lúc người dùng đang sửa bill. Là bước chuẩn bị cho zoneless (khi đó timer không còn gắn với zone).
+
+### Alternatives Considered
+
+- **Thay bằng `debounceTime(3000)`**: đơn giản hơn nhưng `stopCountdown()`/`cancel$` hiện có ngữ nghĩa huỷ rõ ràng, và đổi sang debounce sẽ đổi hành vi (mỗi thay đổi mới sẽ reset bộ đếm — giống `switchMap` hiện tại, nhưng bỏ phát `counter$`); giữ nguyên API `counter$`.
+- **Chạy cả `counterSubject.next` trong zone**: giữ `counter$` "an toàn" cho người dùng async-pipe sau này nhưng làm mất lợi ích; nếu sau này thêm UI hiển thị đếm ngược thì phải đổi lại (hoặc dùng signal).
+- **Chưa kiểm thử**: số lượt change detection thực tế (chỉ đo vị trí zone của `setInterval`), lưu bill với backend thật.
