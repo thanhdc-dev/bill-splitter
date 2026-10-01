@@ -2414,3 +2414,33 @@ Control flow tích hợp trong compiler, không cần import. Import từng pipe
 
 - **Giữ `CommonModule`**: đơn giản hơn nhưng kém tường minh, và Angular khuyến nghị bỏ.
 - **Chưa làm OnPush, `@defer`, timer ngoài zone**: chưa thể kiểm chứng bằng mắt trên trình duyệt trong phiên này nên để lại.
+
+## 2026-10-01 (đợt 3)
+
+### Decision
+
+Self-host font, bật `OnPush` cho 6 component lá, và cố ý **không** làm một số mục tối ưu còn lại.
+
+### Before
+
+- `index.html` nạp Inter, IBM Plex Mono và Material Icons từ `fonts.googleapis.com` bằng 2 thẻ `<link rel="stylesheet">` chặn render (+ 2 `preconnect`).
+- Toàn bộ component dùng change detection mặc định.
+
+### After
+
+- Cài `@fontsource/inter`, `@fontsource/ibm-plex-mono`, `material-icons`; thêm `src/fonts.css` (khai báo trong `angular.json` → `styles`) với `@font-face` chỉ subset `latin` + `vietnamese` (có `unicode-range`) cho Inter 400/500/600/700, `latin` cho IBM Plex Mono 500/600, và class `.material-icons`. Đã bỏ các thẻ Google Fonts khỏi `index.html`. Đã kiểm tra bằng trình duyệt: 0 request tới googleapis/gstatic, font Inter + Material Icons tải đúng, tiếng Việt có dấu hiển thị bình thường.
+- `ChangeDetectionStrategy.OnPush` cho `empty-state`, `confirm-dialog`, `passkey-name-dialog`, `qr-popup`, `image-lightbox`, `edit-field-dialog` (state chỉ đổi qua `@Input`/event). Đã kiểm tra thêm khoản mục, sửa tên khoản mục qua dialog.
+- Initial bundle: 639 kB raw (tăng ~3.6 kB do `@font-face`, nằm trong budget 650 kB).
+
+### Reason
+
+Loại 2 request chặn render sang bên thứ ba (DNS/TLS + CSS) và cho phép service worker cache font cùng origin. `unicode-range` giúp chỉ tải file font thật sự cần.
+
+### Alternatives Considered
+
+- **Subset Material Icons**: thử `pyftsubset` nhưng ligature `liga` kéo lại gần như toàn bộ glyph (closure GSUB) nên không giảm dung lượng đáng kể; Material Symbols subset qua Google CSS lại đổi kiểu icon và vẫn phụ thuộc bên thứ ba. Giữ nguyên `Material Icons` (128 kB woff2, chỉ tải khi dùng).
+- **`@defer (on idle)` cho `<app-payment>`**: đã thử, initial tăng 639 → 647 kB vì bundler gom code chung vào initial, chunk lazy gần như không giảm. Đã hoàn tác.
+- **OnPush cho component còn lại** (`member-table`, `bill-details`, `bank`, `payment`...): các component này gán trực tiếp state trong callback `subscribe`/promise nên bật OnPush sẽ làm view không cập nhật. Cần refactor sang signal/`markForCheck` từng component và có test E2E (cần backend). Hoãn.
+- **`quantity-selector`**: loại khỏi OnPush vì là `ControlValueAccessor` nhận giá trị qua `writeValue`.
+- **Chạy timer auto-save ngoài zone**: chỉ có lợi khi app zoneless/OnPush toàn bộ (async pipe cần tick để render); hiện timer chỉ chạy khi có thay đổi chưa lưu nên chi phí nhỏ. Hoãn.
+- **Initializer không chặn bootstrap** và **zoneless**: chưa được xác nhận; `bill-details`/`create-bill`/`bill-splitter.service` đọc `isLoggedIn()`/`getUserId()` đồng bộ nên có nguy cơ race. Hoãn.
