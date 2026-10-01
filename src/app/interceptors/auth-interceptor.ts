@@ -1,4 +1,5 @@
 import {
+  HttpContextToken,
   HttpInterceptorFn,
   HttpRequest,
   HttpHandlerFn,
@@ -16,6 +17,12 @@ import {
   throwError,
 } from 'rxjs';
 
+/**
+ * Request gửi tới bên thứ ba (vd: PUT lên S3 presigned URL) phải bỏ qua interceptor:
+ * S3 từ chối request có thêm header Authorization, và không được chạy refresh token khi S3 trả lỗi.
+ */
+export const SKIP_AUTH = new HttpContextToken<boolean>(() => false);
+
 let isRefreshing = false;
 const tokenRefreshedSubject = new BehaviorSubject<string | null>(null);
 
@@ -32,6 +39,10 @@ function shouldSkipRefresh(url: string): boolean {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<any>, next: HttpHandlerFn) => {
+  if (req.context.get(SKIP_AUTH)) {
+    return next(req);
+  }
+
   const authService = inject(AuthService);
   const accessToken = authService.getAccessToken();
 

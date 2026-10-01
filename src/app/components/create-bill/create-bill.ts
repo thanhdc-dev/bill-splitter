@@ -82,6 +82,8 @@ export class CreateBill implements OnInit, AfterViewInit {
   private readonly router = inject(Router);
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
+  /** Số ảnh upload lỗi ở lần lưu gần nhất; báo sau khi lưu xong để không bị snackbar khác đè. */
+  private failedUploadCount = 0;
   private readonly billSplitterService = inject(BillSplitterService);
   private readonly authService = inject(AuthService);
   private readonly billTabControlService = inject(BillTabControlService);
@@ -121,6 +123,11 @@ export class CreateBill implements OnInit, AfterViewInit {
     this.route.queryParams.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
       if (params['save'] && params['save'] === 'true') {
         this.save();
+      } else if (params['restore'] === 'true') {
+        // Quay lại sau login từ popup upload ảnh: giữ nguyên dữ liệu đã nhập, chưa tạo bill.
+        this.billSplitterService.finishRestoreDraft();
+        this.patchValueNameCtrl();
+        this.cdr.markForCheck();
       } else {
         this.billSplitterService.resetBill();
         this.fetchUserSetting();
@@ -151,6 +158,7 @@ export class CreateBill implements OnInit, AfterViewInit {
   }
 
   async save(isShare?: boolean) {
+    this.failedUploadCount = 0;
     await this.authService.whenReady();
     if (!this.authService.isLoggedIn()) {
       const confirmLogin = await firstValueFrom(
@@ -166,10 +174,7 @@ export class CreateBill implements OnInit, AfterViewInit {
           .afterClosed(),
       );
       if (!confirmLogin) return;
-      if (this.files.length) {
-        const fileIds = await this.uploadImagesWithProgress();
-        this.billSplitterService.setFileIds(fileIds);
-      }
+      // Guest không được upload ảnh (backend cần biết user) — chỉ lưu bill local rồi đăng nhập.
       this.billSplitterService.saveBillToStorage();
       const loginResult = await firstValueFrom(
         this.dialog.open(LoginDialogComponent).afterClosed(),
@@ -185,16 +190,32 @@ export class CreateBill implements OnInit, AfterViewInit {
       await this.copyUrlToClipboard(code);
     }
     await this.router.navigate(['/', code]);
+    this.notifyFailedUploads();
   }
 
+  private notifyFailedUploads() {
+    if (!this.failedUploadCount) return;
+    this.snackBar.open(
+      `${this.failedUploadCount} ảnh tải lên thất bại. Bạn có thể tải lại trong chi tiết hóa đơn`,
+      'Đóng',
+      { duration: 5000 }
+    );
+    this.failedUploadCount = 0;
+  }
+
+  /**
+   * Ảnh chỉ là thông tin bổ sung: ảnh lỗi bị bỏ qua (báo bằng snackbar) để bill vẫn được lưu,
+   * user có thể upload lại ở màn hình bill-details.
+   */
   private async uploadImagesWithProgress(): Promise<number[]> {
     this.setUploadProgress(0);
     try {
-      const files = await this.billSplitterService.uploadImages(
+      const { uploaded, failed } = await this.billSplitterService.uploadImages(
         this.files,
         (percent) => this.setUploadProgress(percent)
       );
-      return files.map((file) => file.id);
+      this.failedUploadCount = failed.length;
+      return uploaded.map((file) => file.id);
     } finally {
       this.setUploadProgress(null);
     }

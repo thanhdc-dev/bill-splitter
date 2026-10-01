@@ -8,14 +8,16 @@
       (dragleave)="onDragLeave($event)"
       (drop)="onDrop($event)"
       (click)="triggerFileInput()"
-      (keydown)="triggerFileInput()"
+      (keydown.enter)="triggerFileInput()"
+      (keydown.space)="$event.preventDefault(); triggerFileInput()"
       >
       <input
         type="file"
         id="file-input"
         class="file-input"
         multiple
-        accept="image/*"
+        [accept]="acceptedTypes.join(',')"
+        (click)="$event.stopPropagation()"
         (change)="onFileSelected($event)"
         />
 

@@ -9,8 +9,13 @@ import {
 
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
+import { firstValueFrom } from 'rxjs';
 import { ImageCdnUrlService } from '../../core/cdn/image-cdn-url.service';
+import { AuthService } from '../../services/auth.service';
+import { BillSplitterService } from '../../services/bill-splitter.service';
+import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog';
 import { ImageLightboxComponent } from '../image-lightbox/image-lightbox';
+import { LoginDialogComponent } from '../login-dialog/login-dialog';
 
 /**
  * Đại diện cho một ảnh trong component.
@@ -39,6 +44,11 @@ export class ImageUploadComponent {
   public readonly snackBar = inject(MatSnackBar);
   public readonly cdn = inject(ImageCdnUrlService);
   private readonly dialog = inject(MatDialog);
+  private readonly authService = inject(AuthService);
+  private readonly billSplitterService = inject(BillSplitterService);
+
+  /** Tránh mở chồng nhiều popup khi user click/kéo thả liên tiếp. */
+  private isPromptingLogin = false;
 
   @Input() isEditable = true;
   @Input() maxFiles = 5;
@@ -83,14 +93,53 @@ export class ImageUploadComponent {
     this.dragOver = false;
   }
 
-  onDrop(event: DragEvent): void {
+  async onDrop(event: DragEvent): Promise<void> {
     event.preventDefault();
     event.stopPropagation();
     this.dragOver = false;
 
-    if (event.dataTransfer?.files) {
-      this.handleFiles(Array.from(event.dataTransfer.files));
+    // Đọc files trước khi await: dataTransfer bị vô hiệu sau khi handler đồng bộ kết thúc.
+    const files = event.dataTransfer?.files ? Array.from(event.dataTransfer.files) : [];
+    if (!files.length || !(await this.ensureLoggedIn())) return;
+    this.handleFiles(files);
+  }
+
+  /**
+   * Upload ảnh yêu cầu đăng nhập để backend gắn ảnh với user.
+   * Guest: hiện popup xác nhận rồi mở LoginDialog, trả về false (user chọn ảnh lại sau khi đăng nhập).
+   */
+  private async ensureLoggedIn(): Promise<boolean> {
+    await this.authService.whenReady();
+    if (this.authService.isLoggedIn()) return true;
+    if (this.isPromptingLogin) return false;
+
+    this.isPromptingLogin = true;
+    try {
+      const confirmLogin = await firstValueFrom(
+        this.dialog
+          .open(ConfirmDialogComponent, {
+            data: {
+              title: 'Xác nhận',
+              message: 'Bạn cần đăng nhập để sử dụng tính năng tải hình ảnh lên',
+              confirmText: 'Đăng nhập',
+              cancelText: 'Hủy',
+            },
+          })
+          .afterClosed(),
+      );
+      if (confirmLogin) {
+        // OAuth là redirect toàn trang nên state trong bộ nhớ sẽ mất: lưu nháp để khôi phục sau login.
+        this.billSplitterService.saveDraftForRestore();
+        const loginResult = await firstValueFrom(this.dialog.open(LoginDialogComponent).afterClosed());
+        // OAuth đóng dialog bằng `true` rồi redirect; đóng mà chưa đăng nhập = user huỷ -> bỏ nháp.
+        if (loginResult !== true && !this.authService.isLoggedIn()) {
+          this.billSplitterService.discardDraftForRestore();
+        }
+      }
+    } finally {
+      this.isPromptingLogin = false;
     }
+    return false;
   }
 
   private handleFiles(files: File[]): void {
@@ -159,7 +208,8 @@ export class ImageUploadComponent {
     this.imagesChanged.emit(this.images);
   }
 
-  triggerFileInput(): void {
+  async triggerFileInput(): Promise<void> {
+    if (!(await this.ensureLoggedIn())) return;
     const fileInput = document.getElementById('file-input') as HTMLInputElement;
     fileInput?.click();
   }

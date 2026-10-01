@@ -244,18 +244,20 @@ export class BillDetails implements OnInit, OnDestroy, AfterViewInit {
     }
 
     if (isChange) {
+      let failedCount = 0;
       if (this.images.length) {
         const oldFileIds = this.billSplitterService.getFileIds();
         const newImages = this.images.filter(({ id }) => !id).map(img => img.file!).filter(Boolean);
         if (newImages.length) {
           this.setUploadProgress(0);
           try {
-            const newFiles = await this.billSplitterService.uploadImages(
+            const { uploaded, failed } = await this.billSplitterService.uploadImages(
               newImages,
               (percent) => this.setUploadProgress(percent)
             );
-            const newFileIds = newFiles.map((file) => file.id);
+            const newFileIds = uploaded.map((file) => file.id);
             this.billSplitterService.setFileIds([...oldFileIds, ...newFileIds]);
+            failedCount = failed.length;
           } finally {
             this.setUploadProgress(null);
           }
@@ -270,6 +272,12 @@ export class BillDetails implements OnInit, OnDestroy, AfterViewInit {
           });
           this.billAutoSaveService.stopCountdown();
           this.init();
+          if (failedCount) {
+            // Ảnh chỉ là thông tin bổ sung: bill đã lưu, user có thể chọn lại ảnh lỗi.
+            this.snackBar.open(`${failedCount} ảnh tải lên thất bại, vui lòng thử lại`, 'Đóng', {
+              duration: 5000,
+            });
+          }
         })
         .catch((error) => {
           console.error('Có lỗi khi lưu hóa đơn:', error);

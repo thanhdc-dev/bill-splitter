@@ -2653,3 +2653,163 @@ Các tick trung gian không phục vụ hiển thị nên không cần change de
 - **Thay bằng `debounceTime(3000)`**: đơn giản hơn nhưng `stopCountdown()`/`cancel$` hiện có ngữ nghĩa huỷ rõ ràng, và đổi sang debounce sẽ đổi hành vi (mỗi thay đổi mới sẽ reset bộ đếm — giống `switchMap` hiện tại, nhưng bỏ phát `counter$`); giữ nguyên API `counter$`.
 - **Chạy cả `counterSubject.next` trong zone**: giữ `counter$` "an toàn" cho người dùng async-pipe sau này nhưng làm mất lợi ích; nếu sau này thêm UI hiển thị đếm ngược thì phải đổi lại (hoặc dùng signal).
 - **Chưa kiểm thử**: số lượt change detection thực tế (chỉ đo vị trí zone của `setInterval`), lưu bill với backend thật.
+
+## 2026-10-01 (đợt 12)
+
+### Decision
+
+Upload hình ảnh yêu cầu đăng nhập. Guest bấm/kéo thả vào vùng upload thì hiện `ConfirmDialog` ("cần đăng nhập để sử dụng tính năng tải hình ảnh lên"), xác nhận thì mở `LoginDialog`. User đã đăng nhập dùng như cũ.
+
+Các quyết định đã được người dùng duyệt trước khi code:
+- **D1** chặn trong `image-upload` (không chặn ở component cha hay service).
+- **D2** popup = `ConfirmDialog` rồi `LoginDialog` (dùng lại pattern của `create-bill.save()`).
+- **D3** giữ luồng sau login hiện tại (về `/`, bill đã lưu local); chưa làm `returnUrl`. User tự chọn ảnh lại sau khi đăng nhập.
+- **D4** chỉ sửa frontend; yêu cầu backend ghi bên dưới.
+
+### Before
+
+- `image-upload` không kiểm tra auth; guest chọn được ảnh.
+- `create-bill.save()`: guest xác nhận đăng nhập → ảnh **được upload trước** rồi mới mở `LoginDialog` (backend nhận file không có user).
+- `(keydown)` trên vùng upload mở hộp chọn file với mọi phím (kể cả Tab).
+
+### After
+
+- `image-upload.ts`: `ensureLoggedIn()` (chờ `AuthService.whenReady()`, guest → popup, luôn trả `false` cho guest). Gọi ở `triggerFileInput()` (click, Enter, Space) và `onDrop()`. Cờ `isPromptingLogin` chặn mở chồng popup.
+- `onDrop` đọc `dataTransfer.files` **trước** khi `await` vì `dataTransfer` bị vô hiệu sau khi handler đồng bộ kết thúc.
+- `image-upload.html`: `(keydown)` đổi thành `keydown.enter` + `keydown.space`; thêm `(click)="$event.stopPropagation()"` trên `<input type=file>` — do `triggerFileInput` giờ async, click lập trình lên input nổi bọt lên vùng upload sẽ gọi lại và có thể mở hộp chọn file 2 lần.
+- `create-bill.ts`: bỏ nhánh upload ảnh của guest; chỉ `saveBillToStorage()` rồi mở `LoginDialog`.
+
+### Reason
+
+Backend cần biết ảnh thuộc user nào, nên guest không được upload. Chặn ở component bao phủ mọi nơi dùng `image-upload` và đúng yêu cầu "bấm vào upload thì hiện popup".
+
+### Alternatives Considered
+
+- Chặn ở component cha / chỉ ở `uploadImages()`: lặp logic hoặc để guest chọn ảnh rồi mới bị hỏi.
+- Mở thẳng `LoginDialog` / dialog mới: cần sửa hoặc thêm component.
+- Thêm `returnUrl`: UX tốt hơn nhưng đổi `AuthService`, `OauthCallback`, `auth-guard`; để đợt riêng.
+
+### Assumptions & Deviations
+
+- Sau login OAuth (redirect toàn trang), ảnh đang chọn không được giữ (blob/File không persist) và trình duyệt không cho tự mở hộp chọn file → user bấm upload lại.
+- `bill-details` vốn đã ẩn upload với guest (`isEditable=false`); thay đổi này chủ yếu có tác dụng ở `create-bill`.
+- **Yêu cầu backend (chưa làm, ngoài repo này):** endpoint upload phải yêu cầu JWT và lưu `ownerId` vào bản ghi file. Chặn ở frontend có thể bị bypass bằng gọi API trực tiếp. (Endpoint `upload-images` đã bị thay bằng `presigned-url`/`confirm-upload` — xem đợt 13.)
+- Ngoài phạm vi: lỗi upload chưa có thông báo cho user; interceptor chưa logout khi refresh token thất bại.
+
+### Verify
+
+- `ng build --configuration development` và `ng lint` đạt.
+
+## 2026-10-01 (đợt 13)
+
+### Decision
+
+Chuyển upload ảnh sang luồng presigned URL theo `docs/bills-upload-migration.md` (backend đã xoá `POST /bills/upload-images`). Với mỗi file, tuần tự: `POST /bills/presigned-url` → `PUT` thẳng lên `presignedUrl` → `POST /bills/confirm-upload`.
+
+Các quyết định đã được người dùng duyệt:
+- ~~**Lỗi một phần**: huỷ cả lô, không lưu bill~~ → **đã đổi (cùng ngày, theo yêu cầu người dùng)**: xem mục "Thay đổi yêu cầu" bên dưới.
+- **PUT**: dùng `HttpClient` + `HttpContext` (`SKIP_AUTH`) để bỏ qua `authInterceptor`, giữ `reportProgress` cho spinner %.
+- **Backend auth**: chỉ frontend, ghi yêu cầu backend vào docs.
+
+### Before
+
+- `uploadImages()` gửi một request multipart `POST /bills/upload-images` cho cả lô, progress theo request.
+- `authInterceptor` gắn `Authorization: Bearer` cho mọi request.
+- Upload lỗi không có thông báo (`try/finally`).
+- `<input accept="image/*">` (cho phép cả SVG).
+
+### After
+
+- `BillSplitterService.uploadImages()` giữ chữ ký, trả `{id, storagePath}[]`; upload tuần tự từng file, progress = % tổng byte của cả lô. `uploadWithRetry()` thử lại 1 lần từ bước 1 (presigned URL hết hạn, hoặc PUT lỗi khiến confirm trả 404 `ERR_BILL_FILE_NOT_FOUND`). Chỉ confirm sau khi PUT thành công.
+- `auth-interceptor.ts`: export `SKIP_AUTH` (`HttpContextToken`); request gắn token này đi thẳng `next(req)` — không Bearer, không refresh token. Bắt buộc vì S3 từ chối request presigned có thêm header Authorization.
+- `create-bill.ts` / `bill-details.ts`: xem mục "Thay đổi yêu cầu" bên dưới.
+- `image-upload.html`: `[accept]` lấy từ `acceptedTypes` (JPEG/PNG/WebP, khớp whitelist backend).
+
+### Reason
+
+Endpoint cũ đã bị xoá nên bắt buộc đổi. `SKIP_AUTH` tránh gửi Bearer tới S3. Huỷ cả lô giúp không có bill thiếu ảnh âm thầm.
+
+### Alternatives Considered
+
+- `fetch()` / `XMLHttpRequest` cho PUT: không cần sửa interceptor nhưng mất progress theo byte hoặc lệch phong cách Angular.
+- Bỏ ảnh lỗi, vẫn lưu bill / hỏi người dùng: dễ gây hiểu nhầm hoặc thêm dialog.
+- Upload song song nhiều file: doc khuyến nghị tuần tự; progress tổng cũng đơn giản hơn.
+
+### Assumptions & Deviations
+
+- **Yêu cầu backend (chưa làm, ngoài repo này):** trong `bills.controller.ts`, `presigned-url` và `confirm-upload` hiện **không có** `@Roles(Role.USER)` và không nhận `@UserId()` nên vẫn public và không lưu owner. Cần thêm `@Roles(Role.USER)`, `@UserId()`, lưu `ownerId` vào bản ghi file và kiểm tra `confirm-upload` chỉ cho chính chủ.
+- Bucket S3 phải cho phép CORS `PUT` (header `Content-Type`) từ origin của app (`chiatien.thanhdc.dev`, `localhost:4200`) — doc migration không nhắc; chưa xác minh.
+- Dựa vào `file.type` do trình duyệt báo để gửi `mimeType`; ảnh có `type` rỗng/ngoài whitelist đã bị `validateFile` loại ở UI.
+- Chưa xử lý riêng trường hợp token hết hạn giữa chừng khi đang upload (interceptor vẫn refresh cho 2 request tới API).
+
+### Verify
+
+- `ng build` và `ng lint` đạt.
+- Trình duyệt, API/S3 giả: thứ tự gọi `presigned-url` → `PUT` → `confirm-upload` → `POST /bills`; request PUT **không** có header `Authorization`, các request API có.
+- Presigned trả lỗi: gọi 2 lần (thử lại), rồi vẫn gọi `POST /bills`, chuyển sang trang bill và snackbar báo ảnh lỗi (xem "Thay đổi yêu cầu").
+- **Chưa kiểm thử**: S3 thật (CORS, chữ ký), hết hạn URL thật, `bill-details`, upload nhiều file, thanh progress.
+
+### Thay đổi yêu cầu: upload lỗi vẫn lưu bill
+
+**Decision:** ảnh chỉ là thông tin bổ sung, nên upload lỗi **không** chặn việc lưu bill. User có thể upload lại ở màn hình bill-details.
+
+**Before:** một ảnh lỗi (sau khi thử lại 1 lần) thì huỷ cả lô, hiện snackbar, không tạo/cập nhật bill; `uploadImages()` trả `{id, storagePath}[]` hoặc throw.
+
+**After:**
+- `uploadImages()` trả `{ uploaded, failed }`: mỗi file được thử (kèm 1 lần retry); file lỗi gom vào `failed` (`console.error`), không dừng cả lô.
+- Bill vẫn được tạo/cập nhật với `fileIds` của ảnh **upload thành công**; ảnh lỗi bị bỏ qua.
+- `create-bill.ts`: `uploadImagesWithProgress()` lưu `failedUploadCount`; `notifyFailedUploads()` hiện snackbar sau khi lưu và điều hướng xong. `bill-details.ts`: snackbar hiện sau khi `updateBill` thành công.
+
+**Reason:** ảnh không thiết yếu; chặn lưu bill vì ảnh lỗi gây mất dữ liệu nhập tay không cần thiết.
+
+**Alternatives Considered / Assumptions:**
+- Thông báo được hoãn đến sau khi lưu vì `MatSnackBar` chỉ hiện một thông báo một lúc: "Hóa đơn đã được lưu!" / "Đã sao chép URL" sẽ đè thông báo ảnh lỗi nếu hiện sớm hơn.
+- Giả định (người dùng chưa nói rõ): ảnh upload thành công trong cùng lô vẫn được gắn vào bill; ảnh lỗi **không** được giữ lại để thử lại tự động (sau khi tải lại trang chi tiết user phải chọn lại ảnh).
+- Nếu `copyUrlToClipboard` lỗi (vd: không có quyền clipboard), `save(true)` dừng trước bước điều hướng/thông báo — hành vi có từ trước, không đổi.
+- File đã `confirm-upload` nhưng không gắn vào bill (do bill lỗi sau đó) trở thành file mồ côi; backend nên dọn.
+- Verify: trình duyệt, API giả: presigned lỗi → 2 lần gọi, `POST /bills` vẫn chạy, điều hướng `/abc123`, snackbar "1 ảnh tải lên thất bại…". Chưa kiểm thử `bill-details`, nhiều ảnh lẫn lỗi/thành công.
+
+## 2026-10-01 (đợt 14)
+
+### Decision
+
+Guest đã nhập dữ liệu (khoản mục, thành viên...) rồi bấm upload ảnh và đăng nhập thì **không mất dữ liệu**: lưu nháp trước khi đăng nhập, sau login quay về `/?restore=true` với dữ liệu nguyên vẹn, **chưa tự tạo bill**.
+
+Các quyết định đã được người dùng duyệt: (1) khôi phục tại trang chủ, chưa tạo bill; (2) xoá nháp ngay sau khi khôi phục xong.
+
+### Before
+
+- Popup đăng nhập từ `image-upload` không lưu nháp. OAuth là redirect toàn trang nên state trong bộ nhớ mất.
+- `create-bill.ngOnInit` đọc nháp từ storage nhưng gọi `resetBill()` nếu không có `?save=true`; mà `?save=true` lại tự tạo bill. Không có cách nào giữ dữ liệu mà không tạo bill.
+- Logic chọn query param sau login lặp ở `oauth-callback.ts` và `login-dialog.ts` (passkey).
+
+### After
+
+- `BillSplitterService`: `saveDraftForRestore()` (lưu `bill` vào localStorage + cờ sessionStorage `bill_restore_draft`; bill rỗng thì bỏ qua), `getPostLoginQueryParams()` (nháp restore → `{restore:'true'}`, bill khác trong storage → `{save:'true'}`, không có → `{}`), `finishRestoreDraft()` (xoá nháp + cờ), `discardDraftForRestore()` (user huỷ login). `saveBillToStorage()` xoá cờ restore để các luồng "tự tạo bill" cũ (`app.ts` sidebar, `create-bill.save`) không bị nhầm sang restore.
+- `image-upload.ts`: sau khi user xác nhận, gọi `saveDraftForRestore()` rồi mở `LoginDialog`; đóng dialog mà `result !== true` và chưa đăng nhập thì `discardDraftForRestore()` (OAuth đóng dialog bằng `true` rồi redirect nên không bị xoá nhầm; passkey đã `setUser` trước khi đóng).
+- `oauth-callback.ts`, `login-dialog.ts`: dùng `getPostLoginQueryParams()`.
+- `create-bill.ts`: nhánh `?restore=true` — `finishRestoreDraft()`, `patchValueNameCtrl()` (tên bill vì `nameCtrl` chỉ được patch ở constructor, trước khi đọc nháp), không `resetBill()`, không `fetchUserSetting()`.
+
+### Reason
+
+Giữ đúng ý "không mất dữ liệu" mà không tạo bill ngoài ý muốn khi user mới chỉ định upload ảnh. Cờ riêng giúp phân biệt "khôi phục" với "tự tạo bill" mà không đổi hành vi các luồng cũ.
+
+### Alternatives Considered
+
+- Dùng lại `?save=true` (tự tạo bill sau login): ít code nhưng tạo bill khi user chưa bấm Lưu, bill có thể chưa hoàn chỉnh.
+- Hỏi user sau login: linh hoạt nhưng thêm dialog và logic.
+- Giữ nháp đến khi bill được lưu: nháp tồn đọng làm lần login sau tự tạo bill (`isBillEmptyInStorage()` quyết định gắn `save`).
+
+### Assumptions & Deviations
+
+- Dữ liệu chỉ có tên bill (chưa có khoản mục/thành viên) không được lưu nháp (theo `isBillDataEmpty()`, giống `openLoginPopup`).
+- Ảnh đã chọn không được giữ (File/blob không persist qua redirect), user chọn lại sau login.
+- `fetchUserSetting()` (điền sẵn thông tin ngân hàng/Momo từ cài đặt user) **không** chạy ở nhánh restore để không ghi đè dữ liệu đã nhập; user nhập lại nếu cần.
+- `?restore=true` giữ nguyên trên URL (không strip bằng `navigate`) vì lần phát query param kế tiếp không có `restore` sẽ rơi vào nhánh `resetBill()` và xoá dữ liệu vừa khôi phục. Tải lại trang lúc đó thấy form rỗng (nháp đã xoá) — hành vi chấp nhận được.
+- Cờ nằm trong sessionStorage: nếu user bỏ dở OAuth ở trang provider rồi đóng tab, nháp còn trong localStorage nhưng cờ mất → lần login sau sẽ coi là nháp "tự tạo bill" (`?save=true`). Chưa xử lý.
+
+### Verify
+
+- `ng build`, `ng lint` đạt.
+- Trình duyệt: guest nhập thành viên + bấm upload + xác nhận → localStorage `bill` và cờ `bill_restore_draft` được đặt; đóng popup login → cả hai bị xoá; giả lập quay lại bằng `/?restore=true` (đã có token) → thành viên và tên bill được khôi phục, nháp và cờ bị xoá.
+- **Chưa kiểm thử**: OAuth thật (Google/Zalo/GitHub), passkey (`navigate` tại chỗ), khoản mục có số tiền, regression luồng `?save=true`.

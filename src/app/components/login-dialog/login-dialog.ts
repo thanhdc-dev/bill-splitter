@@ -57,11 +57,9 @@ export class LoginDialogComponent {
       // qua query param -> tạo trùng hoá đơn.
       this.dialogRef.close(false);
 
-      const queryParams: Record<string, string> = {};
-      if (!this.billSplitterService.isBillEmptyInStorage()) {
-        queryParams['save'] = 'true';
-      }
-      await this.router.navigate([''], { queryParams });
+      await this.router.navigate([''], {
+        queryParams: this.billSplitterService.getPostLoginQueryParams(),
+      });
     } catch (error) {
       // User bấm huỷ hoặc quá 60 giây -> không hiện lỗi
       if (this.passkeyService.isCeremonyAborted(error)) return;

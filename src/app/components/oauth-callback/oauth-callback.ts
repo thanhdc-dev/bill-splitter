@@ -67,11 +67,9 @@ export class OauthCallback implements OnInit {
         sessionStorage.removeItem('oauth_flow');
 
         // Chuyển hướng về trang chính
-        const queryParams: Record<string, string> = {};
-        if (!this.billSplitterService.isBillEmptyInStorage()) {
-          queryParams['save'] = 'true';
-        }
-        this.router.navigate([''], { queryParams });
+        this.router.navigate([''], {
+          queryParams: this.billSplitterService.getPostLoginQueryParams(),
+        });
 
         // Mời tạo passkey sau khi đã điều hướng, không chặn luồng đăng nhập
         this.promptPasskeySetup();

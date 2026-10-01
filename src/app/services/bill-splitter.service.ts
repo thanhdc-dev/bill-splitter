@@ -1,8 +1,8 @@
-import { HttpClient, HttpEventType, HttpResponse } from '@angular/common/http';
+import { HttpClient, HttpContext, HttpEventType } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { firstValueFrom } from 'rxjs';
-import { filter, map } from 'rxjs/operators';
+import { filter } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import {
   BillFindAll,
@@ -10,8 +10,12 @@ import {
   ExpenseItem,
   Member,
 } from '../models/bill-splitter.model';
+import { SKIP_AUTH } from '../interceptors/auth-interceptor';
 import { AuthService } from './auth.service';
 import { BankInfoItem } from '../models/bank.model';
+
+/** Cờ sessionStorage: nháp trong localStorage cần được khôi phục (không tự tạo bill) sau login. */
+const RESTORE_DRAFT_FLAG = 'bill_restore_draft';
 
 @Injectable({
   providedIn: 'root',
@@ -276,6 +280,8 @@ export class BillSplitterService {
   }
 
   saveBillToStorage() {
+    // Lưu theo kiểu "tự tạo bill sau login" -> huỷ cờ khôi phục nháp (nếu còn sót lại).
+    sessionStorage.removeItem(RESTORE_DRAFT_FLAG);
     const billData = {
       name: this.name(),
       data: {
@@ -292,6 +298,38 @@ export class BillSplitterService {
       fileIds: this.fileIds(),
     };
     localStorage.setItem('bill', JSON.stringify(billData));
+  }
+
+  /**
+   * Lưu nháp để khôi phục sau khi đăng nhập mà KHÔNG tự tạo bill (dùng khi login từ popup upload ảnh).
+   * Bill rỗng thì không lưu, giống `AppComponent.openLoginPopup`.
+   */
+  saveDraftForRestore() {
+    if (this.isBillDataEmpty()) return;
+    this.saveBillToStorage();
+    sessionStorage.setItem(RESTORE_DRAFT_FLAG, '1');
+  }
+
+  /** Huỷ nháp khi user không đăng nhập nữa (đóng popup login). */
+  discardDraftForRestore() {
+    if (!sessionStorage.getItem(RESTORE_DRAFT_FLAG)) return;
+    sessionStorage.removeItem(RESTORE_DRAFT_FLAG);
+    localStorage.removeItem('bill');
+  }
+
+  /** Khôi phục xong: dữ liệu đã nằm trong state nên xoá nháp, tránh lần login sau tự tạo bill ngoài ý muốn. */
+  finishRestoreDraft() {
+    sessionStorage.removeItem(RESTORE_DRAFT_FLAG);
+    localStorage.removeItem('bill');
+  }
+
+  /**
+   * Query param khi quay về trang chủ sau login: nháp "khôi phục" -> `restore`,
+   * bill khác còn trong storage -> `save` (tự tạo bill), không có gì -> rỗng.
+   */
+  getPostLoginQueryParams(): Record<string, string> {
+    if (this.isBillEmptyInStorage()) return {};
+    return sessionStorage.getItem(RESTORE_DRAFT_FLAG) ? { restore: 'true' } : { save: 'true' };
   }
 
   isBillEmptyInStorage() {
@@ -447,44 +485,88 @@ export class BillSplitterService {
   }
 
   /**
-   * `onProgress` báo % tổng thể của cả request (0-100), không tách theo từng file
-   * vì cả batch đi trong một multipart request duy nhất.
+   * Upload tuần tự từng file theo luồng presigned URL: presigned-url -> PUT thẳng lên storage -> confirm-upload.
+   * `onProgress` báo % tổng theo số byte của cả lô (0-100).
+   * File lỗi (sau khi đã thử lại) không làm hỏng cả lô: được gom vào `failed`, các file còn lại vẫn được upload.
    */
   async uploadImages(
     files: File[],
     onProgress?: (percent: number) => void
-  ): Promise<{ id: number; storagePath: string }[]> {
-    const URL = `${environment.apiUrl}/${this.endPoint}/upload-images`;
-    const formData = new FormData();
+  ): Promise<{ uploaded: { id: number; storagePath: string }[]; failed: File[] }> {
+    const totalBytes = files.reduce((sum, file) => sum + file.size, 0) || 1;
+    const uploaded: { id: number; storagePath: string }[] = [];
+    const failed: File[] = [];
+    let completedBytes = 0;
 
-    files.forEach((file) => {
-      formData.append('files', file);
-    });
-
-    if (!onProgress) {
-      return firstValueFrom(this.http.post(URL, formData)) as Promise<
-        { id: number; storagePath: string }[]
-      >;
+    for (const file of files) {
+      try {
+        uploaded.push(
+          await this.uploadWithRetry(file, (loaded) =>
+            onProgress?.(Math.min(100, Math.round((100 * (completedBytes + loaded)) / totalBytes)))
+          )
+        );
+      } catch (error) {
+        console.error('Có lỗi khi tải ảnh lên:', file.name, error);
+        failed.push(file);
+      }
+      completedBytes += file.size;
+      onProgress?.(Math.round((100 * completedBytes) / totalBytes));
     }
 
-    const request$ = this.http.post(URL, formData, {
-      reportProgress: true,
-      observe: 'events',
-    });
+    return { uploaded, failed };
+  }
 
-    return firstValueFrom(
-      request$.pipe(
-        filter((event) => {
-          if (event.type === HttpEventType.UploadProgress) {
-            if (event.total) {
-              onProgress(Math.round((100 * event.loaded) / event.total));
-            }
-            return false;
-          }
-          return event.type === HttpEventType.Response;
-        }),
-        map((event) => (event as HttpResponse<{ id: number; storagePath: string }[]>).body)
+  /** Thử lại 1 lần từ bước 1: presigned URL có thể đã hết hạn, hoặc PUT lỗi nên confirm trả 404. */
+  private async uploadWithRetry(
+    file: File,
+    onBytes: (loaded: number) => void
+  ): Promise<{ id: number; storagePath: string }> {
+    try {
+      return await this.uploadSingleImage(file, onBytes);
+    } catch {
+      return await this.uploadSingleImage(file, onBytes);
+    }
+  }
+
+  private async uploadSingleImage(
+    file: File,
+    onBytes: (loaded: number) => void
+  ): Promise<{ id: number; storagePath: string }> {
+    const baseUrl = `${environment.apiUrl}/${this.endPoint}`;
+
+    const { fileId, presignedUrl } = await firstValueFrom(
+      this.http.post<{ fileId: number; presignedUrl: string; expiresIn: number }>(
+        `${baseUrl}/presigned-url`,
+        { fileName: file.name, mimeType: file.type }
       )
-    ) as Promise<{ id: number; storagePath: string }[]>;
+    );
+
+    await firstValueFrom(
+      this.http
+        .put(presignedUrl, file, {
+          headers: { 'Content-Type': file.type },
+          reportProgress: true,
+          observe: 'events',
+          context: new HttpContext().set(SKIP_AUTH, true),
+        })
+        .pipe(
+          filter((event) => {
+            if (event.type === HttpEventType.UploadProgress) {
+              onBytes(event.loaded);
+              return false;
+            }
+            return event.type === HttpEventType.Response;
+          })
+        )
+    );
+
+    // Chỉ confirm sau khi PUT thành công, nếu không backend trả 404 ERR_BILL_FILE_NOT_FOUND.
+    const confirmed = await firstValueFrom(
+      this.http.post<{ id: number; storagePath: string; status: string }>(
+        `${baseUrl}/confirm-upload`,
+        { fileId }
+      )
+    );
+    return { id: confirmed.id, storagePath: confirmed.storagePath };
   }
 }
