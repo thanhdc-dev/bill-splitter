@@ -2525,3 +2525,29 @@ Hai component này render lại nhiều nhất (mỗi lần gõ/đổi khoản m
 
 - **Chuyển `isShowBankInfo`/`isShowMomoInfo` thành `computed` signal**: gọn hơn `markForCheck` nhưng đụng cả `bankInfo` (đang gán lẻ trong `ngOnInit`/subscribe); để dành đợt chuyển signal toàn bộ.
 - **Bật OnPush cho `member-table`, `bill-details`, `create-bill`, `bank`, `payment`, `bills`** : chưa làm, các component này gán state trực tiếp trong `subscribe`/promise nên cần refactor từng cái.
+
+## 2026-10-01 (đợt 7)
+
+### Decision
+
+Bật `OnPush` cho `member-table`, giữ cách subscribe hiện tại nhưng thêm `ChangeDetectorRef.markForCheck()`.
+
+### Before
+
+`member-table` dùng change detection mặc định; `expenses`, `members`, `displayedColumns`, `isMobile` được gán trong 3 callback `subscribe` (`expenses$`, `members$`, `BreakpointObserver`).
+
+### After
+
+- `ChangeDetectionStrategy.OnPush` + `markForCheck()` ở cuối mỗi callback trên.
+- Điều kiện để an toàn: `BillSplitterService` luôn cập nhật `members`/`expenses` bất biến (spread/map/filter), nên `members$`/`expenses$` luôn phát giá trị mới.
+- Kiểm tra bằng trình duyệt: desktop (bảng) thêm khoản mục + 2 thành viên, tăng số lượng tham gia → tổng tiền ở `result-display` đổi; tick "đã thanh toán" → cập nhật; mobile (390px) hiện 2 card, đổi lên 1280px → chuyển sang bảng; xoá thành viên → còn 1.
+
+### Reason
+
+`member-table` có `mat-table` + nhiều `app-quantity-selector` mỗi hàng nên là nơi tốn nhiều lượt kiểm tra nhất khi có thay đổi ở nơi khác.
+
+### Alternatives Considered
+
+- **Chuyển sang `toSignal` / `async` pipe**: sạch hơn `markForCheck` nhưng đổi cả template; để dành đợt chuyển signal.
+- **Hạn chế đã biết**: nếu sau này service cập nhật mutable (cùng tham chiếu mảng), `members$` sẽ không phát và view sẽ không cập nhật — phải giữ quy ước bất biến.
+- **Ghi chú kiểm thử**: nhãn tab mobile chỉ có icon (`receipt`, `groups`) nên script kiểm thử phải chọn tab theo `role=tab`, không theo chữ.

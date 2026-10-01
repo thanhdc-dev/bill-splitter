@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject } from '@angular/core';
 import { CurrencyPipe } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { BreakpointObserver } from '@angular/cdk/layout';
@@ -24,6 +24,7 @@ import { EmptyStateComponent } from '../empty-state/empty-state';
 const MOBILE_BREAKPOINT = '(max-width: 767px)';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-member-table',
   standalone: true,
   imports: [
@@ -46,6 +47,7 @@ export class MemberTableComponent {
   private readonly fb = inject(FormBuilder);
   private readonly billSplitterService = inject(BillSplitterService);
   private readonly breakpointObserver = inject(BreakpointObserver);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   expenses: ExpenseItem[] = [];
   members: Member[] = [];
@@ -70,12 +72,14 @@ export class MemberTableComponent {
           'totalAmount',
           'actions',
         ];
+        this.cdr.markForCheck();
       });
 
     this.billSplitterService.members$
       .pipe(takeUntilDestroyed())
       .subscribe((members) => {
         this.members = members;
+        this.cdr.markForCheck();
       });
 
     this.breakpointObserver
@@ -83,6 +87,7 @@ export class MemberTableComponent {
       .pipe(takeUntilDestroyed())
       .subscribe(({ matches }) => {
         this.isMobile = matches;
+        this.cdr.markForCheck();
       });
   }
 
