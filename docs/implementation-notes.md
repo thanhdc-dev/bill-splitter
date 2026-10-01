@@ -2551,3 +2551,28 @@ Bật `OnPush` cho `member-table`, giữ cách subscribe hiện tại nhưng th�
 - **Chuyển sang `toSignal` / `async` pipe**: sạch hơn `markForCheck` nhưng đổi cả template; để dành đợt chuyển signal.
 - **Hạn chế đã biết**: nếu sau này service cập nhật mutable (cùng tham chiếu mảng), `members$` sẽ không phát và view sẽ không cập nhật — phải giữ quy ước bất biến.
 - **Ghi chú kiểm thử**: nhãn tab mobile chỉ có icon (`receipt`, `groups`) nên script kiểm thử phải chọn tab theo `role=tab`, không theo chữ.
+
+## 2026-10-01 (đợt 8)
+
+### Decision
+
+Bật `OnPush` cho `create-bill` và `bill-details`; các trường gán ngoài template/async pipe được đánh dấu bằng `markForCheck()`.
+
+### Before
+
+Hai component (lớn nhất app) dùng change detection mặc định. Các trường dùng trong template nhưng gán trong callback/promise: `isMobile`, `uploadProgress`, và ở `bill-details` thêm `isEditable`, `oldImages`, `nameCtrl.value` (gán sau `await fetchBill`).
+
+### After
+
+- `create-bill`: `markForCheck()` trong subscribe `BreakpointObserver`; `uploadProgress` đi qua helper `setUploadProgress()` (gán + `markForCheck`).
+- `bill-details`: tương tự, thêm `markForCheck()` sau khi tính `isEditable` ở `ngOnInit` và cuối `init()` (gọi cả lần tải đầu lẫn sau khi lưu).
+- Kiểm tra bằng trình duyệt: `create-bill` desktop/mobile (đổi viewport chuyển 2 cột ↔ tab, nhập tên bill); `bill-details` với API giả: chủ bill → form chỉnh sửa + ảnh + nút share; khách → chỉ đọc, tên "Quán A" hiện đúng, ảnh hiện.
+
+### Reason
+
+Đây là hai component gốc chứa toàn bộ form; mọi thay đổi nhỏ (gõ, tick) đều kích hoạt kiểm tra cả cây con. Với OnPush ở gốc và các con (expense-form, member-table, result-display) cũng OnPush, chỉ nhánh có thay đổi được kiểm tra.
+
+### Alternatives Considered
+
+- **Chuyển `isMobile`/`uploadProgress`/`isEditable` sang signal**: loại bỏ `markForCheck` thủ công nhưng phải sửa template và tương tác với `ngModel`/`formControl`; để dành khi làm zoneless.
+- **Chưa kiểm thử**: tiến trình upload ảnh thật (cần backend/R2) và luồng lưu bill (autosave counter) — chỉ rà soát code, chưa chạy thật.

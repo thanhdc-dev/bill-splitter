@@ -1,6 +1,8 @@
 import { AsyncPipe, NgClass } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
   AfterViewInit,
   Component,
   OnDestroy,
@@ -53,6 +55,7 @@ import { ImageUploadComponent, ImagePreview } from '../image-upload/image-upload
 const MOBILE_BREAKPOINT = '(max-width: 767px)';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-bill-details',
   imports: [
     AsyncPipe,
@@ -88,6 +91,7 @@ export class BillDetails implements OnInit, OnDestroy, AfterViewInit {
   private readonly billTabControlService = inject(BillTabControlService);
   private readonly billAutoSaveService = inject(BillAutoSaveService);
   private readonly breakpointObserver = inject(BreakpointObserver);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   code!: string;
   nameCtrl = new FormControl();
@@ -120,6 +124,7 @@ export class BillDetails implements OnInit, OnDestroy, AfterViewInit {
       .pipe(takeUntilDestroyed())
       .subscribe(({ matches }) => {
         this.isMobile = matches;
+        this.cdr.markForCheck();
       });
     this.nameCtrl.valueChanges
       .pipe(
@@ -150,6 +155,7 @@ export class BillDetails implements OnInit, OnDestroy, AfterViewInit {
     this.init().then(() => this.authService.whenReady()).then(() => {
       this.billAutoSaveService.startMonitoring();
       this.isEditable = this.billSplitterService.isEditable();
+      this.cdr.markForCheck();
     });
   }
 
@@ -186,6 +192,14 @@ export class BillDetails implements OnInit, OnDestroy, AfterViewInit {
         bill.data.totalAmount,
       )} - Số thành viên tham gia: ${bill.data.members.length}.`,
     });
+    // OnPush: oldImages/nameCtrl được gán sau await nên phải đánh dấu thủ công.
+    this.cdr.markForCheck();
+  }
+
+  /** OnPush: tiến trình upload được gán từ callback ngoài template nên phải đánh dấu thủ công. */
+  private setUploadProgress(value: number | null) {
+    this.uploadProgress = value;
+    this.cdr.markForCheck();
   }
 
   onImagesChanged(images: ImagePreview[]) {
@@ -234,16 +248,16 @@ export class BillDetails implements OnInit, OnDestroy, AfterViewInit {
         const oldFileIds = this.billSplitterService.getFileIds();
         const newImages = this.images.filter(({ id }) => !id).map(img => img.file!).filter(Boolean);
         if (newImages.length) {
-          this.uploadProgress = 0;
+          this.setUploadProgress(0);
           try {
             const newFiles = await this.billSplitterService.uploadImages(
               newImages,
-              (percent) => (this.uploadProgress = percent)
+              (percent) => this.setUploadProgress(percent)
             );
             const newFileIds = newFiles.map((file) => file.id);
             this.billSplitterService.setFileIds([...oldFileIds, ...newFileIds]);
           } finally {
-            this.uploadProgress = null;
+            this.setUploadProgress(null);
           }
         }
       }

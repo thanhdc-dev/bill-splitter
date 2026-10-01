@@ -1,6 +1,8 @@
 import { AsyncPipe, NgClass } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
   AfterViewInit,
   Component,
   DestroyRef,
@@ -49,6 +51,7 @@ import { ImageUploadComponent, ImagePreview } from '../image-upload/image-upload
 const MOBILE_BREAKPOINT = '(max-width: 767px)';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-create-bill',
   imports: [
     AsyncPipe,
@@ -85,6 +88,7 @@ export class CreateBill implements OnInit, AfterViewInit {
   private readonly userService = inject(UserService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly breakpointObserver = inject(BreakpointObserver);
+  private readonly cdr = inject(ChangeDetectorRef);
   @ViewChild('tabGroup') tabGroup?: MatTabGroup;
 
   nameCtrl = new FormControl();
@@ -108,6 +112,7 @@ export class CreateBill implements OnInit, AfterViewInit {
       .pipe(takeUntilDestroyed())
       .subscribe(({ matches }) => {
         this.isMobile = matches;
+        this.cdr.markForCheck();
       });
   }
 
@@ -183,16 +188,22 @@ export class CreateBill implements OnInit, AfterViewInit {
   }
 
   private async uploadImagesWithProgress(): Promise<number[]> {
-    this.uploadProgress = 0;
+    this.setUploadProgress(0);
     try {
       const files = await this.billSplitterService.uploadImages(
         this.files,
-        (percent) => (this.uploadProgress = percent)
+        (percent) => this.setUploadProgress(percent)
       );
       return files.map((file) => file.id);
     } finally {
-      this.uploadProgress = null;
+      this.setUploadProgress(null);
     }
+  }
+
+  /** OnPush: tiến trình upload được gán từ callback ngoài template nên phải đánh dấu thủ công. */
+  private setUploadProgress(value: number | null) {
+    this.uploadProgress = value;
+    this.cdr.markForCheck();
   }
 
   onImagesChanged(images: ImagePreview[]) {
