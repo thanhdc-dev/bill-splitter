@@ -2385,3 +2385,32 @@ Material 20 không cần animations module; `provideAnimations` đã deprecated 
 - **Không làm `provideAppInitializer` không chặn**: `bill-details`, `create-bill`, `bill-splitter.service` đọc `isLoggedIn()`/`getUserId()` đồng bộ, bỏ `await` có nguy cơ race condition. Cần quyết định kiến trúc riêng (guard/signal chờ auth).
 - **Chưa làm font self-host, zoneless, OnPush/signal, `@defer`**: chờ xác nhận hướng đi.
 - `CommonModule` chưa bỏ được vì còn ~15 chỗ `*ngIf`/`ngClass`/... trong template.
+
+## 2026-10-01 (đợt 2)
+
+### Decision
+
+Chuyển toàn bộ template sang control flow mới, bỏ `CommonModule`, và chuyển gói build-time sang `devDependencies`.
+
+### Before
+
+- Còn `*ngIf`/`*ngFor`/`ngSwitch` ở nhiều template; 9 component import cả `CommonModule`.
+- `tailwindcss`, `@tailwindcss/postcss`, `postcss` nằm ở `dependencies`.
+- Budget `initial` warning 600kB (thấp hơn kích thước thực tế 636 kB).
+
+### After
+
+- Chạy `ng generate @angular/core:control-flow`, tất cả dùng `@if`/`@for`/`@switch`.
+- `CommonModule` được thay bằng đúng thứ cần dùng (`AsyncPipe`, `CurrencyPipe`, `DatePipe`, `NgClass`).
+- 3 gói trên chuyển sang `devDependencies`; `package-lock.json` cập nhật bằng `npm install --package-lock-only`.
+- Budget `initial` warning 650kB, error 800kB.
+- Initial bundle 635.5 kB raw / 157.4 kB gzip (gần như không đổi so với đợt 1: `CommonModule` đã được tree-shake phần lớn). `ng build` sạch cảnh báo; `ng lint` còn 2 lỗi có sẵn.
+
+### Reason
+
+Control flow tích hợp trong compiler, không cần import. Import từng pipe giúp bundle rõ ràng và dễ chuyển sang zoneless/OnPush sau này. Gói PostCSS/Tailwind chỉ chạy lúc build.
+
+### Alternatives Considered
+
+- **Giữ `CommonModule`**: đơn giản hơn nhưng kém tường minh, và Angular khuyến nghị bỏ.
+- **Chưa làm OnPush, `@defer`, timer ngoài zone**: chưa thể kiểm chứng bằng mắt trên trình duyệt trong phiên này nên để lại.

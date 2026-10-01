@@ -1,7 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { BillSplitterService } from '../../services/bill-splitter.service';
 import { Router, RouterLink } from '@angular/router';
-import { CommonModule } from '@angular/common';
+import { CurrencyPipe } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatButtonModule } from '@angular/material/button';
@@ -24,7 +24,7 @@ interface Bill {
 @Component({
   selector: 'app-bills',
   imports: [
-    CommonModule,
+    CurrencyPipe,
     MatIconModule,
     MatButtonModule,
     MatProgressSpinnerModule,

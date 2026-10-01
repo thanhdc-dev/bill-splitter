@@ -8,61 +8,67 @@
     <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" class="flat-field">
       <mat-label>Tên món, dịch vụ...</mat-label>
       <input matInput formControlName="name" aria-label="Tên khoản mục" (keydown.enter)="onSubmit()" />
-      <mat-error *ngIf="expenseForm.get('name')?.hasError('required')">
-        Vui lòng nhập tên khoản mục
-      </mat-error>
+      @if (expenseForm.get('name')?.hasError('required')) {
+        <mat-error>
+          Vui lòng nhập tên khoản mục
+        </mat-error>
+      }
     </mat-form-field>
 
     <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" class="flat-field expense-add-row__amount">
       <mat-label>Số tiền</mat-label>
       <input matInput type="text" inputmode="numeric" formControlName="amount"
         aria-label="Số tiền" appThousandSeparator (keydown.enter)="onSubmit()" />
-      <mat-error *ngIf="expenseForm.get('amount')?.hasError('required')">
-        Vui lòng nhập số tiền
-      </mat-error>
-      <mat-error *ngIf="expenseForm.get('amount')?.hasError('min')">
-        Số tiền phải lớn hơn 0
-      </mat-error>
-    </mat-form-field>
+        @if (expenseForm.get('amount')?.hasError('required')) {
+          <mat-error>
+            Vui lòng nhập số tiền
+          </mat-error>
+        }
+        @if (expenseForm.get('amount')?.hasError('min')) {
+          <mat-error>
+            Số tiền phải lớn hơn 0
+          </mat-error>
+        }
+      </mat-form-field>
 
-    <button mat-mini-fab type="submit" class="expense-add-row__submit" aria-label="Thêm khoản mục"
-      [disabled]="!expenseForm.valid">
-      <mat-icon>add</mat-icon>
-    </button>
-  </form>
+      <button mat-mini-fab type="submit" class="expense-add-row__submit" aria-label="Thêm khoản mục"
+        [disabled]="!expenseForm.valid">
+        <mat-icon>add</mat-icon>
+      </button>
+    </form>
 
-  @if (expenses$ | async; as expenses) {
-  @if (!expenses.length) {
-  <app-empty-state
-    icon="receipt_long"
-    title="Chưa có khoản mục nào"
-    description="Thêm từng món trong hóa đơn ở ô phía trên, sau đó chọn ai tham gia món nào ở tab Thành viên."
-    [compact]="true"
-  ></app-empty-state>
-  } @else {
-  <ul class="expense-list">
-    @for (expense of expenses; track expense.id) {
-      <li class="expense-row">
-      <div class="expense-row__main">
-        <button type="button" class="expense-row__name" (click)="updateExpenseName(expense)">
-          {{ expense.name }}
-        </button>
-        <span class="expense-row__meta">
-          {{ getParticipantCount(expense, (members$ | async) || []) }} người ăn chung
-        </span>
-      </div>
+    @if (expenses$ | async; as expenses) {
+      @if (!expenses.length) {
+        <app-empty-state
+          icon="receipt_long"
+          title="Chưa có khoản mục nào"
+          description="Thêm từng món trong hóa đơn ở ô phía trên, sau đó chọn ai tham gia món nào ở tab Thành viên."
+          [compact]="true"
+        ></app-empty-state>
+      } @else {
+        <ul class="expense-list">
+          @for (expense of expenses; track expense.id) {
+            <li class="expense-row">
+              <div class="expense-row__main">
+                <button type="button" class="expense-row__name" (click)="updateExpenseName(expense)">
+                  {{ expense.name }}
+                </button>
+                <span class="expense-row__meta">
+                  {{ getParticipantCount(expense, (members$ | async) || []) }} người ăn chung
+                </span>
+              </div>
 
-      <div class="expense-row__actions">
-        <button type="button" class="expense-row__amount mono-amount" (click)="updateExpenseAmount(expense)">
-          {{ expense.amount | currency: 'VND': 'symbol' : '1.0-0' : 'vi' }}
-        </button>
-        <button mat-icon-button class="expense-row__delete" aria-label="Xoá khoản mục" (click)="removeExpense(expense.id)">
-          <mat-icon>delete</mat-icon>
-        </button>
-      </div>
-    </li>
-}
-  </ul>
-  }
-  }
-</div>
+              <div class="expense-row__actions">
+                <button type="button" class="expense-row__amount mono-amount" (click)="updateExpenseAmount(expense)">
+                  {{ expense.amount | currency: 'VND': 'symbol' : '1.0-0' : 'vi' }}
+                </button>
+                <button mat-icon-button class="expense-row__delete" aria-label="Xoá khoản mục" (click)="removeExpense(expense.id)">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </div>
+            </li>
+          }
+        </ul>
+      }
+    }
+  </div>

@@ -14,11 +14,11 @@
         (click)="toggleTheme()"
         [attr.aria-label]="themeToggleLabel()"
         [matTooltip]="themeToggleLabel()"
-      >
+        >
         <mat-icon>{{ themeIcon() }}</mat-icon>
       </button>
 
-      <ng-container *ngIf="user$ | async as user; else loginSection">
+      @if (user$ | async; as user) {
         <span class="user-name">Xin chào, {{ user.fullname }}!</span>
         <button
           mat-icon-button
@@ -27,21 +27,20 @@
           (click)="toggleSidebar()"
           [class.active]="sidebarOpen"
           [attr.aria-expanded]="sidebarOpen"
-        >
+          >
           <mat-icon>settings</mat-icon>
         </button>
-      </ng-container>
-
-      <ng-template #loginSection>
+      } @else {
         <button
           mat-icon-button
           color="primary"
           aria-label="login"
           (click)="openLoginPopup()"
-        >
+          >
           <mat-icon>login</mat-icon>
         </button>
-      </ng-template>
+      }
+
     </div>
   </header>
 
@@ -50,18 +49,19 @@
   </main>
 
   <!-- Sidebar -->
-  <div
-    class="sidebar-overlay"
-    *ngIf="sidebarOpen"
-    (click)="closeSidebar()"
-  ></div>
+  @if (sidebarOpen) {
+    <div
+      class="sidebar-overlay"
+      (click)="closeSidebar()"
+    ></div>
+  }
 
   <aside
     class="sidebar"
     [class.open]="sidebarOpen"
     [attr.aria-hidden]="!sidebarOpen"
     [attr.inert]="sidebarOpen ? null : ''"
-  >
+    >
     <nav class="sidebar-content" aria-label="Menu tài khoản">
       <div class="sidebar-actions">
         <button type="button" class="sidebar-action" (click)="redirectToList()">

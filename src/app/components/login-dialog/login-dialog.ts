@@ -3,7 +3,7 @@ import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { AuthService } from '../../services/auth.service';
-import { CommonModule } from '@angular/common';
+
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { BillSplitterService, PasskeyService } from '../../services';
@@ -11,7 +11,7 @@ import { BillSplitterService, PasskeyService } from '../../services';
 @Component({
   selector: 'app-login-dialog',
   standalone: true,
-  imports: [CommonModule, MatButtonModule, MatIconModule, MatDialogModule],
+  imports: [MatButtonModule, MatIconModule, MatDialogModule],
   templateUrl: './login-dialog.html',
   styleUrl: './login-dialog.scss'
 })

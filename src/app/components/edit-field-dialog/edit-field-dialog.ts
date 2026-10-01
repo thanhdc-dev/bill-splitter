@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import {
   Component,
   EventEmitter,
@@ -26,15 +26,14 @@ interface EditFieldDialogData {
 @Component({
   selector: 'app-edit-field-dialog',
   imports: [
-    CommonModule,
     MatDialogModule,
     MatButtonModule,
     ReactiveFormsModule,
     MatFormFieldModule,
     MatInputModule,
     FormsModule,
-    ThousandSeparatorDirective,
-  ],
+    ThousandSeparatorDirective
+],
   templateUrl: './edit-field-dialog.html',
   styleUrl: './edit-field-dialog.scss',
 })

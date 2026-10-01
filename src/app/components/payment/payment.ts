@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
@@ -20,7 +20,6 @@ import { BankSelectComponent } from '../bank-select/bank-select';
   selector: 'app-payment',
   standalone: true,
   imports: [
-    CommonModule,
     MatDialogModule,
     MatButtonModule,
     MatFormFieldModule,
@@ -30,8 +29,8 @@ import { BankSelectComponent } from '../bank-select/bank-select';
     MatDividerModule,
     MatIconModule,
     MatTabsModule,
-    MatCardModule,
-  ],
+    MatCardModule
+],
   templateUrl: './payment.html',
   styleUrl: './payment.scss',
 })

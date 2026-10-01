@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+import { AsyncPipe, NgClass } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   AfterViewInit,
@@ -55,7 +55,8 @@ const MOBILE_BREAKPOINT = '(max-width: 767px)';
 @Component({
   selector: 'app-bill-details',
   imports: [
-    CommonModule,
+    AsyncPipe,
+    NgClass,
     MatCardModule,
     MatButtonModule,
     MatIconModule,

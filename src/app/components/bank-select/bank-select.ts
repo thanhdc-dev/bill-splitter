@@ -1,5 +1,5 @@
 import { Component, Input, computed, forwardRef, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { AsyncPipe } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   ControlValueAccessor,
@@ -32,7 +32,7 @@ export interface BankItemLabel extends BankItem {
   selector: 'app-bank-select',
   standalone: true,
   imports: [
-    CommonModule,
+    AsyncPipe,
     ReactiveFormsModule,
     MatFormFieldModule,
     MatSelectModule,

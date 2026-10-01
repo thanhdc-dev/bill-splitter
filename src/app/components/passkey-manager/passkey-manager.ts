@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -17,7 +17,7 @@ import { PasskeyNameDialogComponent } from '../passkey-name-dialog/passkey-name-
   selector: 'app-passkey-manager',
   standalone: true,
   imports: [
-    CommonModule,
+    DatePipe,
     MatCardModule,
     MatButtonModule,
     MatIconModule,

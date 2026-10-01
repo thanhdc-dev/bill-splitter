@@ -2,9 +2,15 @@
 
 <mat-dialog-content>
   <mat-form-field appearance="outline" subscriptSizing="dynamic" class="flat-field w-full">
-    <input matInput type="text" class="mono-amount" *ngIf="type === 'amount'" appThousandSeparator [(ngModel)]="value" />
-    <input matInput type="number" class="mono-amount" *ngIf="type === 'number'" [(ngModel)]="value" />
-    <input matInput type="text" *ngIf="type === 'text'" [(ngModel)]="value" />
+    @if (type === 'amount') {
+      <input matInput type="text" class="mono-amount" appThousandSeparator [(ngModel)]="value" />
+    }
+    @if (type === 'number') {
+      <input matInput type="number" class="mono-amount" [(ngModel)]="value" />
+    }
+    @if (type === 'text') {
+      <input matInput type="text" [(ngModel)]="value" />
+    }
   </mat-form-field>
 </mat-dialog-content>
 

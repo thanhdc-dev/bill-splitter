@@ -1,5 +1,5 @@
 import { Component, EventEmitter, inject, Input, Output } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
 import { ImageCdnUrlService } from '../../core/cdn/image-cdn-url.service';
@@ -23,7 +23,7 @@ export interface ImagePreview {
 @Component({
   selector: 'app-image-upload',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   templateUrl: './image-upload.html',
   styleUrls: ['./image-upload.scss'],
 })

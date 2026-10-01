@@ -5,7 +5,7 @@ import { Router, RouterLink, RouterOutlet } from '@angular/router';
 import { AuthService } from './services/auth.service';
 import { LoginDialogComponent } from './components/login-dialog/login-dialog';
 import { MatDialog } from '@angular/material/dialog';
-import { AsyncPipe, CommonModule } from '@angular/common';
+import { AsyncPipe } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -16,8 +16,7 @@ import { PwaInstallPromptComponent } from './components/pwa-install-prompt/pwa-i
   selector: 'app-root',
   imports: [
     RouterOutlet,
-    AsyncPipe,
-    CommonModule,
+    AsyncPipe,
     MatIconModule,
     MatButtonModule,
     MatTooltipModule,

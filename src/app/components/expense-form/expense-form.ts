@@ -10,7 +10,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { BillSplitterService } from '../../services/bill-splitter.service';
-import { CommonModule } from '@angular/common';
+import { AsyncPipe, CurrencyPipe } from '@angular/common';
 import { ThousandSeparatorDirective } from '../../directives/thousand-separator';
 import { Observable } from 'rxjs';
 import { ExpenseItem, Member } from '../../models/bill-splitter.model';
@@ -24,7 +24,8 @@ import { EmptyStateComponent } from '../empty-state/empty-state';
   selector: 'app-expense-form',
   standalone: true,
   imports: [
-    CommonModule,
+    AsyncPipe,
+    CurrencyPipe,
     ReactiveFormsModule,
     MatFormFieldModule,
     MatInputModule,

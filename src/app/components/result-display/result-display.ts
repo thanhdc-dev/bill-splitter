@@ -1,6 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { AsyncPipe, CommonModule } from '@angular/common';
+import { AsyncPipe, CurrencyPipe } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { BillSplitterService } from '../../services/bill-splitter.service';
 import { ExpenseItem, Member } from '../../models/bill-splitter.model';
@@ -18,7 +18,7 @@ import { EmptyStateComponent } from '../empty-state/empty-state';
   selector: 'app-result-display',
   standalone: true,
   imports: [
-    CommonModule,
+    CurrencyPipe,
     AsyncPipe,
     MatCardModule,
     MatIconModule,

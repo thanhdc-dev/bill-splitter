@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CurrencyPipe } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { BreakpointObserver } from '@angular/cdk/layout';
 import {
@@ -27,7 +27,7 @@ const MOBILE_BREAKPOINT = '(max-width: 767px)';
   selector: 'app-member-table',
   standalone: true,
   imports: [
-    CommonModule,
+    CurrencyPipe,
     ReactiveFormsModule,
     MatFormFieldModule,
     MatTableModule,

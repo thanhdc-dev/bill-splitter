@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+
 import { Component, inject, OnInit } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -9,11 +9,10 @@ import { MatIconModule } from '@angular/material/icon';
   selector: 'app-qr-popup',
   standalone: true,
   imports: [
-    CommonModule,
     MatCardModule,
     MatButtonModule,
-    MatIconModule,
-  ],
+    MatIconModule
+],
   templateUrl: './qr-popup.html',
   styleUrl: './qr-popup.scss',
 })

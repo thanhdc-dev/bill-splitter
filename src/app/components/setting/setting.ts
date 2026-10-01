@@ -8,7 +8,7 @@ import {
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { USER_SETTING_KEYS } from '../../constants';
-import { CommonModule } from '@angular/common';
+
 import { MatIconModule } from '@angular/material/icon';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatCardModule } from '@angular/material/card';
@@ -26,7 +26,6 @@ const SECURITY_TAB_INDEX = 2;
 @Component({
   selector: 'app-setting',
   imports: [
-    CommonModule,
     ReactiveFormsModule,
     MatFormFieldModule,
     MatInputModule,
@@ -35,8 +34,8 @@ const SECURITY_TAB_INDEX = 2;
     MatTabsModule,
     MatCardModule,
     MatButtonModule,
-    PasskeyManager,
-  ],
+    PasskeyManager
+],
   templateUrl: './setting.html',
   styleUrl: './setting.scss',
 })
