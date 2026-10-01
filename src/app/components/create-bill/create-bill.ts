@@ -36,7 +36,7 @@ import {
   Observable,
 } from 'rxjs';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { AuthService, BillSplitterService, UserService } from '../../services';
+import { AuthService, BillShareService, BillSplitterService, UserService } from '../../services';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog';
 import { LoginDialogComponent } from '../login-dialog/login-dialog';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -85,6 +85,7 @@ export class CreateBill implements OnInit, AfterViewInit {
   /** Số ảnh upload lỗi ở lần lưu gần nhất; báo sau khi lưu xong để không bị snackbar khác đè. */
   private failedUploadCount = 0;
   private readonly billSplitterService = inject(BillSplitterService);
+  private readonly billShareService = inject(BillShareService);
   private readonly authService = inject(AuthService);
   private readonly billTabControlService = inject(BillTabControlService);
   private readonly userService = inject(UserService);
@@ -187,7 +188,7 @@ export class CreateBill implements OnInit, AfterViewInit {
     const code = await this.billSplitterService.createBill();
     this.billSplitterService.updateIsChange(false);
     if (isShare) {
-      await this.copyUrlToClipboard(code);
+      await this.billShareService.share(code, this.billSplitterService.getName());
     }
     await this.router.navigate(['/', code]);
     this.notifyFailedUploads();
@@ -236,13 +237,6 @@ export class CreateBill implements OnInit, AfterViewInit {
     if (firstNameValue) {
       this.nameCtrl.patchValue(firstNameValue, { emitEvent: false });
     }
-  }
-
-  private async copyUrlToClipboard(code: string) {
-    await navigator.clipboard.writeText(`${window.location.origin}/${code}`);
-    this.snackBar.open('Đã sao chép URL vào khay nhớ tạm!', 'Đóng', {
-      duration: 3000,
-    });
   }
 
   private async fetchUserSetting() {

@@ -6,3 +6,4 @@ export * from './user.service';
 export * from './bill-auto-save.service';
 export * from './passkey.service';
 export * from './theme.service';
+export * from './bill-share.service';

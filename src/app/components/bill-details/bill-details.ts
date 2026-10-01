@@ -41,6 +41,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import {
   AuthService,
   BillAutoSaveService,
+  BillShareService,
   BillSplitterService,
   SeoService,
 } from '../../services';
@@ -86,6 +87,7 @@ export class BillDetails implements OnInit, OnDestroy, AfterViewInit {
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
   private readonly billSplitterService = inject(BillSplitterService);
+  private readonly billShareService = inject(BillShareService);
   private readonly authService = inject(AuthService);
   private readonly seoService = inject(SeoService);
   private readonly billTabControlService = inject(BillTabControlService);
@@ -218,7 +220,7 @@ export class BillDetails implements OnInit, OnDestroy, AfterViewInit {
     await this.authService.whenReady();
     const isChange = this.billSplitterService.getIsChange();
     if (isShare && (!this.isEditable || !isChange)) {
-      this.copyUrlToClipboard(this.code);
+      await this.billShareService.share(this.code, this.billSplitterService.getName());
       return;
     }
 
@@ -284,14 +286,7 @@ export class BillDetails implements OnInit, OnDestroy, AfterViewInit {
         });
     }
     if (isShare) {
-      await this.copyUrlToClipboard(this.code);
+      await this.billShareService.share(this.code, this.billSplitterService.getName());
     }
-  }
-
-  private async copyUrlToClipboard(code: string) {
-    await navigator.clipboard.writeText(`${window.location.origin}/${code}`);
-    this.snackBar.open('Đã sao chép URL vào khay nhớ tạm!', 'Đóng', {
-      duration: 3000,
-    });
   }
 }

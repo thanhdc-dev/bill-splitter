@@ -2813,3 +2813,41 @@ Giữ đúng ý "không mất dữ liệu" mà không tạo bill ngoài ý muố
 - `ng build`, `ng lint` đạt.
 - Trình duyệt: guest nhập thành viên + bấm upload + xác nhận → localStorage `bill` và cờ `bill_restore_draft` được đặt; đóng popup login → cả hai bị xoá; giả lập quay lại bằng `/?restore=true` (đã có token) → thành viên và tên bill được khôi phục, nháp và cờ bị xoá.
 - **Chưa kiểm thử**: OAuth thật (Google/Zalo/GitHub), passkey (`navigate` tại chỗ), khoản mục có số tiền, regression luồng `?save=true`.
+
+---
+
+## 2026-10-01 (đợt 15)
+
+### Decision
+
+Dùng Web Share API (`navigator.share`) cho nút chia sẻ để mở thẳng share sheet (Zalo/Messenger...), thay vì chỉ copy link. Tạo `BillShareService` dùng chung cho create-bill, bill-details và danh sách bills. Các quyết định đã được người dùng duyệt: (1) khi share bị từ chối do hết user activation thì fallback copy link + snackbar có nút "Chia sẻ"; (2) áp dụng cả 3 chỗ; (3) payload gồm title + text + url.
+
+### Before
+
+- 3 component tự gọi `navigator.clipboard.writeText(...)`; người tạo phải tự mở Zalo/Messenger rồi dán link.
+- `bills.ts` có `onCopyUrl`, nút `content_copy`.
+
+### After
+
+- `services/bill-share.service.ts`: `share(code, name?)` → `navigator.share({title, text: 'Chia tiền: <tên>', url})`; `AbortError` (user đóng sheet) coi là xong; lỗi khác hoặc không hỗ trợ → copy link, và nếu `canShare` thì snackbar có action "Chia sẻ" (click là user activation mới nên gọi lại `navigator.share` được).
+- create-bill, bill-details: bỏ `copyUrlToClipboard`, gọi service. `bills.ts`: `onCopyUrl` → `onShareUrl`, icon `share`.
+
+### Reason
+
+Giảm thao tác cho người tạo. `navigator.share` cần user activation còn hiệu lực; ở create-bill sau khi `await` upload/lưu bill (và có thể dialog đăng nhập) activation thường đã hết (đặc biệt Safari iOS), nên bắt buộc có fallback; nút trên snackbar cho phép share lại.
+
+### Alternatives Considered
+
+- Chỉ fallback copy: đơn giản nhưng create-bill hầu như luôn rơi vào fallback trên iOS.
+- Tách lưu và share thành 2 bước: đổi UX nhiều hơn.
+- Chỉ truyền `url`: gọn hơn, nhưng Zalo/Messenger hiển thị tên bill tốt hơn khi có title/text.
+
+### Assumptions & Deviations
+
+- Web Share cần HTTPS (hoặc localhost). Hỗ trợ theo hiểu biết hiện tại: Chrome/Edge Android, Safari iOS 12.2+, Samsung Internet có; Firefox Android và desktop Firefox không → dùng fallback copy. WebView in-app (trong Zalo/Messenger) có thể không có `navigator.share` → fallback copy.
+- **Chưa kiểm thử trên thiết bị thật** (chưa đo được việc activation có còn sau khi lưu bill hay không trên iOS/Android).
+- Nút ở danh sách bills đổi nhãn/icon từ copy sang share; trên máy không hỗ trợ vẫn copy link như cũ.
+
+### Verify
+
+- `ng build`, `ng lint` đạt.

@@ -1,9 +1,9 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { BillSplitterService } from '../../services/bill-splitter.service';
+import { BillShareService } from '../../services/bill-share.service';
 import { Router, RouterLink } from '@angular/router';
 import { CurrencyPipe } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
-import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { EmptyStateComponent } from '../empty-state/empty-state';
@@ -36,9 +36,9 @@ interface Bill {
 })
 export class Bills implements OnInit {
   private readonly dialog = inject(MatDialog);
-  private readonly snackBar = inject(MatSnackBar);
   private readonly router = inject(Router);
   private readonly billSplitterService = inject(BillSplitterService);
+  private readonly billShareService = inject(BillShareService);
 
   bills: Bill[] = [];
   /** Tách "đang tải" / "lỗi" / "không có hóa đơn nào" để không hiện nhầm empty state. */
@@ -68,20 +68,9 @@ export class Bills implements OnInit {
     this.router.navigate([`/${code}`]);
   }
 
-  onCopyUrl(event: Event, code: string): void {
+  onShareUrl(event: Event, bill: Bill): void {
     event.stopPropagation(); // Ngăn việc trigger click của item
-    const url = `${window.location.origin}/${code}`;
-    navigator.clipboard
-      .writeText(url)
-      .then(() => {
-        // Có thể thêm thông báo toast ở đây
-        this.snackBar.open('URL đã được sao chép!', 'Đóng', {
-          duration: 3000,
-        });
-      })
-      .catch((err) => {
-        console.error('Lỗi khi copy URL:', err);
-      });
+    void this.billShareService.share(bill.code, bill.name);
   }
 
   formatDate(dateString: string): string {
