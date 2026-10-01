@@ -25,7 +25,7 @@ import { MAT_INPUT_VALUE_ACCESSOR } from '@angular/material/input';
 })
 export class ThousandSeparatorDirective {
   private _value: string | null = null;
-  private _onTouched: () => void = () => {};
+  private _onTouched: () => void = () => undefined;
   private readonly elementRef = inject(ElementRef<HTMLInputElement>);
 
   @Input()

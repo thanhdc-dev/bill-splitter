@@ -43,55 +43,55 @@
   <div class="bill-wrapper">
     @for (item of bills; track item.code) {
       <div
-      class="bill receipt-ticket"
-      role="button"
-      tabindex="0"
-      [title]="formatDate(item.createdAt)"
-      (click)="onItemClick(item.code)"
-      (keydown.enter)="onItemClick(item.code)"
-      (keydown.space)="$event.preventDefault(); onItemClick(item.code)"
-    >
-      <div class="bill-stub receipt-ticket__stub">
-        <span class="bill-stub__day">{{ getStubDay(item.createdAt) }}</span>
-        <span class="bill-stub__month">{{ getStubMonth(item.createdAt) }}</span>
-      </div>
-
-      <div class="bill-content">
-        <div class="bill-info">
-          <div class="bill-header">
-            <h3 class="bill-name">{{ item.name }}</h3>
-            <span class="bill-code">#{{ item.code }}</span>
-          </div>
-
-          <div class="bill-meta">
-            <span class="bill-amount mono-amount">{{ item.data.totalAmount | currency: 'VND': 'symbol' : '1.0-0' : 'vi' }}</span>
-            <span class="bill-member-count">
-              <mat-icon>groups</mat-icon>{{ item.data.members.length }} người
-            </span>
-          </div>
+        class="bill receipt-ticket"
+        role="button"
+        tabindex="0"
+        [title]="formatDate(item.createdAt)"
+        (click)="onItemClick(item.code)"
+        (keydown.enter)="onItemClick(item.code)"
+        (keydown.space)="$event.preventDefault(); onItemClick(item.code)"
+      >
+        <div class="bill-stub receipt-ticket__stub">
+          <span class="bill-stub__day">{{ getStubDay(item.createdAt) }}</span>
+          <span class="bill-stub__month">{{ getStubMonth(item.createdAt) }}</span>
         </div>
 
-        <div class="actions">
-          <button
-            class="copy-btn"
-            (click)="onCopyUrl($event, item.code)"
-            title="Copy URL"
-            aria-label="Copy URL"
-          >
-            <mat-icon>content_copy</mat-icon>
-          </button>
-          <button
-            class="delete-btn"
-            mat-icon-button
-            aria-label="Xoá hóa đơn"
-            (click)="onDelete($event, item.code)"
-          >
-            <mat-icon>delete</mat-icon>
-          </button>
+        <div class="bill-content">
+          <div class="bill-info">
+            <div class="bill-header">
+              <h3 class="bill-name">{{ item.name }}</h3>
+              <span class="bill-code">#{{ item.code }}</span>
+            </div>
+
+            <div class="bill-meta">
+              <span class="bill-amount mono-amount">{{ item.data.totalAmount | currency: 'VND': 'symbol' : '1.0-0' : 'vi' }}</span>
+              <span class="bill-member-count">
+                <mat-icon>groups</mat-icon>{{ item.data.members.length }} người
+              </span>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button
+              class="copy-btn"
+              (click)="onCopyUrl($event, item.code)"
+              title="Copy URL"
+              aria-label="Copy URL"
+            >
+              <mat-icon>content_copy</mat-icon>
+            </button>
+            <button
+              class="delete-btn"
+              mat-icon-button
+              aria-label="Xoá hóa đơn"
+              (click)="onDelete($event, item.code)"
+            >
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
         </div>
       </div>
-    </div>
-}
+    }
   </div>
   }
 </div>

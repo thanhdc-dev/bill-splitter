@@ -17,10 +17,6 @@ import { provideServiceWorker } from '@angular/service-worker';
 import { PwaUpdateService } from './services/pwa-update.service';
 import { environment } from '../environments/environment';
 
-export function initializeApp(authService: AuthService) {
-  return () => authService.initialize();
-}
-
 export const appConfig: ApplicationConfig = {
   providers: [
     provideAppInitializer(() => {

@@ -52,8 +52,6 @@ export class BillSplitterService {
   public readonly isChange$ = toObservable(this.isChange);
   public readonly fileIds$ = toObservable(this.fileIds);
 
-  constructor() {}
-
   private markAsChanged() {
     this.isChange.set(true);
   }
