@@ -19,8 +19,17 @@ export class AuthService {
     this.API_URL = environment.apiUrl;
   }
 
-  async initialize() {
-    await this.loadStoredTokens();
+  /** Resolve khi đã khôi phục xong phiên đăng nhập (kể cả khi không có token). */
+  private ready: Promise<void> = Promise.resolve();
+
+  /** Không chặn bootstrap: chỉ khởi chạy việc khôi phục phiên, nơi nào cần thì `await whenReady()`. */
+  initialize(): Promise<void> {
+    this.ready = this.loadStoredTokens();
+    return this.ready;
+  }
+
+  whenReady(): Promise<void> {
+    return this.ready;
   }
 
   // Load stored tokens on app init

@@ -146,6 +146,7 @@ export class CreateBill implements OnInit, AfterViewInit {
   }
 
   async save(isShare?: boolean) {
+    await this.authService.whenReady();
     if (!this.authService.isLoggedIn()) {
       const confirmLogin = await firstValueFrom(
         this.dialog
@@ -212,7 +213,8 @@ export class CreateBill implements OnInit, AfterViewInit {
     });
   }
 
-  private fetchUserSetting() {
+  private async fetchUserSetting() {
+    await this.authService.whenReady();
     if (this.authService.isLoggedIn()) {
       Promise.all([
         this.userService.getSettingBankAccount(),

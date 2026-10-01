@@ -2471,3 +2471,32 @@ Nén ảnh tĩnh trong `public/` (thumbnail OG và icon PWA) bằng Pillow, gi�
 - **Chỉ tối ưu PNG lossless (`optimize=True`)**: icon 512 chỉ giảm 97 → 95 kB, không đáng kể.
 - **Cài `sharp`/`pngquant`**: không cần, Pillow đã có sẵn và đủ dùng; tránh thêm dependency cho việc chạy một lần.
 - **Logo (`logo.png`, `favicon.png`) và logo ngân hàng**: giữ nguyên, đã nhỏ (≤4 kB) hoặc đã là WebP.
+
+## 2026-10-01 (đợt 5)
+
+### Decision
+
+Khởi tạo phiên đăng nhập **không chặn bootstrap**; thay vào đó `AuthService` cung cấp `whenReady()` và những nơi cần trạng thái đăng nhập tự chờ.
+
+### Before
+
+- `provideAppInitializer` `return authService.initialize()` → Angular không render cho đến khi `GET /auth/me` trả về (chỉ khi có `accessToken` trong localStorage).
+- `authGuard` đọc `isLoggedIn()` đồng bộ.
+
+### After
+
+- `AuthService.initialize()` lưu promise vào `ready`; thêm `whenReady()`.
+- `app.config.ts`: `void authService.initialize()` (không return) → app render ngay.
+- `authGuard` thành `async`, `await whenReady()` trước khi kiểm tra `isLoggedIn()`.
+- `await whenReady()` thêm vào: `save()` của `create-bill` và `bill-details`, `fetchUserSetting()` của `create-bill`, và trước `startMonitoring()` + `isEditable` ở `bill-details.ngOnInit` (nơi `isEditable()` đọc `isLoggedIn()`/`getUserId()` đồng bộ).
+- Đã kiểm tra bằng trình duyệt với API giả: (1) có token, mở thẳng `/bills` → hiển thị danh sách (guard chờ đúng); (2) không token, mở `/bills` → về `/`; (3) mở `/abc123` bằng chủ bill → form chỉnh sửa; (4) cùng bill khi chưa đăng nhập → chỉ đọc. Không có lỗi console.
+
+### Reason
+
+Người dùng có token không còn phải nhìn màn hình trắng chờ API auth; trang công khai (`/`, `/:code`) hiển thị ngay. Chỉ những nơi thật sự phụ thuộc phiên mới chờ.
+
+### Alternatives Considered
+
+- **Giữ `await` trong initializer**: an toàn nhất nhưng giữ nguyên độ trễ khởi động.
+- **Chuyển `AuthService` sang signal + `computed isEditable`**: sạch hơn nhưng phải sửa nhiều nơi và nên làm cùng đợt OnPush/zoneless; hoãn.
+- **Rủi ro còn lại**: mọi nơi MỚI đọc `isLoggedIn()` đồng bộ ngay lúc khởi tạo sẽ thấy `false` trong vài trăm ms đầu — phải dùng `whenReady()`. `bank.ts` đọc `isEditable()` trong template nên tự cập nhật khi auth xong.

@@ -24,7 +24,8 @@ export const appConfig: ApplicationConfig = {
       const pwaUpdateService = inject(PwaUpdateService);
 
       pwaUpdateService.init();
-      return authService.initialize();
+
+      void authService.initialize();
     }),
     provideBrowserGlobalErrorListeners(),
     provideZoneChangeDetection({ eventCoalescing: true }),

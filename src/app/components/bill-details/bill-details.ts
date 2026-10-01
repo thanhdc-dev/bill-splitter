@@ -147,7 +147,7 @@ export class BillDetails implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngOnInit() {
-    this.init().then(() => {
+    this.init().then(() => this.authService.whenReady()).then(() => {
       this.billAutoSaveService.startMonitoring();
       this.isEditable = this.billSplitterService.isEditable();
     });
@@ -201,6 +201,7 @@ export class BillDetails implements OnInit, OnDestroy, AfterViewInit {
   }
 
   async save(isShare?: boolean) {
+    await this.authService.whenReady();
     const isChange = this.billSplitterService.getIsChange();
     if (isShare && (!this.isEditable || !isChange)) {
       this.copyUrlToClipboard(this.code);
