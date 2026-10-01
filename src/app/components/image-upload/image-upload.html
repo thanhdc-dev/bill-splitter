@@ -57,9 +57,9 @@
     }
 
     <div class="preview-grid">
-      <div
+      @for (image of images; track image.previewUrl; let i = $index) {
+        <div
         class="preview-item"
-        *ngFor="let image of images; let i = index"
         role="button"
         tabindex="0"
         [attr.aria-label]="'Xem ảnh ' + (i + 1)"
@@ -113,6 +113,7 @@
         </div>
 
       </div>
+}
     </div>
 
   </div>

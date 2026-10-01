@@ -2353,3 +2353,35 @@ tìm được, gồm 5 quyết định:
 - **Chuẩn hoá contrast bằng cách tự tính từ CSS variables** — cân nhắc nhưng không dùng vì kém
   chính xác hơn Lighthouse/axe thật (không mô phỏng đúng anti-aliasing, overlay, opacity chồng
   lớp); để mục này ở trạng thái "cần đo thủ công" thay vì tự ý kết luận PASS.
+
+## 2026-10-01
+
+### Decision
+
+Tối ưu build prod đợt 1: bỏ `provideAnimations()`, siết budget `initial`, chuyển `*ngFor` sang `@for` có `track`, sửa `ngsw-config.json`.
+
+### Before
+
+- `app.config.ts` gọi `provideAnimations()` dù không component nào dùng `@trigger`/`animations:`.
+- `angular.json`: budget `initial` warning/error cùng 2MB.
+- 5 chỗ `*ngFor` không `trackBy` (bills, expense-form, image-upload, result-display x2).
+- `ngsw-config.json`: tham chiếu `/favicon.ico` (không tồn tại), nhóm `assets` có `updateMode: "prefetch"`.
+- Initial bundle: 702 kB raw / 175 kB gzip.
+
+### After
+
+- Không còn `provideAnimations()`.
+- Budget `initial`: warning 600kB, error 800kB.
+- 5 chỗ trên dùng `@for` với `track` theo `id` (`code` cho bills, `previewUrl` cho ảnh).
+- `ngsw-config.json`: `/favicon.png`, `updateMode: "lazy"`.
+- Initial bundle: 637 kB raw / 158 kB gzip. `ng build` qua; `ng lint` còn 2 lỗi có sẵn (`thousand-separator.ts`, `bill-splitter.service.ts`).
+
+### Reason
+
+Material 20 không cần animations module; `provideAnimations` đã deprecated từ Angular 20.2. `@for` bắt buộc `track`, tránh dựng lại DOM. Budget cũ quá rộng nên không bắt được hồi quy.
+
+### Alternatives Considered
+
+- **Không làm `provideAppInitializer` không chặn**: `bill-details`, `create-bill`, `bill-splitter.service` đọc `isLoggedIn()`/`getUserId()` đồng bộ, bỏ `await` có nguy cơ race condition. Cần quyết định kiến trúc riêng (guard/signal chờ auth).
+- **Chưa làm font self-host, zoneless, OnPush/signal, `@defer`**: chờ xác nhận hướng đi.
+- `CommonModule` chưa bỏ được vì còn ~15 chỗ `*ngIf`/`ngClass`/... trong template.

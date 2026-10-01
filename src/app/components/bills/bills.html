@@ -41,8 +41,8 @@
 
   @else {
   <div class="bill-wrapper">
-    <div
-      *ngFor="let item of bills"
+    @for (item of bills; track item.code) {
+      <div
       class="bill receipt-ticket"
       role="button"
       tabindex="0"
@@ -91,6 +91,7 @@
         </div>
       </div>
     </div>
+}
   </div>
   }
 </div>

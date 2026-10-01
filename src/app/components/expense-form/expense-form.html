@@ -41,7 +41,8 @@
   ></app-empty-state>
   } @else {
   <ul class="expense-list">
-    <li class="expense-row" *ngFor="let expense of expenses">
+    @for (expense of expenses; track expense.id) {
+      <li class="expense-row">
       <div class="expense-row__main">
         <button type="button" class="expense-row__name" (click)="updateExpenseName(expense)">
           {{ expense.name }}
@@ -60,6 +61,7 @@
         </button>
       </div>
     </li>
+}
   </ul>
   }
   }
