@@ -561,6 +561,12 @@ h1, h2, h3, h4, h5, h6 {
     color: var(--text-secondary) !important;
     letter-spacing: 0.2px;
   }
+
+  /* Placeholder phải nhìn ra là gợi ý, không phải dữ liệu đã nhập (floatLabel="always" nên nó luôn hiện). */
+  input.mat-mdc-input-element::placeholder {
+    color: var(--text-secondary);
+    opacity: 0.7;
+  }
 }
 
 @media screen and (max-width: 600px) {

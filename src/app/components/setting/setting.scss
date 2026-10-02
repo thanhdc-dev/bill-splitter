@@ -15,17 +15,41 @@
   }
 }
 
+/* 3 tab (icon + chữ) rộng ~393px với padding mặc định 24px nên Material bật mũi tên phân trang và ẩn
+   tab "Bảo mật" ở 360px. Giảm padding, và ≤400px bỏ icon (chữ vẫn còn) để chắc chắn vừa. */
+:host ::ng-deep .mat-mdc-tab-header .mdc-tab {
+  padding: 0 12px;
+  min-width: 0;
+}
+
+@media (max-width: 400px) {
+  .tab-icon {
+    display: none;
+  }
+}
+
 .settings-container {
   max-width: 700px;
   margin: 0 auto;
 }
 
+/* Cỡ tiêu đề khớp .list-title ở bills.scss (22px, 20px ở ≤480px) — trang phụ không nên to hơn danh sách. */
 .settings-title {
   color: var(--text-primary);
   margin-bottom: 24px;
-  font-size: 28px;
+  font-size: 22px;
   font-weight: 600;
   text-align: center;
+
+  @media (max-width: 480px) {
+    font-size: 20px;
+  }
+}
+
+.tab-hint {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
 }
 
 .form-error-hint {

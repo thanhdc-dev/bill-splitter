@@ -8,7 +8,7 @@
       >
       <mat-tab formGroupName="bankAccount">
         <ng-template mat-tab-label>
-          <mat-icon>account_balance</mat-icon>
+          <mat-icon class="tab-icon">account_balance</mat-icon>
           <span class="pl-0.5">Ngân hàng</span>
         </ng-template>
 
@@ -22,7 +22,7 @@
 
           <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" class="flat-field account-name">
             <mat-label>Họ & Tên</mat-label>
-            <input matInput type="text" formControlName="accountName" />
+            <input matInput type="text" formControlName="accountName" autocomplete="name" placeholder="VD: NGUYEN VAN A" />
             @if (bankAccountForm.get('accountName')?.hasError('required')) {
               <mat-error>
                 Vui lòng nhập họ & tên
@@ -32,7 +32,7 @@
 
           <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" class="flat-field account-number">
             <mat-label>Số tài khoản</mat-label>
-            <input matInput type="text" formControlName="accountNumber" />
+            <input matInput type="text" inputmode="numeric" autocomplete="off" formControlName="accountNumber" placeholder="VD: 0123456789" />
             @if (bankAccountForm.get('accountNumber')?.hasError('required')) {
               <mat-error>
                 Vui lòng nhập số tài khoản
@@ -44,19 +44,22 @@
 
       <mat-tab formGroupName="momoWallet" labelClass="momo">
         <ng-template mat-tab-label>
-          <mat-icon>smartphone</mat-icon>
+          <mat-icon class="tab-icon">smartphone</mat-icon>
           <span class="pl-0.5">Momo</span>
         </ng-template>
 
         <mat-card>
+          <p class="tab-hint">
+            Không bắt buộc. Điền họ tên và số điện thoại để hiện thông tin Momo; thêm số tài khoản Momo để tạo mã QR.
+          </p>
           <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" class="flat-field account-name-momo">
             <mat-label>Họ & Tên</mat-label>
-            <input matInput type="text" formControlName="accountName" />
+            <input matInput type="text" formControlName="accountName" autocomplete="name" placeholder="VD: NGUYEN VAN A" />
           </mat-form-field>
 
           <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" class="flat-field phone-number-momo">
             <mat-label>Số điện thoại</mat-label>
-            <input matInput type="text" formControlName="phoneNumber" placeholder="0912345678" />
+            <input matInput type="text" inputmode="tel" autocomplete="tel" formControlName="phoneNumber" placeholder="0912345678" />
             @if (momoWalletForm.get('phoneNumber')?.hasError('pattern')) {
               <mat-error>
                 Số điện thoại không hợp lệ
@@ -66,14 +69,14 @@
 
           <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" class="flat-field account-number-momo">
             <mat-label>Số tài khoản</mat-label>
-            <input matInput type="text" formControlName="accountNumber" />
+            <input matInput type="text" inputmode="numeric" autocomplete="off" formControlName="accountNumber" />
           </mat-form-field>
         </mat-card>
       </mat-tab>
 
       <mat-tab labelClass="security">
         <ng-template mat-tab-label>
-          <mat-icon>security</mat-icon>
+          <mat-icon class="tab-icon">security</mat-icon>
           <span class="pl-0.5">Bảo mật</span>
         </ng-template>
 
@@ -91,8 +94,7 @@
         }
         <button
           mat-raised-button
-          color="primary"
-          class="save-button"
+          class="btn-gold save-button"
           type="submit"
           >
           Lưu

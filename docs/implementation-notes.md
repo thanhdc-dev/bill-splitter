@@ -3131,3 +3131,64 @@ cách duy nhất để vừa tên, 2 icon bút và số tiền ở 360px mà v�
 - `--touch-target` mới áp dụng cho các control tự vẽ liệt kê trên; `.upload-progress`, tab, v.v. chưa
   dùng. Chưa kiểm dark mode. Chữ 11–13px còn lại ở các component ngoài báo cáo (bank 0.8rem, lightbox,
   qr-popup, passkey-manager, thead kết quả 13px) chưa đổi.
+
+## 2026-10-02 (UX audit mobile — đợt 6: trang Cài đặt, UX-08 + UX-14 + UX-15)
+
+### Decision
+
+Sửa trang `/setting` theo đề xuất đã trình bày (không có câu hỏi riêng vì không mâu thuẫn quyết định
+cũ): nút Lưu dùng `.btn-gold` (CTA vàng đồng của app), tiêu đề cùng cỡ với danh sách hoá đơn, 3 tab vừa
+360px, thêm `inputmode`/`autocomplete`/placeholder/gợi ý cho form.
+
+Quyết định phát sinh (chưa hỏi riêng): (a) áp dụng cùng thuộc tính nhập liệu cho form thanh toán ở
+trang chủ (`payment.html`) để 2 form giống nhau; (b) làm mờ placeholder của mọi `.flat-field` (thay đổi
+toàn cục); (c) nội dung gợi ý Momo do mình diễn giải từ code, xem Hạn chế.
+
+### Before (360px)
+
+- 3 tab rộng x=52→445, Material bật phân trang (`pager`), tab "Bảo mật" ngoài khung nhìn.
+- Nút Lưu `mat-raised-button color="primary"` render nền `rgb(250,249,253)` (gần trắng, chữ teal) — nhìn
+  như nút phụ dù là hành động chính duy nhất; tiêu đề 28px (to hơn tiêu đề danh sách 22px).
+- Input không có `inputmode`, `autocomplete` hay placeholder (trừ SĐT Momo); tab Momo không giải thích 3
+  trường.
+
+### After
+
+- `setting.html`: nút Lưu `class="btn-gold save-button"` (bỏ `color="primary"`) → nền
+  `rgb(184,114,46)`, chữ trắng; icon tab có class `.tab-icon`; "Họ & Tên" `autocomplete="name"` +
+  placeholder "VD: NGUYEN VAN A"; số tài khoản `inputmode="numeric" autocomplete="off"` + placeholder
+  "VD: 0123456789"; SĐT Momo `inputmode="tel" autocomplete="tel"`; đoạn `.tab-hint` đầu tab Momo.
+- `setting.scss`: `::ng-deep .mat-mdc-tab-header .mdc-tab { padding: 0 12px; min-width: 0 }` (cùng cách
+  đợt 4); `.tab-icon` ẩn ở ≤400px (chữ vẫn còn); tiêu đề 22px, 20px ở ≤480px (khớp `.list-title`).
+- `payment.html`: cùng `inputmode`/`autocomplete`/placeholder cho các input (không thêm đoạn gợi ý).
+- `styles.scss`: `.flat-field input.mat-mdc-input-element::placeholder { color: var(--text-secondary);
+  opacity: .7 }` — trước đó placeholder đậm gần bằng chữ đã nhập nên "VD: ..." trông như dữ liệu đã điền.
+- Kiểm chứng (Playwright, API mock, trước/sau cùng một script): 360px và 320px không còn `pager`, 3 tab
+  nằm trong 16→344 (360px) / 16→304 (320px), bấm "Bảo mật" hiện tab và ẩn nút Lưu; 1024px tab và
+  layout không đổi; dark mode nút Lưu vẫn đọc được; `inputmode`/`autocomplete` đo đúng ở cả 2 tab;
+  `tsc` và `eslint` sạch.
+
+### Reason
+
+Báo cáo UX-08 (thiếu hướng dẫn/bàn phím số), UX-14 (tab Bảo mật bị ẩn), UX-15 (CTA yếu, tiêu đề quá
+to). `color="primary"` trên `mat-raised-button` không còn tô nền theo theme M3 hiện tại, trong khi
+`.btn-gold` đã là CTA chuẩn của app (ghi ở mục "biên nhận").
+
+### Alternatives Considered
+
+- `mat-flat-button color="primary"`: chưa kiểm chứng sẽ tô nền teal; `.btn-gold` đã có sẵn và đã dùng
+  làm CTA nên chọn nó.
+- Giữ icon ở mọi độ rộng và chỉ giảm padding: vừa 360px nhưng chỉ dư ~7px, vỡ ở 320px hoặc khi người
+  dùng tăng cỡ chữ hệ thống.
+- Cuộn ngang/pager giữ nguyên: giải pháp mặc định của Material nhưng chính là nguyên nhân UX-14.
+
+### Hạn chế / giả định
+
+- Các nút `mat-raised-button color="primary"` khác (vd "Thử lại", "Tạo hóa đơn mới", "Về trang chủ")
+  vẫn render nền gần trắng — ngoài phạm vi báo cáo; cần quyết định chung về kiểu CTA nếu muốn đổi.
+- Câu gợi ý Momo suy ra từ code: thông tin Momo chỉ hiện khi có họ tên + SĐT (`fetchIsShowMomoInfo`),
+  QR Momo chỉ tạo khi có "Số tài khoản" (`getQrCodeUrlMomo`); chưa xác nhận với backend ý nghĩa chính
+  xác của "Số tài khoản" Momo nên câu chữ không nêu định dạng.
+- "Họ & Tên" dùng `autocomplete="name"` có thể gợi ý tên của chính người dùng dù tài khoản nhận tiền
+  có thể là người khác; chấp nhận vì vẫn có thể sửa.
+- Tab Bảo mật chỉ xem trong trạng thái mock (danh sách passkey rỗng); chưa thử đăng ký passkey.
