@@ -13,7 +13,7 @@ Kiểm tra bằng đọc code + chạy app thật (skill `run-web`, 360×740, ba
 | Trạng thái | Mục |
 |---|---|
 | ✅ Đã sửa | UX-01, 02, 03, 04, 05, 07, 08, 09, 10, 11, 13, 14, 15, 16, 17, 18, 19 |
-| ⚠️ Sửa một phần | UX-06 (chữ nội dung đã ≥14px; nhãn floating của field vẫn 12px, đo `12px`, giữ theo quyết định đợt 5) ; UX-13 (đã sửa thông báo lỗi, màn callback vẫn chưa có timeout/thử lại) |
+| ⚠️ Sửa một phần | UX-06 (chữ nội dung đã ≥14px; nhãn floating của field vẫn 12px, đo `12px`, giữ theo quyết định đợt 5) |
 | ⛔ Không phải lỗi | UX-12 (form thành viên tách dấu phẩy thành nhiều người) |
 
 Bằng chứng chạy app: `/ZZZZZZ` hiện "Không tìm thấy hóa đơn" + nút "Về trang chủ"; FAB hiện ngay (opacity 1, container `padding-bottom` 96px); tab có chữ; nút khoản mục/± /xoá/+ đo 40–48px (nút xoá 40×40 là `mat-icon-button`, vùng chạm thật 48px theo notes đợt 5); xoá khoản mục → snackbar "Hoàn tác" và khôi phục được; khách bấm FAB → 1 dialog đăng nhập kèm dòng giải thích; `/setting` 3 tab vừa 360px, không pager, nút Lưu nền vàng, tiêu đề 20px; header "Hi, Test User". Các mục UX-04/09/13/18/19 xác nhận qua code (+ notes), chưa thao tác lỗi backend thật.
@@ -117,7 +117,7 @@ Kích thước **đo thật** ở 360px:
 | UX-10 ✅ Đã sửa | Empty state "chọn ai tham gia ở **tab** Thành viên" sai ở ≥768px (layout 2 cột, không có tab). Đã xác nhận ở 1024px. | Code+Run | [expense-form.html:45](../src/app/components/expense-form/expense-form.html#L45) |
 | UX-11 ✅ Đã sửa | Sidebar action cao ≈44px (`padding:10px`); mini-fab "+" cao 42px. (Field cao **48px**, không phải 46px — xem mục Đính chính.) | Code | [app.scss:123](../src/app/app.scss#L123), [expense-form.scss:53](../src/app/components/expense-form/expense-form.scss#L53) |
 | UX-12 ⛔ Không phải lỗi (form tách "," thành nhiều người) | Placeholder "VD: Tèo, Tý, Tủn" gợi ý nhập nhiều tên nhưng form chỉ nhận một tên mỗi lần; nút "+" chỉ có icon. | Code | [member-table.html:10](../src/app/components/member-table/member-table.html#L10) |
-| UX-13 ✅ Đã sửa | Lỗi OAuth cụt ("Đăng nhập thất bại:" kết thúc bằng dấu hai chấm, không lý do); màn callback chỉ có spinner, không timeout/thử lại. | Code | [oauth-callback.ts:37](../src/app/components/oauth-callback/oauth-callback.ts#L37) |
+| UX-13 ✅ Đã sửa (thông báo lỗi OAuth đã đầy đủ; timeout/nút thử lại cho màn callback không nằm trong phạm vi sửa) | Lỗi OAuth cụt ("Đăng nhập thất bại:" kết thúc bằng dấu hai chấm, không lý do); màn callback chỉ có spinner, không timeout/thử lại. | Code | [oauth-callback.ts:37](../src/app/components/oauth-callback/oauth-callback.ts#L37) |
 | UX-16 ✅ Đã sửa | Header cắt tên người dùng ở 360px: "Xin chào, Thanh ...". | Run | [app.html:22](../src/app/app.html#L22), [app.scss:154-156](../src/app/app.scss#L154-L156) |
 | UX-17 ✅ Đã sửa (đợt 8: lưới 2 dòng ở ≤768px, thẻ 147 → 92px ở 360px, 5 thẻ 849 → 516px; kèm sửa tên dài tràn thẻ — xem `docs/implementation-notes.md`) | Mỗi thẻ hoá đơn cao ≈140px ở 360px → danh sách dài phải cuộn nhiều (9 hoá đơn ≈ 1400px+). | Run | [bills.scss:200-225](../src/app/components/bills/bills.scss#L200-L225) |
 | UX-18 ✅ Đã sửa | Tên nút lẫn tiếng Anh: "Download" trong QR popup; thông điệp xoá "bill #…". | Code | [qr-popup.html:37](../src/app/components/qr-popup/qr-popup.html#L37), [bills.ts](../src/app/components/bills/bills.ts#L100) |
