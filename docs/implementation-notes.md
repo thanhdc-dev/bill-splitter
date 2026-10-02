@@ -2901,3 +2901,58 @@ Hiển thị nhầm "hoá đơn rỗng" khi đang tải hoặc lỗi là lỗi U
   (403, 5xx) hiện cùng nhóm "lỗi kết nối" với nút "Thử lại".
 - `init()` gọi lại sau khi lưu (`save`) vẫn không bắt lỗi riêng — ngoài phạm vi đợt 1 (thuộc UX-04,
   đợt 2).
+
+## 2026-10-02 (UX audit mobile — đợt 2: báo lỗi/thành công cho các thao tác ghi, UX-04)
+
+### Decision
+
+Mọi thao tác ghi đang im lặng khi thất bại nay báo bằng `MatSnackBar` (đã dùng ở 13 nơi trong app),
+không tạo service/interceptor chung mới. Hai thay đổi hành vi nhỏ đi kèm, người dùng chưa được hỏi
+riêng vì là hệ quả trực tiếp của việc bắt lỗi (xem "Hạn chế / giả định"): (1) `bill-details.save()`
+nay `await` `updateBill` thay vì fire-and-forget; (2) tải cài đặt lỗi hiện snackbar có nút "Thử lại".
+
+### Before
+
+- `bills.ts` `onDelete`: `await delete()` không try/catch, không toast thành công.
+- `setting.ts`: `loadUserData()` là `Promise.all().then()` không `.catch`; `onSubmit()` không
+  try/catch.
+- `create-bill.ts` `save()`: `uploadImagesWithProgress()`/`createBill()` ném lỗi ra ngoài thành
+  unhandled rejection, người dùng không thấy gì.
+- `bill-details.ts` `save()`: `updateBill().then().catch(console.error)` không await; nếu lưu lỗi mà
+  `isShare` thì vẫn tiếp tục sao chép link của bản chưa lưu được; lỗi `uploadImages` ném ra ngoài.
+
+### After
+
+- `bills.ts`: try/catch quanh `delete()` → "Không xóa được hóa đơn. Vui lòng thử lại."; thành công →
+  "Đã xóa hóa đơn #<mã>" rồi `loadData()`.
+- `setting.ts`: `.catch` khi tải → snackbar "Không tải được cài đặt thanh toán." + nút "Thử lại" gọi
+  lại `loadUserData()`; `onSubmit` try/catch → "Không lưu được cài đặt. Vui lòng thử lại.".
+- `create-bill.ts`: gom upload ảnh + `createBill()` vào try/catch (biến `isGuest` thay cho nhánh
+  `else if`, hành vi không đổi: khách không upload ảnh); lỗi → snackbar, ở lại trang, không điều
+  hướng/chia sẻ.
+- `bill-details.ts`: toàn bộ khối upload + `updateBill` nằm trong một try/catch, `await updateBill`;
+  lỗi → snackbar "Không lưu được hóa đơn. Vui lòng thử lại." và `return` (không chia sẻ). `init()`
+  gọi lại sau khi lưu có `.catch` chỉ log (bill đã lưu xong).
+- Kiểm chứng (Playwright 360×740, toàn bộ API mock — không đụng dữ liệu thật): xoá 500 → snackbar
+  lỗi, thẻ còn nguyên; xoá 200 → toast thành công, danh sách rỗng; cài đặt tải 500 → snackbar + Thử
+  lại; lưu cài đặt 500/200 → đúng thông báo; tạo bill 500 → ở lại `/`, 200 → sang `/NEW001`; lưu bill
+  chi tiết 500 → snackbar. `tsc` và `eslint` sạch.
+
+### Reason
+
+Báo cáo UX-04: thất bại im lặng khiến người dùng tưởng đã lưu/xoá. Dùng lại snackbar để nhất quán với
+`BillShareService` và các màn khác, không thêm tầng trừu tượng cho 5 chỗ gọi.
+
+### Alternatives Considered
+
+- HTTP interceptor hiện snackbar cho mọi lỗi: bị loại vì một số request (fetchBill, getBills) đã có
+  trạng thái lỗi riêng trong trang, interceptor sẽ báo trùng; thông điệp cũng cần ngữ cảnh từng thao
+  tác ("xoá" khác "lưu").
+- Giữ `updateBill().then()` không await: bị loại vì không thể chặn bước chia sẻ khi lưu lỗi.
+
+### Hạn chế / giả định
+
+- Thông điệp lỗi chung, chưa phân biệt mã lỗi (401/403/5xx/mất mạng). Lỗi 401 đã được interceptor
+  refresh token xử lý trước khi tới đây.
+- Tự động lưu (`counter$`) gọi `save()` nên nếu server lỗi kéo dài, snackbar sẽ lặp theo mỗi chu kỳ.
+- Chưa sửa chữ "bill #" trong hộp xác nhận xoá (UX-18, để đợt 7); toast mới dùng "hóa đơn #".

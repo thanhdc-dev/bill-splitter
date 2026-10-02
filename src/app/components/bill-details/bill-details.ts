@@ -272,44 +272,48 @@ export class BillDetails implements OnInit, OnDestroy, AfterViewInit {
     }
 
     if (isChange) {
-      let failedCount = 0;
-      if (this.images.length) {
-        const oldFileIds = this.billSplitterService.getFileIds();
-        const newImages = this.images.filter(({ id }) => !id).map(img => img.file!).filter(Boolean);
-        if (newImages.length) {
-          this.setUploadProgress(0);
-          try {
-            const { uploaded, failed } = await this.billSplitterService.uploadImages(
-              newImages,
-              (percent) => this.setUploadProgress(percent)
-            );
-            const newFileIds = uploaded.map((file) => file.id);
-            this.billSplitterService.setFileIds([...oldFileIds, ...newFileIds]);
-            failedCount = failed.length;
-          } finally {
-            this.setUploadProgress(null);
+      try {
+        let failedCount = 0;
+        if (this.images.length) {
+          const oldFileIds = this.billSplitterService.getFileIds();
+          const newImages = this.images.filter(({ id }) => !id).map(img => img.file!).filter(Boolean);
+          if (newImages.length) {
+            this.setUploadProgress(0);
+            try {
+              const { uploaded, failed } = await this.billSplitterService.uploadImages(
+                newImages,
+                (percent) => this.setUploadProgress(percent)
+              );
+              const newFileIds = uploaded.map((file) => file.id);
+              this.billSplitterService.setFileIds([...oldFileIds, ...newFileIds]);
+              failedCount = failed.length;
+            } finally {
+              this.setUploadProgress(null);
+            }
           }
         }
-      }
-      this.billSplitterService
-        .updateBill(this.code)
-        .then(() => {
-          this.billSplitterService.updateIsChange(false);
-          this.snackBar.open('Hóa đơn đã được lưu!', 'Đóng', {
-            duration: 3000,
-          });
-          this.billAutoSaveService.stopCountdown();
-          this.init();
-          if (failedCount) {
-            // Ảnh chỉ là thông tin bổ sung: bill đã lưu, user có thể chọn lại ảnh lỗi.
-            this.snackBar.open(`${failedCount} ảnh tải lên thất bại, vui lòng thử lại`, 'Đóng', {
-              duration: 5000,
-            });
-          }
-        })
-        .catch((error) => {
-          console.error('Có lỗi khi lưu hóa đơn:', error);
+        await this.billSplitterService.updateBill(this.code);
+        this.billSplitterService.updateIsChange(false);
+        this.snackBar.open('Hóa đơn đã được lưu!', 'Đóng', {
+          duration: 3000,
         });
+        this.billAutoSaveService.stopCountdown();
+        // Tải lại để đồng bộ id ảnh/dữ liệu server; bill đã lưu rồi nên lỗi ở đây chỉ log.
+        this.init().catch((error) => console.error('Có lỗi khi tải lại hóa đơn:', error));
+        if (failedCount) {
+          // Ảnh chỉ là thông tin bổ sung: bill đã lưu, user có thể chọn lại ảnh lỗi.
+          this.snackBar.open(`${failedCount} ảnh tải lên thất bại, vui lòng thử lại`, 'Đóng', {
+            duration: 5000,
+          });
+        }
+      } catch (error) {
+        console.error('Có lỗi khi lưu hóa đơn:', error);
+        this.snackBar.open('Không lưu được hóa đơn. Vui lòng thử lại.', 'Đóng', {
+          duration: 5000,
+        });
+        // Không chia sẻ link của bản chưa lưu được.
+        return;
+      }
     }
     if (isShare) {
       await this.billShareService.share(this.code, this.billSplitterService.getName());

@@ -161,7 +161,8 @@ export class CreateBill implements OnInit, AfterViewInit {
   async save(isShare?: boolean) {
     this.failedUploadCount = 0;
     await this.authService.whenReady();
-    if (!this.authService.isLoggedIn()) {
+    const isGuest = !this.authService.isLoggedIn();
+    if (isGuest) {
       const confirmLogin = await firstValueFrom(
         this.dialog
           .open(ConfirmDialogComponent, {
@@ -181,11 +182,22 @@ export class CreateBill implements OnInit, AfterViewInit {
         this.dialog.open(LoginDialogComponent).afterClosed(),
       );
       if (!loginResult) return;
-    } else if (this.files.length) {
-      const fileIds = await this.uploadImagesWithProgress();
-      this.billSplitterService.setFileIds(fileIds);
     }
-    const code = await this.billSplitterService.createBill();
+
+    let code: string;
+    try {
+      if (!isGuest && this.files.length) {
+        const fileIds = await this.uploadImagesWithProgress();
+        this.billSplitterService.setFileIds(fileIds);
+      }
+      code = await this.billSplitterService.createBill();
+    } catch (error) {
+      console.error('Có lỗi khi tạo hóa đơn:', error);
+      this.snackBar.open('Không lưu được hóa đơn. Vui lòng thử lại.', 'Đóng', {
+        duration: 5000,
+      });
+      return;
+    }
     this.billSplitterService.updateIsChange(false);
     if (isShare) {
       await this.billShareService.share(code, this.billSplitterService.getName());

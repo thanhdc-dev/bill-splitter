@@ -8,6 +8,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { EmptyStateComponent } from '../empty-state/empty-state';
 import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog';
 import { firstValueFrom } from 'rxjs';
 
@@ -36,6 +37,7 @@ interface Bill {
 })
 export class Bills implements OnInit {
   private readonly dialog = inject(MatDialog);
+  private readonly snackBar = inject(MatSnackBar);
   private readonly router = inject(Router);
   private readonly billSplitterService = inject(BillSplitterService);
   private readonly billShareService = inject(BillShareService);
@@ -103,9 +105,16 @@ export class Bills implements OnInit {
         .afterClosed()
     );
 
-    if (confirmLogin) {
+    if (!confirmLogin) return;
+
+    try {
       await this.billSplitterService.delete(billCode);
-      await this.loadData();
+    } catch (err) {
+      console.error('Lỗi khi xóa hóa đơn:', err);
+      this.snackBar.open('Không xóa được hóa đơn. Vui lòng thử lại.', 'Đóng', { duration: 5000 });
+      return;
     }
+    this.snackBar.open(`Đã xóa hóa đơn #${billCode}`, 'Đóng', { duration: 3000 });
+    await this.loadData();
   }
 }

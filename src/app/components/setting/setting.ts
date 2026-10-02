@@ -99,13 +99,28 @@ export class Setting implements OnInit {
         },
       };
       this.settingsForm.patchValue(settingsData);
+    }).catch((error) => {
+      // Form trống vì lỗi mạng dễ bị tưởng là "chưa có cài đặt" rồi lưu đè — báo rõ và cho thử lại.
+      console.error('Lỗi khi tải cài đặt:', error);
+      this.snackBar
+        .open('Không tải được cài đặt thanh toán.', 'Thử lại', { duration: 8000 })
+        .onAction()
+        .subscribe(() => this.loadUserData());
     });
   }
 
   // Hàm xử lý khi người dùng nhấn nút Lưu
   async onSubmit() {
     if (this.settingsForm.valid) {
-      await this.userService.updateSetting(this.settingsForm.value);
+      try {
+        await this.userService.updateSetting(this.settingsForm.value);
+      } catch (error) {
+        console.error('Lỗi khi lưu cài đặt:', error);
+        this.snackBar.open('Không lưu được cài đặt. Vui lòng thử lại.', 'Đóng', {
+          duration: 5000,
+        });
+        return;
+      }
       this.snackBar.open('Đã lưu cài đặt!', 'Đóng', {
         duration: 3000,
       });
