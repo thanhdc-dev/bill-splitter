@@ -118,12 +118,8 @@
 }
 .upload-progress {
   z-index: 999;
-  /* Nằm ngay trên FAB (56px) thay vì chồng lên nó; mobile cộng thêm chiều cao PWA prompt. */
+  /* Nằm ngay trên FAB (56px) thay vì chồng lên nó. */
   bottom: calc(1.75rem + 56px + 12px);
-
-  @media screen and (max-width: 767px) {
-    bottom: calc(1.75rem + 56px + 12px + var(--pwa-prompt-offset, 0px));
-  }
 
   display: flex;
   align-items: center;
@@ -138,5 +134,10 @@
     font-size: 0.8rem;
     font-weight: 600;
     color: var(--text-secondary);
+  }
+
+  /* Mobile: cộng thêm chiều cao PWA prompt. Đặt cuối rule vì Sass yêu cầu khai báo đứng trước rule lồng. */
+  @media screen and (max-width: 767px) {
+    bottom: calc(1.75rem + 56px + 12px + var(--pwa-prompt-offset, 0px));
   }
 }

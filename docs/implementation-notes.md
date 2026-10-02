@@ -3249,3 +3249,31 @@ chuẩn khác nhau cho cùng một dữ liệu.
 - Màn callback OAuth vẫn chỉ có spinner, chưa có timeout/nút thử lại (nửa còn lại của UX-13).
 - `aria-label` tiếng Anh khác trong app ("close dialog", "Show QR code", "settings"…) chưa đổi, ngoài
   phạm vi báo cáo. Hộp thoại sửa chưa hỗ trợ Enter để lưu.
+
+## 2026-10-02 (sửa warning build: Sass `mixed-decls` ở `.upload-progress`)
+
+### Decision
+
+Sửa 12 cảnh báo `Deprecation [plugin angular-sass]` (mixed-decls) trong `ng build --configuration=production`
+bằng cách chuyển khối `@media` xuống cuối rule `.upload-progress`, không đổi giá trị CSS.
+
+### Before
+
+Ở đợt 4 mình đặt `@media screen and (max-width: 767px) { bottom: calc(... var(--pwa-prompt-offset)) }`
+ngay sau `bottom`, trước `display`, `gap`, `padding`, `background`... của `.upload-progress` trong
+`create-bill.scss` và `bill-details.scss` → Sass cảnh báo vì khai báo xuất hiện sau rule lồng (hành vi sẽ
+đổi trong phiên bản Sass tới). Build prod: 12 warning (5 + 5 + 2 "repetitive omitted").
+
+### After
+
+`@media` nằm cuối rule (sau `&__label`). Thứ tự áp dụng thực tế không đổi: media vẫn đứng sau `bottom`
+mặc định nên vẫn ghi đè ở ≤767px. `npm run build:prod`: 0 warning, exit 0; `npm run lint` sạch.
+
+### Reason
+
+Giữ build sạch và tránh đổi hành vi ngầm khi Sass đổi cách xử lý `mixed-decls`.
+
+### Alternatives Considered
+
+- Bọc các khai báo phía sau trong `& { ... }` (cách Sass gợi ý để chọn hành vi mới): xấu hơn và đổi
+  nhiều dòng hơn so với việc đơn giản dời khối `@media`.
