@@ -87,6 +87,11 @@ html.dark {
   /* Chỉ dùng cho số tiền/số lượng (xem .mono-amount ở phần override Material bên dưới) */
   --font-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
 
+  /* Sàn dùng chung (UX audit mobile): vùng chạm tối thiểu cho control tự vẽ (nút icon Material đã có
+     vùng chạm 48px riêng) và cỡ chữ tối thiểu cho nội dung. Nhãn field/chip ngày-tháng được phép 12px. */
+  --touch-target: 44px;
+  --font-size-sm: 0.875rem;
+
   /* Role */
   --bg-color: var(--paper);
   --surface-color: var(--surface-raw);

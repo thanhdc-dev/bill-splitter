@@ -96,11 +96,15 @@ h3 {
 .copy-btn {
   background: var(--surface-muted);
   border: none;
-  padding: 6px;
+  width: var(--touch-target);
+  height: var(--touch-target);
+  padding: 0;
   border-radius: 50%;
   cursor: pointer;
   transition: all 0.2s ease;
   display: inline-flex;
+  align-items: center;
+  justify-content: center;
   margin-left: 12px;
 
   &:hover {

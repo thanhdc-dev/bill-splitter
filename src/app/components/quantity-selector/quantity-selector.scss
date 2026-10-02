@@ -5,7 +5,7 @@
   width: fit-content;
   border: 1px solid var(--border-color);
   border-radius: 8px;
-  overflow: hidden;
+  /* Không dùng overflow:hidden: nó cắt vùng chạm 48px của nút ± (UX-03). Bo góc đặt trên chính nút. */
   background: var(--surface-color);
 
   &:focus-within {
@@ -15,6 +15,12 @@
 }
 
 .quantity-btn {
+  width: var(--touch-target);
+  height: var(--touch-target);
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border-radius: 0;
   background: var(--surface-muted);
   border: none;
@@ -36,10 +42,12 @@
 }
 
 .decrease {
+  border-radius: 7px 0 0 7px;
   border-right: 1px solid var(--border-color);
 }
 
 .increase {
+  border-radius: 0 7px 7px 0;
   border-left: 1px solid var(--border-color);
 }
 
@@ -50,8 +58,9 @@
 }
 
 .quantity-input {
-  width: 35px;
-  height: 32px;
+  width: var(--touch-target);
+  height: var(--touch-target);
+  padding: 0;
   border: none;
   outline: none;
   text-align: center;

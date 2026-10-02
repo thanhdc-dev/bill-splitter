@@ -50,9 +50,9 @@
 
   &__submit {
     flex-shrink: 0;
-    width: 42px;
-    height: 42px;
-    margin-top: 3px;
+    /* 48px = chiều cao khung input (flat-field) nên nút canh khớp, không cần margin-top. */
+    width: 48px;
+    height: 48px;
     border-radius: var(--border-radius-sm) !important;
     background-color: var(--teal) !important;
     color: var(--on-primary-color) !important;
@@ -72,12 +72,19 @@
   flex-direction: column;
 }
 
+/* Lưới 2 dòng: tên (+ xoá) / số người (+ số tiền). 1 dòng không đủ chỗ cho tên + 2 icon bút ở
+   360px (tên bị cắt còn vài chữ), còn 2 dòng thì tên có gần cả chiều rộng. */
 .expense-row {
-  display: flex;
+  display: grid;
+  /* 3 cột để số tiền (rộng) không chiếm cột của tên: nó trải qua cột 2-3, nút xoá chỉ ở cột 3. */
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-areas:
+    'name name delete'
+    'meta amount amount';
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 12px 2px;
+  column-gap: 12px;
+  /* Nút tên/số tiền đã cao --touch-target nên padding dọc nhỏ để hàng không phình quá. */
+  padding: 2px 2px;
   border-bottom: 1px solid var(--border-subtle);
 
   &:last-child {
@@ -85,15 +92,14 @@
   }
 }
 
-.expense-row__main {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
-/* Reset nút thành text thường — bấm vào tên để sửa, không cần icon bút riêng. */
+/* Reset nút thành text thường, thêm icon bút để biết bấm được và đủ cao --touch-target. */
 .expense-row__name {
+  grid-area: name;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--touch-target);
+  min-width: 0;
   background: none;
   border: none;
   padding: 0;
@@ -103,9 +109,6 @@
   font-size: 14.5px;
   font-weight: 500;
   color: var(--text-primary);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 
   &:hover,
   &:focus-visible {
@@ -114,22 +117,38 @@
   }
 }
 
-.expense-row__meta {
-  font-size: 12px;
+.expense-row__label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.expense-row__edit {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  font-size: 16px;
   color: var(--text-secondary);
 }
 
-.expense-row__actions {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  flex-shrink: 0;
+.expense-row__meta {
+  grid-area: meta;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
 }
 
 .expense-row__amount {
+  grid-area: amount;
+  justify-self: end;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: var(--touch-target);
+  min-width: var(--touch-target);
   background: none;
   border: none;
-  padding: 0;
+  padding: 0 4px;
   font: inherit;
   cursor: pointer;
   font-size: 14.5px;
@@ -144,6 +163,8 @@
 }
 
 .expense-row__delete {
+  grid-area: delete;
+  justify-self: end;
   opacity: 0.6;
   transition: opacity 0.2s;
 
@@ -168,8 +189,5 @@
       flex: 1 1 auto !important;
     }
 
-    &__submit {
-      margin-top: 0;
-    }
   }
 }

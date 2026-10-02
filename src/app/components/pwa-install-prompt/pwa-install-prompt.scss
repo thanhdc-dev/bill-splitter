@@ -98,7 +98,7 @@
 
     @media (max-width: 767px) {
       &[mat-raised-button] {
-        font-size: 13px;
+        font-size: var(--font-size-sm);
         padding: 0 12px;
         min-width: auto;
       }

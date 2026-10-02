@@ -51,8 +51,8 @@
 
   &__submit {
     flex-shrink: 0;
-    width: 42px;
-    height: 42px;
+    width: 48px;
+    height: 48px;
     border-radius: var(--border-radius-sm) !important;
     background-color: var(--teal) !important;
     color: var(--on-primary-color) !important;
@@ -102,7 +102,7 @@
 
   .expense-amount {
     color: var(--text-secondary);
-    font-size: 0.75rem;
+    font-size: var(--font-size-sm);
     font-weight: 400;
     margin-top: 2px;
     display: block;
@@ -219,7 +219,7 @@
     .expense-amount {
       display: block;
       margin-top: 2px;
-      font-size: 0.75rem;
+      font-size: var(--font-size-sm);
       color: var(--text-secondary);
     }
   }

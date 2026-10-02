@@ -17,7 +17,7 @@
 
 .list-subtitle {
   margin: 2px 0 0;
-  font-size: 13px;
+  font-size: var(--font-size-sm);
   color: var(--text-secondary);
 }
 
@@ -84,7 +84,7 @@
   }
 
   &__month {
-    font-size: 11px;
+    font-size: 12px;
     opacity: 0.85;
   }
 }
@@ -130,7 +130,7 @@
   flex-shrink: 0;
   color: var(--text-secondary);
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--font-size-sm);
 }
 
 .bill-meta {
@@ -150,7 +150,7 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 13px;
+  font-size: var(--font-size-sm);
   color: var(--text-secondary);
 
   mat-icon {
@@ -169,6 +169,8 @@
 .copy-btn {
   background: transparent;
   border: none;
+  min-width: var(--touch-target);
+  min-height: var(--touch-target);
   padding: 8px;
   border-radius: 8px;
   cursor: pointer;

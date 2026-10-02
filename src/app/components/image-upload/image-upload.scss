@@ -138,8 +138,8 @@
           position: absolute;
           top: 0.5rem;
           right: 0.5rem;
-          width: 2rem;
-          height: 2rem;
+          width: var(--touch-target);
+          height: var(--touch-target);
           background-color: var(--overlay-color);
           color: white;
           border: none;
@@ -175,7 +175,7 @@
           .image-name {
             display: block;
             color: white;
-            font-size: 0.75rem;
+            font-size: var(--font-size-sm);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -185,7 +185,7 @@
           .image-size {
             display: block;
             color: var(--border-color);
-            font-size: 0.625rem;
+            font-size: 0.75rem;
           }
         }
       }

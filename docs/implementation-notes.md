@@ -3068,3 +3068,66 @@ tạo phụ thuộc chéo.
 - Ở 320px 2 tab (136+137px) vẫn vượt khung và Material bật phân trang; chưa xử lý (thiết bị rất hẹp).
 - `.upload-progress` chỉ kiểm bằng phần tử giả lập (không chạy upload thật).
 - Desktop ≥768px: PWA prompt nằm giữa đáy nên FAB không dời lên; chưa kiểm khi cửa sổ 768–900px.
+
+## 2026-10-02 (UX audit mobile — đợt 5: vùng chạm tối thiểu và cỡ chữ tối thiểu, UX-03 + UX-06 + UX-11)
+
+### Decision
+
+Theo lựa chọn của người dùng (AskUserQuestion): (1) vùng chạm — **tăng kích thước nhìn thấy + thêm
+icon bút** thay vì mở rộng vô hình; (2) cỡ chữ — **14px cho nội dung, 12px cho nhãn**. Gom thành 2
+token dùng chung trong `styles.scss` (`:root`): `--touch-target: 44px`, `--font-size-sm: 0.875rem`.
+Không đụng nút `mat-icon-button`/`mat-mini-fab` mặc định: đã đo, vùng chạm thật của chúng là 48px.
+
+Quyết định phát sinh (chưa hỏi riêng, xem Reason): (a) **áp dụng ở mọi độ rộng, không giới hạn dưới
+768px** như đề xuất ban đầu; (b) **đổi hàng khoản mục sang lưới 2 dòng**; (c) kích thước ảnh 10px →
+12px (không 14px) vì là chú thích nhỏ trên ảnh; (d) tên khoản mục/số tiền nay có `aria-label` "Sửa
+...", nút xoá ảnh có `aria-label="Xoá ảnh"`.
+
+### Before (đo ở 360px)
+
+Nút tên/số tiền khoản mục 133×17 / 68×17; ô số lượng 39×34, nút ± 40×40 bị `overflow:hidden` của
+`.quantity-selector` cắt vùng chạm (hit ≈38×38); nút "+" 42px; copy ngân hàng 36×36; nút chia sẻ ở
+danh sách 40×40; nút xoá ảnh 32×32 không `aria-label`; icon trạng thái 36×36. Chữ: meta khoản mục 12px,
+số tiền phụ trong thẻ thành viên 12px, subtitle/số người 13px, mã hoá đơn 12px, tháng 11px, meta kết
+quả 12.8px, tên/kích thước ảnh 12/10px, nút PWA mobile 13px. Hàng khoản mục 65px.
+
+### After
+
+- `styles.scss`: thêm `--touch-target`, `--font-size-sm`.
+- `expense-form`: nút tên và số tiền `min-height: var(--touch-target)` + icon bút 16px, thêm
+  `aria-label`; hàng chuyển `display:grid` 3 cột × 2 dòng (`name name delete` / `meta amount amount`)
+  — bản 1 dòng làm tên bị cắt còn "Cơm tấm ..." và dòng phụ xuống hàng; "+" 48×48 (bằng chiều cao
+  field, bỏ `margin-top`); meta 14px. Hàng cao 93px (trước 65px).
+- `quantity-selector`: bỏ `overflow:hidden` (bo góc chuyển xuống 2 nút), nút ± và ô số 44×44 → hộp
+  142×46; vùng chạm nút ± không còn bị cắt (hit 48×46 thay vì 38×38).
+- `member-table`: "+" 48px; số tiền phụ 14px. `bank`: copy 44×44. `image-upload`: nút xoá 44px, tên 14px,
+  kích thước 12px, `aria-label`. `result-display`: icon trạng thái 44px, meta 14px. `bills`: nút chia
+  sẻ ≥44px, subtitle/mã/số người 14px, tháng 12px. `pwa-install-prompt`: nút mobile 14px.
+- Giữ nguyên: nhãn floating `.flat-field` 12px, `.sidebar-action` (đã 44px), tên nút Material.
+- Kiểm chứng (Playwright 360×740 + 1024×800, API mock, chụp trước/sau cùng một script): xem số liệu
+  ở Before/After; ảnh thành viên/ngân hàng/danh sách hoá đơn/kết quả đã so sánh bằng mắt; `tsc` và
+  `eslint` sạch.
+
+### Reason
+
+Báo cáo UX-03/06/11. (a) Mọi độ rộng: màn hình cảm ứng lớn/laptop cảm ứng cũng cần vùng chạm, và tránh
+2 bộ style song song khó bảo trì; đã chụp desktop 1024px — layout 2 cột không vỡ. (b) Lưới 2 dòng là
+cách duy nhất để vừa tên, 2 icon bút và số tiền ở 360px mà vẫn có vùng chạm ≥44px.
+
+### Alternatives Considered
+
+- Mở rộng vùng chạm vô hình bằng `::after`/padding âm: ít đổi giao diện nhưng người dùng chọn phương án
+  rõ ràng hơn (icon bút).
+- Giữ hàng 1 dòng, chỉ thêm icon bút ở tên: số tiền không có dấu hiệu bấm được; hoặc 2 icon trên 1
+  dòng làm tên bị cắt quá ngắn.
+- Giới hạn tăng kích thước dưới `@media (max-width: 767px)`: xem (a).
+- 14px cho cả nhãn: vẫn bị loại, theo quyết định của người dùng.
+
+### Hạn chế / giả định
+
+- Hàng khoản mục cao hơn ~28px (65 → 93px), giao diện "biên nhận" dài hơn khi có nhiều khoản mục.
+- Thẻ thành viên: hộp số lượng 142px (trước 129px) làm tên khoản mục bị cắt sớm hơn vài ký tự ("Cơm
+  tấ…"); bảng thành viên desktop (min-width 600px, cuộn ngang) lộ cột kế tiếp ít hơn.
+- `--touch-target` mới áp dụng cho các control tự vẽ liệt kê trên; `.upload-progress`, tab, v.v. chưa
+  dùng. Chưa kiểm dark mode. Chữ 11–13px còn lại ở các component ngoài báo cáo (bank 0.8rem, lightbox,
+  qr-popup, passkey-manager, thead kết quả 13px) chưa đổi.
