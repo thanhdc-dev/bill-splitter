@@ -34,7 +34,12 @@ export class OauthCallback implements OnInit {
 
       if (error) {
         console.error('OAuth error:', error);
-        this.snackBar.open('Đăng nhập thất bại:', 'Đóng', {
+        // Người dùng tự bấm huỷ ở trang của nhà cung cấp không phải là lỗi hệ thống.
+        const message =
+          error === 'access_denied'
+            ? 'Bạn đã huỷ đăng nhập.'
+            : 'Đăng nhập thất bại. Vui lòng thử lại.';
+        this.snackBar.open(message, 'Đóng', {
           duration: 3000,
         });
         this.router.navigate(['/']);
@@ -45,7 +50,7 @@ export class OauthCallback implements OnInit {
         this.handleCallback(code, state);
       } else {
         console.error('No authorization code received');
-        this.snackBar.open('Không nhận được mã xác thực từ Google', 'Đóng', {
+        this.snackBar.open('Không nhận được mã xác thực. Vui lòng thử đăng nhập lại.', 'Đóng', {
           duration: 3000,
         });
         this.router.navigate(['/']);

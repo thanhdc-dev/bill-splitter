@@ -9,6 +9,7 @@ import {
 } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { ErrorStateMatcher } from '@angular/material/core';
 import { ThousandSeparatorDirective } from '../../directives/thousand-separator';
 
 interface EditFieldDialogData {
@@ -56,7 +57,27 @@ export class EditFieldDialogComponent {
     }
   }
 
+  /**
+   * Thông báo lỗi của giá trị đang nhập (null = hợp lệ). Cùng quy tắc với form thêm khoản mục:
+   * tên không rỗng, số tiền là số >= 0 (0 được phép).
+   */
+  get error(): string | null {
+    const raw = String(this.value ?? '').trim();
+    if (this.type === 'text') {
+      return raw ? null : 'Không được để trống';
+    }
+    if (!raw) return 'Vui lòng nhập số tiền';
+    const amount = Number(raw);
+    if (Number.isNaN(amount)) return 'Số tiền không hợp lệ';
+    if (amount < 0) return 'Số tiền không được âm';
+    return null;
+  }
+
+  /** Cho mat-error hiện ngay khi giá trị sai (template-driven ngModel không có touched/submitted). */
+  readonly errorMatcher: ErrorStateMatcher = { isErrorState: () => !!this.error };
+
   save(): void {
+    if (this.error) return;
     this.handleChange.emit(this.value);
     this.dialogRef.close(this.value);
   }

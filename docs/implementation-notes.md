@@ -3192,3 +3192,60 @@ to). `color="primary"` trên `mat-raised-button` không còn tô nền theo them
 - "Họ & Tên" dùng `autocomplete="name"` có thể gợi ý tên của chính người dùng dù tài khoản nhận tiền
   có thể là người khác; chấp nhận vì vẫn có thể sửa.
 - Tab Bảo mật chỉ xem trong trạng thái mock (danh sách passkey rỗng); chưa thử đăng ký passkey.
+
+## 2026-10-02 (UX audit mobile — đợt 7: chữ/thông báo và validate hộp thoại sửa, UX-10/13/16/18/19)
+
+### Decision
+
+Theo trả lời của người dùng (AskUserQuestion): (1) **UX-19** — hộp thoại sửa tên/số tiền khoản mục
+**vô hiệu nút Lưu và báo lỗi dưới ô** khi giá trị sai; số tiền 0 vẫn được phép (khớp form thêm khoản
+mục, `Validators.min(0)`); (2) **UX-16** — rút ngắn lời chào ở header thành "Hi, <họ tên>". Các sửa chữ
+còn lại (UX-10/13/18) không có lựa chọn thay thế đáng kể nên làm luôn.
+
+**UX-12 bỏ, không sửa:** báo cáo nói "form thành viên chỉ nhận một tên nhưng placeholder gợi ý nhiều
+tên". Sai — `member-table.ts` `onSubmit` có `name.split(',')` nên nhập "Tèo, Tý, Tủn" thêm 3 người. Kết
+luận "STILL-TRUE" của lượt đối chiếu code trước đó cũng sai ở mục này. **UX-17** (thẻ hoá đơn cao ~140px)
+để nguyên, là lựa chọn thiết kế mức thấp.
+
+### Before
+
+- `edit-field-dialog`: `save()` luôn đóng hộp thoại; tên rỗng vẫn lưu; số tiền rỗng/`-`/âm đóng hộp
+  thoại rồi bị `expense-form.ts` bỏ qua im lặng (`NaN`/`< 0` → `return`). Tiêu đề "Cập tên Khoản mục".
+- Header "Xin chào, {họ tên}!" cắt "Xin chào, Thanh ..." ở 360px. QR popup nút "Download"; xác nhận xoá
+  "bill #…". OAuth lỗi "Đăng nhập thất bại:" (cụt, kể cả khi người dùng tự huỷ); thiếu mã → "...từ
+  Google" kể cả khi đăng nhập bằng Zalo. Mô tả empty state khoản mục nhắc "tab Thành viên" (sai ở
+  ≥768px, layout 2 cột không có tab).
+
+### After
+
+- `edit-field-dialog.ts/.html`: getter `error` (text: không rỗng sau `trim`; số tiền: không rỗng, `Number`
+  hợp lệ, `>= 0`), `errorMatcher` để `mat-error` hiện ngay, `[disabled]="!!error"` ở nút Lưu và chặn trong
+  `save()`; số tiền thêm `inputmode="numeric"`. `expense-form.ts`: tiêu đề "Cập nhật tên khoản mục".
+- `app.html`: `Hi, {{ user.fullname }}` kèm `title` = họ tên đầy đủ (hover/long-press xem đủ). Vẫn cắt
+  bằng `…` khi họ tên dài (đã đo: "Hi, Nguyễn Văn …" ở 360px với họ tên 4 từ).
+- `qr-popup.html`: "Tải xuống" (+ `aria-label`); `bills.ts`: "Bạn có chắc muốn xóa hóa đơn #<mã>?".
+- `oauth-callback.ts`: `error=access_denied` → "Bạn đã huỷ đăng nhập."; lỗi khác → "Đăng nhập thất bại.
+  Vui lòng thử lại."; thiếu mã → "Không nhận được mã xác thực. Vui lòng thử đăng nhập lại.".
+- `expense-form.html`: "ở phần Thành viên" thay "ở tab Thành viên".
+- Kiểm chứng (Playwright 360×740 + 1024×800, API mock): tên "   " → Lưu bị khoá + "Không được để
+  trống", tên hợp lệ lưu được; số tiền `""`/`-`/`-5` khoá nút kèm đúng thông báo, `0` và `2500000` cho
+  lưu (hiển thị 2.500.000 ₫); QR popup, hộp xác nhận xoá, 3 trường hợp OAuth callback đều đúng chữ;
+  header 1024px "Hi, …". `tsc` và `eslint` sạch.
+
+### Reason
+
+UX-19 và UX-13/18/10/16 trong báo cáo. Quy tắc validate lấy từ form thêm khoản mục để không phát sinh 2
+chuẩn khác nhau cho cùng một dữ liệu.
+
+### Alternatives Considered
+
+- Cho bấm Lưu rồi mới báo lỗi: người dùng không chọn (chọn vô hiệu nút).
+- Cấm số tiền 0: lệch với form thêm khoản mục (cho phép 0) nên không chọn.
+- Chỉ hiện tên cuối / ẩn lời chào ở ≤480px: người dùng chọn giữ họ tên đầy đủ nhưng rút lời chào.
+
+### Hạn chế / giả định
+
+- "Hi" là tiếng Anh trong giao diện tiếng Việt — theo yêu cầu của người dùng; họ tên dài vẫn bị cắt.
+- Màn callback OAuth vẫn chỉ có spinner, chưa có timeout/nút thử lại (nửa còn lại của UX-13).
+- `aria-label` tiếng Anh khác trong app ("close dialog", "Show QR code", "settings"…) chưa đổi, ngoài
+  phạm vi báo cáo. Hộp thoại sửa chưa hỗ trợ Enter để lưu.

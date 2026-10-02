@@ -97,7 +97,7 @@ export class Bills implements OnInit {
         .open(ConfirmDialogComponent, {
           data: {
             title: 'Xác nhận',
-            message: `Bạn có chắc muốn xóa bill #${billCode}`,
+            message: `Bạn có chắc muốn xóa hóa đơn #${billCode}?`,
             confirmText: 'Xóa',
             cancelText: 'Hủy',
           },

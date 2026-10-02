@@ -19,7 +19,7 @@
       </button>
 
       @if (user$ | async; as user) {
-        <span class="user-name">Xin chào, {{ user.fullname }}!</span>
+        <span class="user-name" [attr.title]="user.fullname">Hi, {{ user.fullname }}</span>
         <button
           mat-icon-button
           class="settings-btn"

@@ -3,18 +3,21 @@
 <mat-dialog-content>
   <mat-form-field appearance="outline" subscriptSizing="dynamic" class="flat-field w-full">
     @if (type === 'amount') {
-      <input matInput type="text" class="mono-amount" appThousandSeparator [(ngModel)]="value" />
+      <input matInput type="text" inputmode="numeric" class="mono-amount" appThousandSeparator [(ngModel)]="value" [errorStateMatcher]="errorMatcher" />
     }
     @if (type === 'number') {
-      <input matInput type="number" class="mono-amount" [(ngModel)]="value" />
+      <input matInput type="number" class="mono-amount" [(ngModel)]="value" [errorStateMatcher]="errorMatcher" />
     }
     @if (type === 'text') {
-      <input matInput type="text" [(ngModel)]="value" />
+      <input matInput type="text" [(ngModel)]="value" [errorStateMatcher]="errorMatcher" />
+    }
+    @if (error) {
+      <mat-error>{{ error }}</mat-error>
     }
   </mat-form-field>
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">
   <button mat-button aria-label="cancel" (click)="cancel()">Hủy</button>
-  <button mat-raised-button color="primary" aria-label="save" (click)="save()">Lưu</button>
+  <button mat-raised-button color="primary" aria-label="save" [disabled]="!!error" (click)="save()">Lưu</button>
 </mat-dialog-actions>

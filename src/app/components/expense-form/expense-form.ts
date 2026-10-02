@@ -85,7 +85,7 @@ export class ExpenseFormComponent {
   updateExpenseName(expense: ExpenseItem) {
     const dialogRef = this.dialog.open(EditFieldDialogComponent, {
       data: {
-        label: 'Cập tên Khoản mục',
+        label: 'Cập nhật tên khoản mục',
         value: expense.name,
       },
     });
