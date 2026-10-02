@@ -1,4 +1,5 @@
 import { AsyncPipe, NgClass } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   ChangeDetectionStrategy,
@@ -24,6 +25,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { ExpenseFormComponent } from '../expense-form/expense-form';
 import { MemberTableComponent } from '../member-table/member-table';
 import { ResultDisplayComponent } from '../result-display/result-display';
+import { EmptyStateComponent } from '../empty-state/empty-state';
 import { BankComponent } from '../bank/bank';
 import { PaymentComponent } from '../payment/payment';
 import { ExpenseItem, Member } from '../../models/bill-splitter.model';
@@ -36,7 +38,7 @@ import {
   Observable,
   Subscription,
 } from 'rxjs';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import {
   AuthService,
@@ -78,6 +80,8 @@ const MOBILE_BREAKPOINT = '(max-width: 767px)';
     MatProgressSpinnerModule,
     MatTooltipModule,
     RevealOnScroll,
+    EmptyStateComponent,
+    RouterLink,
   ],
   templateUrl: './bill-details.html',
   styleUrl: './bill-details.scss',
@@ -105,6 +109,10 @@ export class BillDetails implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('tabGroup') tabGroup?: MatTabGroup;
   sub!: Subscription;
   isEditable = false;
+  /** Trạng thái tải bill lần đầu — mẫu giống bills.ts. */
+  isLoading = true;
+  hasError = false;
+  notFound = false;
   oldImages: { id: number; storagePath: string }[] = [];
   images: ImagePreview[] = [];
   /** null = không đang upload; 0-100 = % tiến trình của batch upload ảnh hiện tại. */
@@ -154,11 +162,29 @@ export class BillDetails implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngOnInit() {
-    this.init().then(() => this.authService.whenReady()).then(() => {
-      this.billAutoSaveService.startMonitoring();
-      this.isEditable = this.billSplitterService.isEditable();
+    void this.loadBill();
+  }
+
+  /** Tải bill lần đầu và cả khi bấm "Thử lại"; lỗi 404 tách riêng với lỗi kết nối. */
+  async loadBill() {
+    this.isLoading = true;
+    this.hasError = false;
+    this.notFound = false;
+    this.cdr.markForCheck();
+    try {
+      await this.init();
+    } catch (error) {
+      this.notFound = error instanceof HttpErrorResponse && error.status === 404;
+      this.hasError = !this.notFound;
+      return;
+    } finally {
+      this.isLoading = false;
       this.cdr.markForCheck();
-    });
+    }
+    await this.authService.whenReady();
+    this.billAutoSaveService.startMonitoring();
+    this.isEditable = this.billSplitterService.isEditable();
+    this.cdr.markForCheck();
   }
 
   ngAfterViewInit() {

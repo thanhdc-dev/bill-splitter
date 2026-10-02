@@ -2851,3 +2851,53 @@ Giảm thao tác cho người tạo. `navigator.share` cần user activation cò
 ### Verify
 
 - `ng build`, `ng lint` đạt.
+
+## 2026-10-02 (UX audit mobile — đợt 1: trạng thái tải/không tìm thấy/lỗi ở `bill-details`)
+
+### Decision
+
+Thêm 3 trạng thái `isLoading` / `notFound` / `hasError` ngay trong `BillDetails` (không thêm route
+`**`, không chuyển hướng). Người dùng chọn phương án "trạng thái ngay trong trang" qua
+AskUserQuestion (UX-01 trong `docs/ux-audit-mobile.md`). Tái dùng `app-empty-state` và mẫu
+loading/lỗi/thử lại của `bills.html`; 404 phân biệt với lỗi mạng bằng `HttpErrorResponse.status`.
+
+### Before
+
+- `ngOnInit` gọi `this.init().then(...)` không có `.catch`; `fetchBill` log lỗi rồi ném lại nên thành
+  unhandled rejection.
+- Template luôn render form + `app-result-display`. Trong lúc tải (và sau cả 404/mất kết nối) trang
+  hiện "Chưa có gì để chia", người dùng tưởng hoá đơn rỗng. Đã đo: trễ API 2,5s vẫn là empty state,
+  không spinner.
+
+### After
+
+- `bill-details.ts`: `isLoading = true`, `hasError`, `notFound`; `ngOnInit` gọi `loadBill()` (public,
+  dùng lại cho nút "Thử lại"). `loadBill()` bắt lỗi của `init()`: 404 → `notFound`, còn lại →
+  `hasError`; chỉ chạy `whenReady()` / `startMonitoring()` / tính `isEditable` khi tải thành công.
+  Import thêm `HttpErrorResponse`, `RouterLink`, `EmptyStateComponent`.
+- `bill-details.html`: bọc toàn bộ nội dung cũ (card, tear-line, result, bank, upload-progress, FAB)
+  trong nhánh `@else` của `@if (isLoading) … @else if (notFound) … @else if (hasError)`. Ở các trạng
+  thái lỗi FAB không hiện (không có gì để lưu/chia sẻ).
+- `bill-details.scss`: thêm `.bill-state` (khớp `.list-loading` ở `bills.scss`).
+- Kiểm chứng (Playwright 360×740 + 1024×740, chỉ GET): spinner khi trễ; mã `ZZZZZZ` → "Không tìm
+  thấy hóa đơn" + "Về trang chủ", không có FAB; abort request đầu → "Không tải được hóa đơn", bấm
+  "Thử lại" → tải thành công; bill thật hiển thị bình thường ở cả 2 viewport. `tsc` và `eslint` sạch.
+
+### Reason
+
+Hiển thị nhầm "hoá đơn rỗng" khi đang tải hoặc lỗi là lỗi UX nặng nhất của báo cáo; trang danh sách
+đã có mẫu chuẩn nên dùng lại để nhất quán và không thêm service/route mới.
+
+### Alternatives Considered
+
+- Chuyển hướng về `/` kèm snackbar khi lỗi: đơn giản hơn nhưng mất ngữ cảnh (người dùng không biết
+  link sai hay mạng lỗi) và vẫn phải xử lý riêng trạng thái đang tải.
+- Route `**`/trang 404 riêng: không áp dụng được vì `:code` khớp mọi đoạn đơn; chỉ biết 404 sau khi
+  gọi API.
+
+### Hạn chế / giả định
+
+- Giả định backend trả HTTP 404 cho mã không tồn tại (đã xác nhận với `ZZZZZZ`); mã trạng thái khác
+  (403, 5xx) hiện cùng nhóm "lỗi kết nối" với nút "Thử lại".
+- `init()` gọi lại sau khi lưu (`save`) vẫn không bắt lỗi riêng — ngoài phạm vi đợt 1 (thuộc UX-04,
+  đợt 2).

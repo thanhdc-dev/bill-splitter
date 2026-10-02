@@ -1,4 +1,42 @@
 <div class="bill-splitter-container">
+  @if (isLoading) {
+  <div class="bill-state bill-state--loading" role="status" aria-live="polite">
+    <mat-spinner diameter="40"></mat-spinner>
+    <p>Đang tải hóa đơn...</p>
+  </div>
+  }
+
+  @else if (notFound) {
+  <div class="bill-state">
+    <app-empty-state
+      icon="search_off"
+      title="Không tìm thấy hóa đơn"
+      description="Mã hóa đơn không tồn tại hoặc đã bị xóa. Kiểm tra lại đường dẫn bạn nhận được."
+    >
+      <button mat-raised-button color="primary" routerLink="/">
+        <mat-icon>home</mat-icon>
+        Về trang chủ
+      </button>
+    </app-empty-state>
+  </div>
+  }
+
+  @else if (hasError) {
+  <div class="bill-state">
+    <app-empty-state
+      icon="cloud_off"
+      title="Không tải được hóa đơn"
+      description="Có lỗi khi kết nối tới máy chủ. Kiểm tra kết nối mạng rồi thử lại."
+    >
+      <button mat-raised-button color="primary" (click)="loadBill()">
+        <mat-icon>refresh</mat-icon>
+        Thử lại
+      </button>
+    </app-empty-state>
+  </div>
+  }
+
+  @else {
   <mat-card>
     <mat-card-content>
       <div class="top-bar">
@@ -86,4 +124,5 @@
       <mat-icon>{{(isSaving$ | async) ? 'sync' : 'share'}}</mat-icon>
     </button>
   </div>
+  }
 </div>
