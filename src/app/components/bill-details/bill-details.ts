@@ -29,7 +29,6 @@ import { EmptyStateComponent } from '../empty-state/empty-state';
 import { BankComponent } from '../bank/bank';
 import { PaymentComponent } from '../payment/payment';
 import { ExpenseItem, Member } from '../../models/bill-splitter.model';
-import { RevealOnScroll } from '../../directives/reveal-on-scroll';
 import {
   debounceTime,
   distinctUntilChanged,
@@ -78,7 +77,6 @@ const MOBILE_BREAKPOINT = '(max-width: 767px)';
     ImageUploadComponent,
     MatProgressSpinnerModule,
     MatTooltipModule,
-    RevealOnScroll,
     EmptyStateComponent,
     RouterLink,
   ],

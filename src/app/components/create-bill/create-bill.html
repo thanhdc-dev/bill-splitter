@@ -67,10 +67,10 @@
   </div>
   }
 
-  <div class="buttons fixed bottom-7 right-7" appRevealOnScroll>
-    <!-- FAB nổi cố định (quyết định 2026-09-22): người dùng cần lưu bất cứ lúc nào khi đang
-         nhập liệu dài mà không phải cuộn lên top-bar. Chấp nhận che nội dung góc dưới-phải
-         khi cuộn trên mobile — xem docs/implementation-notes.md. -->
+  <div class="buttons fixed bottom-7 right-7">
+    <!-- FAB nổi cố định, hiện ngay từ đầu (quyết định 2026-09-22, 2026-10-02): người dùng cần lưu
+         bất cứ lúc nào khi đang nhập liệu dài mà không phải cuộn lên top-bar — xem
+         docs/implementation-notes.md. -->
     <button mat-fab class="fab-gold share-button" aria-label="Lưu và sao chép link chia sẻ"
       matTooltip="Lưu và sao chép link chia sẻ" matTooltipPosition="left"
       [ngClass]="{'share-button__syncing': (isSaving$ | async)}" [disabled]="(isSaving$ | async)"

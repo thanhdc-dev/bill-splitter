@@ -27,7 +27,6 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { ExpenseItem, Member } from '../../models/bill-splitter.model';
-import { RevealOnScroll } from '../../directives/reveal-on-scroll';
 import {
   debounceTime,
   distinctUntilChanged,
@@ -71,7 +70,6 @@ const MOBILE_BREAKPOINT = '(max-width: 767px)';
     ImageUploadComponent,
     MatProgressSpinnerModule,
     MatTooltipModule,
-    RevealOnScroll,
   ],
   templateUrl: './create-bill.html',
   styleUrl: './create-bill.scss',

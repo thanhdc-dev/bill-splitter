@@ -3007,3 +3007,64 @@ tương tự `image-upload.ts`).
   báo cáo UX-07 nên chưa đổi. Nếu muốn thống nhất, đổi tương tự và giữ `discardDraftForRestore`.
 - Chưa chạy được luồng OAuth/passkey thật (backend/provider ngoài phạm vi kiểm tra); chỉ kiểm chứng
   dialog, huỷ và dọn storage.
+
+## 2026-10-02 (UX audit mobile — đợt 4: FAB hiện từ đầu, né PWA prompt/upload-progress, nhãn tab, UX-02 + UX-05)
+
+### Decision
+
+1. FAB "Lưu & chia sẻ" **hiện ngay từ đầu**, bỏ cơ chế "ẩn đến khi cuộn". Người dùng chọn qua
+   AskUserQuestion. Vẫn icon-only và nổi cố định (giữ quyết định 2026-09-22); chỉ **thay thế** phần
+   "ẩn đến khi cuộn quá 120px" (`RevealOnScroll`) được thêm sau đó.
+2. Tab "Khoản mục"/"Thành viên" hiện lại **icon + chữ** ở mọi kích thước (người dùng chọn).
+3. Quyết định phát sinh (chưa hỏi riêng, là hệ quả của 1): (a) `.upload-progress` được đặt **ngay
+   trên** FAB thay vì chồng lên — **đảo ngược** phần "không xử lý chồng lấn với .upload-progress" của
+   2026-09-22, vì FAB luôn hiện nên chồng lấn sẽ xảy ra mỗi lần upload; (b) xoá directive
+   `RevealOnScroll` vì hết nơi dùng.
+
+### Before
+
+- `.buttons` (FAB) `opacity:0; pointer-events:none` cho tới khi `window.scrollY > 120`.
+  `.bill-splitter-container` không chừa `padding-bottom`: FAB 56×56 che chữ cuối trang. PWA prompt
+  (`z-index:1000`, cao 65px, cố định đáy) che 37px dưới của FAB và nút ✕ của nó nằm trong vùng FAB.
+- `create-bill.scss` ẩn `.label` và hiện `.icon` ở ≤600px (tên tab đọc ra là `receipt`/`groups`);
+  `bill-details.scss` chỉ hiện chữ; 2 trang khác nhau.
+
+### After
+
+- `create-bill.scss`/`bill-details.scss`: bỏ opacity/pointer-events/`.is-visible`; `.buttons
+  { bottom: 1.75rem }`, ở ≤767px `bottom: calc(1.75rem + var(--pwa-prompt-offset, 0px))`;
+  `.bill-splitter-container { padding-bottom: 6rem }` (56px FAB + 28px + 12px);
+  `.upload-progress { bottom: calc(1.75rem + 56px + 12px [+ offset ở mobile]) }`.
+- `pwa-install-prompt.ts/.html`: `#prompt` + `@ViewChild` setter dùng `ResizeObserver` đặt
+  `--pwa-prompt-offset` (px) lên `documentElement` khi prompt hiện, về `0px` khi ẩn/huỷ component.
+- Tab: `.mat-tab-label` là flex (icon trước chữ qua `row-reverse`) ở mọi kích thước, bỏ media query
+  ≤600px ở cả 2 file; `::ng-deep .mat-mdc-tab-header .mdc-tab { padding: 0 12px; min-width: 0 }`
+  (tab dùng `::ng-deep` như `payment.scss`/`setting.scss` vì `.mdc-tab` nằm trong component con) — nếu
+  không mỗi tab rộng ~161px, tổng vượt 360px và Material bật mũi tên phân trang cắt tab 2.
+- Xoá `src/app/directives/reveal-on-scroll.ts`, bỏ import/`imports` và `appRevealOnScroll` ở 2 trang.
+- Kiểm chứng (Playwright, API mock): 360×740 FAB hiện lúc tải (`opacity 1`, `pointer-events auto`),
+  `padding-bottom` 96px, cuối trang `app-bank` kết thúc ở y=628 < FAB y=656; bật PWA prompt → FAB lên
+  y=591 (trên prompt y=675), huỷ → về y=656; `.upload-progress` (giả lập bằng clone) nằm trên FAB.
+  Tab 136+137px, không có phân trang ở 360 và 767 (create-bill và bill-details). 1024×800: layout 2
+  cột không đổi, FAB ở góc dưới-phải. `tsc`/`eslint` sạch.
+
+### Reason
+
+Báo cáo UX-02/UX-05: hành động chính bị ẩn lúc đầu, bị PWA prompt và upload chồng lên, tab chỉ icon
+khó hiểu và không nhất quán giữa 2 trang. Dùng biến CSS thay vì cho 3 component biết nhau để không
+tạo phụ thuộc chéo.
+
+### Alternatives Considered
+
+- Giữ "ẩn đến khi cuộn" + chỉ thêm padding (khuyến nghị ban đầu): người dùng chọn hiện ngay từ đầu.
+- Đẩy PWA prompt vào dòng chảy trang (không `fixed`): đổi hành vi prompt ở mọi trang, rủi ro cao hơn.
+- `aria-label` cho tab icon-only: không cần nữa khi đã có chữ hiển thị.
+
+### Hạn chế / giả định
+
+- FAB hiện từ đầu có thể che góc dưới-phải nội dung ở viewport thấp: ở 360×640 FAB đè chữ của empty
+  state "Chưa có khoản mục nào" (không che tab Ngân hàng/Momo, nằm dưới nếp gấp). Đây là đánh đổi đã
+  được người dùng chấp nhận cho FAB nổi cố định.
+- Ở 320px 2 tab (136+137px) vẫn vượt khung và Material bật phân trang; chưa xử lý (thiết bị rất hẹp).
+- `.upload-progress` chỉ kiểm bằng phần tử giả lập (không chạy upload thật).
+- Desktop ≥768px: PWA prompt nằm giữa đáy nên FAB không dời lên; chưa kiểm khi cửa sổ 768–900px.

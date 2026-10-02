@@ -5,6 +5,8 @@
   margin: 0 auto;
   position: relative;
   min-height: 100vh;
+  /* Chừa chỗ cho FAB (56px + bottom 28px + 12px) để không che nội dung cuối trang. */
+  padding-bottom: 6rem;
 
   /* Card container for the main inputs */
   >.mat-mdc-card {
@@ -50,17 +52,17 @@
     }
   }
 
-  /* Floating Action Button — ẩn đến khi cuộn quá `threshold` (RevealOnScroll), khớp create-bill,
-     xem docs/implementation-notes.md. */
+  /* Floating Action Button — hiện ngay từ đầu, khớp create-bill (quyết định 2026-10-02), xem
+     docs/implementation-notes.md. */
   .buttons {
     z-index: 999;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.2s ease;
+    bottom: 1.75rem;
 
-    &.is-visible {
-      opacity: 1;
-      pointer-events: auto;
+    /* Mobile: PWA install prompt (cố định đáy, z-index 1000) cao `--pwa-prompt-offset` (do
+       PwaInstallPromptComponent đặt) — đẩy FAB lên trên nó thay vì bị che. Từ 768px prompt nằm
+       giữa đáy, không chạm góc phải nên không cần. */
+    @media screen and (max-width: 767px) {
+      bottom: calc(1.75rem + var(--pwa-prompt-offset, 0px));
     }
 
     button {
@@ -76,14 +78,23 @@
     }
   }
 
+  /* Nhãn tab: icon + chữ, khớp create-bill. */
   .mat-tab-label {
+    display: flex;
+    flex-direction: row-reverse; /* icon trước chữ, markup đặt chữ trước */
+    align-items: center;
+    gap: 6px;
     margin-bottom: 0;
     font-weight: 500;
     font-size: 0.95rem;
+  }
 
-    .icon {
-      display: none;
-    }
+  /* Tab có chữ rộng hơn tab icon: giảm padding/min-width mặc định (24px/90px) để 2 tab vừa
+     360px, nếu không Material bật mũi tên phân trang và cắt tab thứ 2. */
+  /* ::ng-deep vì .mdc-tab nằm trong template của mat-tab-header (component con). */
+  ::ng-deep .mat-mdc-tab-header .mdc-tab {
+    padding: 0 12px;
+    min-width: 0;
   }
 
   .mat-mdc-tab-header {
@@ -123,25 +134,17 @@
       transform: rotate(360deg);
     }
   }
-
-  @media screen and (max-width: 600px) {
-    .mat-tab-label {
-      font-size: 1rem;
-
-      .label {
-        display: none;
-      }
-
-      .icon {
-        display: block;
-      }
-    }
-
-  }
 }
 
 .upload-progress {
   z-index: 999;
+  /* Nằm ngay trên FAB (56px) thay vì chồng lên nó; mobile cộng thêm chiều cao PWA prompt. */
+  bottom: calc(1.75rem + 56px + 12px);
+
+  @media screen and (max-width: 767px) {
+    bottom: calc(1.75rem + 56px + 12px + var(--pwa-prompt-offset, 0px));
+  }
+
   display: flex;
   align-items: center;
   gap: 8px;
