@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { AuthService } from '../../services/auth.service';
@@ -7,6 +7,11 @@ import { AuthService } from '../../services/auth.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { BillSplitterService, PasskeyService } from '../../services';
+
+export interface ILoginDialogData {
+  /** Lý do cần đăng nhập, hiện phía trên các nút (vd "Bạn cần đăng nhập để lưu và chia sẻ"). */
+  message?: string;
+}
 
 @Component({
   selector: 'app-login-dialog',
@@ -22,7 +27,9 @@ export class LoginDialogComponent {
   private readonly passkeyService = inject(PasskeyService);
   private readonly billSplitterService = inject(BillSplitterService);
   private readonly router = inject(Router);
+  private readonly data = inject<ILoginDialogData | null>(MAT_DIALOG_DATA, { optional: true });
 
+  readonly message = this.data?.message;
   isLoading = false;
   isPasskeySupported = this.passkeyService.isSupported();
 

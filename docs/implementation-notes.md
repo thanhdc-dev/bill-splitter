@@ -2956,3 +2956,54 @@ Báo cáo UX-04: thất bại im lặng khiến người dùng tưởng đã lư
   refresh token xử lý trước khi tới đây.
 - Tự động lưu (`counter$`) gọi `save()` nên nếu server lỗi kéo dài, snackbar sẽ lặp theo mỗi chu kỳ.
 - Chưa sửa chữ "bill #" trong hộp xác nhận xoá (UX-18, để đợt 7); toast mới dùng "hóa đơn #".
+
+## 2026-10-02 (UX audit mobile — đợt 3: gộp 2 dialog đăng nhập khi lưu/chia sẻ lúc chưa đăng nhập, UX-07)
+
+### Decision
+
+Bỏ `ConfirmDialogComponent` ("Bạn cần đăng nhập để lưu và chia sẻ") ở `create-bill` và
+`bill-details`, mở thẳng `LoginDialogComponent` kèm dòng giải thích. Người dùng chọn phương án này
+qua AskUserQuestion (UX-07). Khi người dùng huỷ dialog đăng nhập ở `create-bill`, bản lưu tạm trong
+`localStorage` bị xoá (quyết định phát sinh, xem Reason).
+
+### Before
+
+FAB → dialog "Xác nhận" (Hủy / Đăng nhập) → dialog chọn provider = 3 chạm trước khi chuyển OAuth.
+`create-bill` chỉ gọi `saveBillToStorage()` sau khi người dùng bấm "Đăng nhập" ở dialog xác nhận.
+
+### After
+
+- `login-dialog.ts`: thêm `ILoginDialogData { message?: string }`, nhận qua `MAT_DIALOG_DATA` tuỳ
+  chọn (`inject(..., { optional: true })`); `login-dialog.html` hiện `message` (nếu có) phía trên
+  "Chọn phương thức đăng nhập:". Các nơi mở dialog không truyền data (header, `image-upload`) không
+  đổi. `login-dialog.scss`: `.login-message` đậm.
+- `create-bill.ts` và `bill-details.ts`: bỏ dialog xác nhận, mở `LoginDialogComponent` với
+  `message: 'Bạn cần đăng nhập để lưu và chia sẻ'` — còn 2 chạm. Bỏ import `ConfirmDialogComponent`
+  ở 2 file.
+- `create-bill.ts`: `saveBillToStorage()` giờ chạy trước khi mở dialog; nếu đóng dialog mà chưa đăng
+  nhập → `clearBillStorage()`.
+- Kiểm chứng (Playwright 360×740, API mock, khách): `/` và `/GUEST1` (mock) chỉ có 1 dialog kèm dòng
+  giải thích; huỷ → `localStorage.bill` bị xoá (đang mở thì còn); icon đăng nhập ở header vẫn không có
+  dòng giải thích. `tsc`/`eslint` sạch.
+
+### Reason
+
+Giảm 1 chạm và 1 màn chắn không đem thêm thông tin. Vì `saveBillToStorage()` đánh dấu "tự tạo bill
+sau khi đăng nhập" (`getPostLoginQueryParams()` → `save`), nếu để nguyên thì người dùng huỷ dialog sẽ
+để lại bản lưu tạm và lần đăng nhập sau (vd từ header) tự tạo bill ngoài ý muốn — trước đây không xảy
+ra vì huỷ ở dialog xác nhận là thoát trước khi lưu. Điều kiện `!isLoggedIn()` là bắt buộc: passkey
+đóng dialog bằng `false` nhưng đã đăng nhập và cần bản lưu tạm cho bước điều hướng `?save=true` (mẫu
+tương tự `image-upload.ts`).
+
+### Alternatives Considered
+
+- Giữ nguyên 2 dialog, chỉ sửa chữ: không giải quyết số chạm.
+- Chỉ lưu bản tạm bên trong `LoginDialogComponent` khi chọn provider: sạch hơn nhưng phải cho dialog
+  biết ngữ cảnh "tạo bill sau login", đụng thêm app.ts/image-upload — để lại nếu cần dọn về sau.
+
+### Hạn chế / giả định
+
+- `image-upload.ts` (popup "đăng nhập để tải ảnh") vẫn dùng confirm + login 2 bước; không thuộc
+  báo cáo UX-07 nên chưa đổi. Nếu muốn thống nhất, đổi tương tự và giữ `discardDraftForRestore`.
+- Chưa chạy được luồng OAuth/passkey thật (backend/provider ngoài phạm vi kiểm tra); chỉ kiểm chứng
+  dialog, huỷ và dọn storage.

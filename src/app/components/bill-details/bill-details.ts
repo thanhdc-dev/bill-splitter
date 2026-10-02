@@ -48,8 +48,7 @@ import {
   SeoService,
 } from '../../services';
 import { formatAmount } from '../../shared/helpers';
-import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog';
-import { LoginDialogComponent } from '../login-dialog/login-dialog';
+import { ILoginDialogData, LoginDialogComponent } from '../login-dialog/login-dialog';
 import { BillTabControlService } from './bill-tab-control.service';
 import { ImageUploadComponent, ImagePreview } from '../image-upload/image-upload';
 
@@ -251,22 +250,12 @@ export class BillDetails implements OnInit, OnDestroy, AfterViewInit {
     }
 
     if (!this.authService.isLoggedIn()) {
-      const confirmLogin = await firstValueFrom(
+      const loginResult = await firstValueFrom(
         this.dialog
-          .open(ConfirmDialogComponent, {
-            data: {
-              title: 'Xác nhận',
-              message: 'Bạn cần đăng nhập để lưu và chia sẻ',
-              confirmText: 'Đăng nhập',
-              cancelText: 'Hủy',
-            },
+          .open<LoginDialogComponent, ILoginDialogData>(LoginDialogComponent, {
+            data: { message: 'Bạn cần đăng nhập để lưu và chia sẻ' },
           })
           .afterClosed(),
-      );
-      if (!confirmLogin) return;
-
-      const loginResult = await firstValueFrom(
-        this.dialog.open(LoginDialogComponent).afterClosed(),
       );
       if (!loginResult) return;
     }

@@ -8,6 +8,11 @@
   padding: 20px 0;
 }
 
+.login-message {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
 .google-btn,
 .passkey-btn,
 .zalo-btn {

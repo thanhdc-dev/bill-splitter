@@ -37,8 +37,7 @@ import {
 } from 'rxjs';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { AuthService, BillShareService, BillSplitterService, UserService } from '../../services';
-import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog';
-import { LoginDialogComponent } from '../login-dialog/login-dialog';
+import { ILoginDialogData, LoginDialogComponent } from '../login-dialog/login-dialog';
 import { ActivatedRoute, Router } from '@angular/router';
 import { BillTabControlService } from '../bill-details/bill-tab-control.service';
 import { BANKS } from '../../constants';
@@ -163,25 +162,21 @@ export class CreateBill implements OnInit, AfterViewInit {
     await this.authService.whenReady();
     const isGuest = !this.authService.isLoggedIn();
     if (isGuest) {
-      const confirmLogin = await firstValueFrom(
-        this.dialog
-          .open(ConfirmDialogComponent, {
-            data: {
-              title: 'Xác nhận',
-              message: 'Bạn cần đăng nhập để lưu và chia sẻ',
-              confirmText: 'Đăng nhập',
-              cancelText: 'Hủy',
-            },
-          })
-          .afterClosed(),
-      );
-      if (!confirmLogin) return;
       // Guest không được upload ảnh (backend cần biết user) — chỉ lưu bill local rồi đăng nhập.
       this.billSplitterService.saveBillToStorage();
       const loginResult = await firstValueFrom(
-        this.dialog.open(LoginDialogComponent).afterClosed(),
+        this.dialog
+          .open<LoginDialogComponent, ILoginDialogData>(LoginDialogComponent, {
+            data: { message: 'Bạn cần đăng nhập để lưu và chia sẻ' },
+          })
+          .afterClosed(),
       );
-      if (!loginResult) return;
+      if (!loginResult) {
+        // Huỷ dialog = không muốn đăng nhập: bỏ bản lưu tạm kẻo lần đăng nhập sau tự tạo bill ngoài
+        // ý muốn. Passkey đóng bằng false nhưng đã đăng nhập và cần bản lưu tạm để điều hướng `save`.
+        if (!this.authService.isLoggedIn()) this.billSplitterService.clearBillStorage();
+        return;
+      }
     }
 
     let code: string;

@@ -3,6 +3,9 @@
 
   <mat-dialog-content>
     <div class="login-content">
+      @if (message) {
+      <p class="login-message">{{ message }}</p>
+      }
       <p>Chọn phương thức đăng nhập:</p>
 
       <button
