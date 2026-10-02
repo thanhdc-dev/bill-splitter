@@ -204,25 +204,50 @@
     padding: 16px;
   }
 
+  /* Lưới 2 dòng: [tên + mã | nút chia sẻ/xoá] / [số tiền + số người]. Trước đây nút nằm dòng riêng
+     dưới cùng (44px, ~30% chiều cao thẻ) nên thẻ cao ~147px. `.bill-info` dùng display:contents để
+     tên/meta trở thành ô lưới trực tiếp mà không đổi HTML. */
   .bill-content {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      'head actions'
+      'meta meta';
+    align-items: center;
+    column-gap: 8px;
+    row-gap: 0;
     padding: 14px 16px;
   }
 
+  .bill-info {
+    display: contents;
+  }
+
   .actions {
-    align-self: flex-end;
+    grid-area: actions;
+    align-self: start;
   }
 
   .bill-header {
+    grid-area: head;
     flex-direction: column;
     align-items: flex-start;
     gap: 2px;
+    /* Không có min-width:0 + max-width thì h3 rộng theo nội dung và ellipsis không bao giờ chạy:
+       tên dài tràn ra mép thẻ và đè lên nút. */
+    min-width: 0;
+    max-width: 100%;
   }
 
   .bill-name {
+    max-width: 100%;
     font-size: 16px;
+  }
+
+  .bill-meta {
+    grid-area: meta;
+    /* 12px làm "N người" xuống dòng khi số tiền dài (vd 1.312.200 ₫) → thẻ cao thêm ~28px. */
+    gap: 8px;
   }
 }
 
@@ -232,7 +257,13 @@
   }
 
   .bill-content {
-    padding: 12px 14px;
+    padding: 12px;
+  }
+
+  /* Nhường chỗ cho cột tên (cạnh 2 nút) để tên mặc định "Bill dd/mm/yyyy" còn nguyên ngày. */
+  .bill-stub {
+    min-width: 48px;
+    padding: 12px 6px;
   }
 
   .bill-name {

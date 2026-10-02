@@ -3277,3 +3277,49 @@ Giữ build sạch và tránh đổi hành vi ngầm khi Sass đổi cách xử 
 
 - Bọc các khai báo phía sau trong `& { ... }` (cách Sass gợi ý để chọn hành vi mới): xấu hơn và đổi
   nhiều dòng hơn so với việc đơn giản dời khối `@media`.
+
+## 2026-10-02 (UX audit mobile — đợt 8: thu gọn thẻ hoá đơn và sửa tên dài tràn thẻ, UX-17)
+
+### Decision
+
+Làm UX-17 theo phương án B của phân tích lại (người dùng chọn "thực hiện theo khuyến nghị"): ở ≤768px
+xếp thẻ hoá đơn thành lưới 2 dòng, kèm sửa lỗi tên dài tràn thẻ và chống "N người" xuống dòng. Giữ
+nút chia sẻ 44px (không thu về 40px như phương án C).
+
+### Before (360px, 5 hoá đơn mock)
+
+- Thẻ cao 147px, 176px khi số tiền dài làm "N người" xuống dòng; 5 thẻ = 849px. Nút chia sẻ/xoá nằm
+  dòng riêng dưới cùng (~44px, ~30% chiều cao thẻ) vì `.bill-content` là `flex-direction: column`.
+- Lỗi có từ trước: ở mobile `.bill-header` là `column` + `align-items: flex-start` nên `h3.bill-name`
+  rộng theo nội dung, `text-overflow: ellipsis` không chạy; tên dài (vd "Bill 21/07/2025 liên hoan…")
+  tràn ra mép thẻ và bị cắt cụt, 1 trong 5 thẻ có phần tử nằm ngoài thẻ.
+
+### After
+
+- `bills.scss` (`@media (max-width: 768px)`): `.bill-content` là grid `minmax(0,1fr) auto`, vùng
+  `'head actions' / 'meta meta'`; `.bill-info { display: contents }` để không đổi HTML; `.bill-header`
+  và `.bill-name` có `min-width: 0; max-width: 100%` (ellipsis chạy được); `.bill-meta` gap 12px → 8px.
+- `≤480px`: `.bill-content` padding 12px; `.bill-stub` `min-width: 48px; padding: 12px 6px` để cột tên đủ
+  rộng cho tên mặc định "Bill dd/mm/yyyy" còn nguyên ngày.
+- Kết quả đo (cùng script trước/sau): 360px thẻ 92px (5 thẻ 516px, −39%), không phần tử nào ngoài thẻ,
+  không xuống dòng "N người", tên dài có `…`; 768px 152 → 96px; 1024px không đổi (87px). `tsc`, `eslint`,
+  `ng build --configuration=production` (0 warning) đều sạch.
+
+### Reason
+
+Báo cáo UX-17 (danh sách dài phải cuộn nhiều) và sửa lỗi tràn tên phát hiện khi phân tích lại.
+
+### Alternatives Considered
+
+- A (nút xếp dọc cột phải): thẻ 110–124px, tên bị cắt sớm hơn.
+- C (nút 40px, bớt padding): thẻ 89–118px nhưng nút chia sẻ (nút thường, không có vùng chạm 48px) dưới mức
+  44px đã chốt ở đợt 5.
+- D (menu "⋮"): thêm 1 chạm cho chia sẻ và phải thêm `mat-menu`.
+- Chỉ sửa ellipsis, giữ bố cục cũ: an toàn nhất nhưng không thu gọn thẻ.
+
+### Hạn chế / giả định
+
+- Cột tên hẹp hơn: tên tuỳ chỉnh dài hơn ~12–13 ký tự bị cắt bằng `…` ở 360px (xem đủ khi mở hoá đơn; mã
+  hoá đơn vẫn hiện đủ ở dòng dưới).
+- Ở 320px 3/5 thẻ vẫn cao 117px vì số tiền dài làm "N người" xuống dòng; chưa xử lý (thiết bị rất hẹp).
+- Chưa kiểm dark mode (không đổi màu) và chưa kiểm với danh sách thật nhiều hơn 5 hoá đơn.
