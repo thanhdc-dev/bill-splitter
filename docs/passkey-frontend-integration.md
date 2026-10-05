@@ -1,7 +1,7 @@
 # Tích hợp Passkey (WebAuthn) — Tài liệu cho Frontend
 
 > Hướng dẫn cho **frontend** tích hợp đăng nhập không mật khẩu bằng Passkey (WebAuthn).
-> Base URL API: `https://api.thanhdc.dev` (thay bằng domain thực tế). Ngày cập nhật: 2026-09-17.
+> Base URL API: `https://api.thanhdc.app` (thay bằng domain thực tế). Ngày cập nhật: 2026-09-17.
 
 ---
 
@@ -49,9 +49,9 @@ Trước khi FE gọi được bất kỳ API passkey nào, backend phải tạo
 
 | Thông tin | Mô tả | Ví dụ |
 |---|---|---|
-| `rpId` | Domain gốc, **không** kèm scheme/port/path | `app.thanhdc.dev` |
+| `rpId` | Domain gốc, **không** kèm scheme/port/path | `app.thanhdc.app` |
 | `rpName` | Tên hiển thị trên hộp thoại của OS/trình duyệt | `ThanhDC App` |
-| `origins` | Danh sách origin đầy đủ (scheme + host + port), **không** dấu `/` cuối | `["https://app.thanhdc.dev", "https://www.app.thanhdc.dev"]` |
+| `origins` | Danh sách origin đầy đủ (scheme + host + port), **không** dấu `/` cuối | `["https://app.thanhdc.app", "https://www.app.thanhdc.app"]` |
 
 > **Dev local:** yêu cầu backend thêm `rpId: "localhost"` + `origins: ["http://localhost:4200"]` (đúng port dev server). Vì `rpId` khác nhau nên passkey tạo ở local **không** dùng được trên production và ngược lại — cần đăng ký riêng ở từng môi trường.
 
@@ -124,7 +124,7 @@ const supportsAutofill = await browserSupportsWebAuthnAutofill();
 ```json
 {
   "challenge": "5WMAmdqccLDibwuTBoY4zadcYDcxU8rk4mdrDmdWPBg",
-  "rp": { "name": "ThanhDC App", "id": "app.thanhdc.dev" },
+  "rp": { "name": "ThanhDC App", "id": "app.thanhdc.app" },
   "user": {
     "id": "CzFE4_jBDQiqZiicuIRLPWlnebkwfezd5LDpKUlfPFk",
     "name": "thanh@example.com",
@@ -152,7 +152,7 @@ const supportsAutofill = await browserSupportsWebAuthnAutofill();
 
 **Curl:**
 ```bash
-curl -X POST "https://api.thanhdc.dev/auth/passkey/register/options" \
+curl -X POST "https://api.thanhdc.app/auth/passkey/register/options" \
   -H "Authorization: Bearer <accessToken>" \
   -H "Content-Type: application/json" \
   -d '{ "appKey": "webA" }'
@@ -186,7 +186,7 @@ curl -X POST "https://api.thanhdc.dev/auth/passkey/register/options" \
 ```ts
 import { startRegistration } from '@simplewebauthn/browser';
 
-const API = 'https://api.thanhdc.dev';
+const API = 'https://api.thanhdc.app';
 const APP_KEY = 'webA';
 
 async function registerPasskey(accessToken: string, deviceName?: string) {
@@ -247,7 +247,7 @@ async function registerPasskey(accessToken: string, deviceName?: string) {
 {
   "challengeId": "0f1c4c1e-6f6b-4d5e-9a3e-2b2a1c4f7e88",
   "options": {
-    "rpId": "app.thanhdc.dev",
+    "rpId": "app.thanhdc.app",
     "challenge": "-gcdvS3h9SqSK_1gnpscHWqfWIFX6qd1ErM-d-6-tnM",
     "timeout": 60000,
     "userVerification": "preferred"

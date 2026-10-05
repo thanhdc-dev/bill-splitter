@@ -3323,3 +3323,75 @@ Báo cáo UX-17 (danh sách dài phải cuộn nhiều) và sửa lỗi tràn t�
   hoá đơn vẫn hiện đủ ở dòng dưới).
 - Ở 320px 3/5 thẻ vẫn cao 117px vì số tiền dài làm "N người" xuống dòng; chưa xử lý (thiết bị rất hẹp).
 - Chưa kiểm dark mode (không đổi màu) và chưa kiểm với danh sách thật nhiều hơn 5 hoá đơn.
+
+---
+
+## 2026-10-05 (cấu hình deploy Vercel)
+
+### Decision
+
+Thêm `vercel.json` ở root để deploy frontend Angular lên Vercel:
+
+1. `outputDirectory: dist/browser` (builder `@angular/build:application` xuất vào `dist/browser`).
+2. `buildCommand: npm run build:prod`, `installCommand: npm ci`.
+3. **SPA rewrite** mọi đường dẫn về `/index.html`.
+4. Header `no-cache` cho `ngsw-worker.js`, `ngsw.json`, `safety-worker.js`, `worker-basic.min.js` và `manifest.webmanifest`.
+5. **Giữ nguyên** `environment.ts` hard-code (`apiUrl`, `appUrl`), không chuyển sang env var của Vercel.
+
+### Before
+
+- Không có cấu hình Vercel; chưa có rewrite nên route dạng path (`/:code`, `/auth/callback`) sẽ 404 khi refresh hoặc OAuth redirect.
+- Service worker không có chỉ dẫn cache, dễ bị CDN/trình duyệt giữ bản cũ.
+
+### After
+
+- `vercel.json` khai báo build/output/rewrite/header như trên.
+- Vercel phục vụ file tĩnh có thật trước, chỉ các đường dẫn không khớp file mới rewrite về `index.html`.
+
+### Reason
+
+- App là SPA dùng path routing nên bắt buộc rewrite.
+- Service worker cần luôn lấy bản mới để cơ chế cập nhật PWA (`PwaUpdateService`) hoạt động.
+- Chưa có nhu cầu nhiều môi trường nên không đổi cơ chế cấu hình môi trường (tránh thay đổi kiến trúc ngoài yêu cầu).
+
+### Alternatives Considered
+
+- Dùng `routes` kiểu cũ của Vercel: bị thay bằng `rewrites`/`headers`, không dùng.
+- Sinh `environment.ts` từ biến môi trường Vercel trong bước build: linh hoạt cho preview/staging nhưng đổi kiến trúc cấu hình; để sau nếu cần.
+
+### Assumptions / Lưu ý
+
+- Backend (`api.thanhdc.app`) phải thêm domain Vercel vào CORS và redirect URI OAuth `/auth/callback`.
+- Passkey gắn `rpId` theo domain; chạy trên `*.vercel.app` sẽ không dùng được passkey của domain chính.
+- Chưa kiểm chứng deploy thực tế trên Vercel.
+
+---
+
+## 2026-10-05 (đổi domain `thanhdc.dev` → `thanhdc.app`)
+
+### Decision
+
+Đổi toàn bộ domain từ `thanhdc.dev` sang `thanhdc.app` (app: `chiatien.thanhdc.app`, API: `api.thanhdc.app`).
+
+### Before
+
+- `environment.ts`, `index.html` (og/twitter meta), `public/sitemap.xml`, `public/robots.txt` và các doc tích hợp trỏ `thanhdc.dev`.
+
+### After
+
+- Các file trên trỏ `thanhdc.app`.
+- Các mục lịch sử cũ trong file notes này (ví dụ `rpId: thanhdc.dev`) được giữ nguyên làm audit trail.
+
+### Reason
+
+- Domain production mới.
+
+### Alternatives Considered
+
+- Sinh domain từ biến môi trường lúc build: không làm, vì ngoài phạm vi yêu cầu.
+
+### Assumptions / Lưu ý
+
+- **Passkey:** `rpId` phía backend phải đổi sang `thanhdc.app` và `origins` thành `https://chiatien.thanhdc.app`. Passkey đã đăng ký với `thanhdc.dev` sẽ không dùng được nữa (WebAuthn gắn với rpId); người dùng phải tạo lại.
+- Backend cần cập nhật CORS, redirect URI OAuth (`/auth/callback`) và CORS S3 cho domain mới.
+- Domain `chiatien.thanhdc.app` cần được gắn trong Vercel (Settings → Domains).

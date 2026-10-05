@@ -1,7 +1,7 @@
 # Bills: chuyển sang luồng upload Presigned URL — Tài liệu cho Webapp
 
 > Hướng dẫn cho **webapp** đang dùng tính năng upload ảnh hoá đơn (bills). Endpoint upload multipart cũ (`POST /bills/upload-images`) đã bị **xoá hẳn** — webapp bắt buộc phải chuyển sang luồng mới bên dưới trước khi cập nhật lên bản này.
-> Base URL API: `https://api.thanhdc.dev` (thay bằng domain thực tế). Ngày cập nhật: 2026-09-25.
+> Base URL API: `https://api.thanhdc.app` (thay bằng domain thực tế). Ngày cập nhật: 2026-09-25.
 
 ---
 
@@ -49,7 +49,7 @@ Luồng mới (giống hệt cách `photos` module đang làm): **webapp tự up
 
 **JavaScript (fetch):**
 ```js
-const res = await fetch("https://api.thanhdc.dev/bills/presigned-url", {
+const res = await fetch("https://api.thanhdc.app/bills/presigned-url", {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({ fileName: file.name, mimeType: file.type }),
@@ -91,7 +91,7 @@ await fetch(presignedUrl, {
 
 **Curl:**
 ```bash
-curl -X POST "https://api.thanhdc.dev/bills/confirm-upload" \
+curl -X POST "https://api.thanhdc.app/bills/confirm-upload" \
   -H "Content-Type: application/json" \
   -d '{ "fileId": 42 }'
 ```
