@@ -7,7 +7,7 @@
   "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }],
   "headers": [
     {
-      "source": "/(ngsw-worker\.js|ngsw\.json|safety-worker\.js|worker-basic\.min\.js)",
+      "source": "/(ngsw-worker.js|ngsw.json|safety-worker.js|worker-basic.min.js)",
       "headers": [{ "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }]
     },
     {
