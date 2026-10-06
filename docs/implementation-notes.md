@@ -3395,3 +3395,33 @@ Thêm `vercel.json` ở root để deploy frontend Angular lên Vercel:
 - **Passkey:** `rpId` phía backend phải đổi sang `thanhdc.app` và `origins` thành `https://chiatien.thanhdc.app`. Passkey đã đăng ký với `thanhdc.dev` sẽ không dùng được nữa (WebAuthn gắn với rpId); người dùng phải tạo lại.
 - Backend cần cập nhật CORS, redirect URI OAuth (`/auth/callback`) và CORS S3 cho domain mới.
 - Domain `chiatien.thanhdc.app` cần được gắn trong Vercel (Settings → Domains).
+
+## 2026-10-06
+
+### Decision
+
+Gửi thêm `fileSize` (byte) trong body request `POST /presigned-url`.
+
+### Before
+
+```ts
+{ fileName: file.name, mimeType: file.type }
+```
+
+### After
+
+```ts
+{ fileName: file.name, mimeType: file.type, fileSize: file.size }
+```
+
+### Reason
+
+- Backend cần kích thước file khi tạo presigned URL (ví dụ để validate giới hạn dung lượng / ràng buộc content-length).
+
+### Alternatives Considered
+
+- Không có; thay đổi theo yêu cầu trực tiếp.
+
+### Assumptions / Lưu ý
+
+- `fileSize` là số byte (`File.size`); backend cần chấp nhận field này trong DTO.

@@ -537,7 +537,7 @@ export class BillSplitterService {
     const { fileId, presignedUrl } = await firstValueFrom(
       this.http.post<{ fileId: number; presignedUrl: string; expiresIn: number }>(
         `${baseUrl}/presigned-url`,
-        { fileName: file.name, mimeType: file.type }
+        { fileName: file.name, mimeType: file.type, fileSize: file.size }
       )
     );
 
