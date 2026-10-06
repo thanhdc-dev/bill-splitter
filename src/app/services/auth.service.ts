@@ -91,7 +91,7 @@ export class AuthService {
         `${this.API_URL}/${this.endPoint}/${provider}/login-url`,
         {
           params: {
-            app: environment.appKey,
+            client: environment.appKey,
           },
         }
       )

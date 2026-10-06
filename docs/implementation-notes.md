@@ -3425,3 +3425,35 @@ Gửi thêm `fileSize` (byte) trong body request `POST /presigned-url`.
 ### Assumptions / Lưu ý
 
 - `fileSize` là số byte (`File.size`); backend cần chấp nhận field này trong DTO.
+
+## 2026-10-06 (đổi query param `app` → `client` ở `login-url`)
+
+### Decision
+
+`AuthService.getAuthUrl()` gửi `?client=<appKey>` thay vì `?app=<appKey>` khi gọi `GET /auth/:provider/login-url`.
+
+### Before
+
+```ts
+params: { app: environment.appKey }
+```
+
+### After
+
+```ts
+params: { client: environment.appKey }
+```
+
+### Reason
+
+- Hosting (LiteSpeed) trả `406 Not Acceptable` cho mọi request có tên query param bắt đầu bằng `app`, nên request không tới được API. Backend đã đổi sang `client` và không còn hỗ trợ `app`.
+
+### Alternatives Considered
+
+- Giữ `app` / đổi sang `appKey`, `app_key`: vẫn bắt đầu bằng `app` nên vẫn bị chặn.
+
+### Assumptions / Lưu ý
+
+- Giá trị (`environment.appKey`) không đổi; chỉ đổi tên param. Các endpoint khác (`/auth/callback`, `/auth/me`, `/auth/refresh`, `/auth/logout`) và API passkey (`appKey` trong body/query) không đổi.
+- Phải deploy cùng lúc với API mới, nếu lệch sẽ nhận `400 VALIDATION_FAIL`.
+- Chưa có cơ chế retry cho lần gọi đầu bị `504` do cold start; chưa thêm vì ngoài phạm vi thay đổi này.
