@@ -61,3 +61,8 @@ Luôn kiểm tra và xác nhận:
 - Nếu chưa cập nhật, phải giải thích rõ tại sao không cần thay đổi tài liệu.
 - Không bao giờ âm thầm đưa ra các quyết định kiến trúc.
 - Luôn để lại dấu vết kiểm toán (audit trail).
+
+## Gợi ý commit message
+
+- Sau khi hoàn thành mỗi công việc được giao, **luôn gợi ý** một commit message bằng **tiếng Anh**, ngắn gọn (một dòng, theo Conventional Commits). Ví dụ: `feat: add expense split by percentage`.
+- Chỉ **gợi ý**, **không** tự `git commit` nếu người dùng chưa yêu cầu.
