@@ -3,7 +3,8 @@
 ## Nguyên tắc chung
 
 - Agent chịu trách nhiệm **vừa triển khai vừa ghi tài liệu** dự án.
-- Mục tiêu: luôn ghi lại các quyết định triển khai thành tài liệu tại `docs/implementation-notes.md`.
+- Mục tiêu: luôn ghi lại các quyết định triển khai thành tài liệu. `docs/implementation-notes.md` chỉ là **mục lục (index)**; nội dung chi tiết nằm ở `docs/notes/YYYY-MM.md` (một file mỗi tháng).
+- **Tiết kiệm token:** không `Read` nguyên file notes. Đọc index trước, rồi `Grep '^## '` trong file tháng liên quan và `Read` với `offset`/`limit`.
 - Không bao giờ **âm thầm** đưa ra quyết định kiến trúc — mọi quyết định phải để lại dấu vết kiểm toán (audit trail).
 
 ## Workflow khi phát triển
@@ -12,7 +13,7 @@ Mỗi lần thực hiện công việc phát triển, làm theo 3 bước:
 
 1. **Triển khai** thay đổi được yêu cầu.
 2. **Xác định** bất kỳ quyết định nào chưa được chỉ định rõ ràng → **đặt câu hỏi để người dùng xác nhận** trước khi bắt đầu thực hiện.
-3. **Ghi lại** quyết định đó vào `docs/implementation-notes.md`.
+3. **Ghi lại** quyết định đó vào `docs/notes/YYYY-MM.md` của tháng hiện tại (thêm vào cuối file) và thêm **một dòng** tiêu đề vào mục tháng tương ứng trong `docs/implementation-notes.md` (index). Tạo file tháng mới nếu chưa có.
 
 ## Khi nào BẮT BUỘC ghi tài liệu
 
@@ -27,7 +28,7 @@ Mỗi lần thực hiện công việc phát triển, làm theo 3 bước:
 
 ## Định dạng tài liệu
 
-Bổ sung các mục vào `docs/implementation-notes.md` theo định dạng chuẩn:
+Bổ sung các mục vào `docs/notes/YYYY-MM.md` theo định dạng chuẩn:
 
 ```markdown
 ## YYYY-MM-DD
@@ -53,11 +54,15 @@ Tại sao quyết định này lại được đưa ra.
 Các phương án khác đã được xem xét và đánh giá.
 ```
 
+### Bản rút gọn (thay đổi nhỏ)
+
+Áp dụng khi thay đổi thuần **style/CSS/copy**, không đổi kiến trúc, không thêm thư viện, và dưới ~10 dòng. Chỉ cần hai mục **Decision** và **Reason** (bỏ Before/After/Alternatives Considered), tối đa ~10 dòng. Nếu còn nghi ngờ thì dùng định dạng đầy đủ.
+
 ## Trước khi hoàn tất
 
 Luôn kiểm tra và xác nhận:
 
-- `docs/implementation-notes.md` đã được cập nhật chưa?
+- `docs/notes/YYYY-MM.md` và index `docs/implementation-notes.md` đã được cập nhật chưa?
 - Nếu chưa cập nhật, phải giải thích rõ tại sao không cần thay đổi tài liệu.
 - Không bao giờ âm thầm đưa ra các quyết định kiến trúc.
 - Luôn để lại dấu vết kiểm toán (audit trail).
