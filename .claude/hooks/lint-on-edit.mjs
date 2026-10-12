@@ -16,13 +16,19 @@ try {
 const normalized = filePath.replace(/\\/g, '/');
 if (!/\.(ts|html)$/.test(normalized) || normalized.includes('/node_modules/')) process.exit(0);
 
-const result = spawnSync('npx', ['eslint', '--fix', filePath], {
+const MAX_OUTPUT_LINES = 30;
+
+// --quiet: report errors only (skip warnings) to keep the feedback small
+const result = spawnSync('npx', ['eslint', '--fix', '--quiet', filePath], {
   cwd: process.env.CLAUDE_PROJECT_DIR ?? process.cwd(),
   encoding: 'utf8',
   shell: true,
 });
 
 if (result.status !== 0) {
-  console.error(`${result.stdout ?? ''}${result.stderr ?? ''}`.trim());
+  const lines = `${result.stdout ?? ''}${result.stderr ?? ''}`.trim().split('\n');
+  const shown = lines.slice(0, MAX_OUTPUT_LINES).join('\n');
+  const omitted = lines.length - MAX_OUTPUT_LINES;
+  console.error(omitted > 0 ? `${shown}\n... (${omitted} more lines omitted; run \`npx eslint ${filePath}\`)` : shown);
   process.exit(2);
 }
