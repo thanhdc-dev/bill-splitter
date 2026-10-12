@@ -3457,3 +3457,47 @@ params: { client: environment.appKey }
 - Giá trị (`environment.appKey`) không đổi; chỉ đổi tên param. Các endpoint khác (`/auth/callback`, `/auth/me`, `/auth/refresh`, `/auth/logout`) và API passkey (`appKey` trong body/query) không đổi.
 - Phải deploy cùng lúc với API mới, nếu lệch sẽ nhận `400 VALIDATION_FAIL`.
 - Chưa có cơ chế retry cho lần gọi đầu bị `504` do cold start; chưa thêm vì ngoài phạm vi thay đổi này.
+
+---
+
+## 2026-10-12 (thêm Claude Code hooks và skill `log-decision`)
+
+### Decision
+
+1. Thêm 2 hook project-level vào `.claude/settings.json` (commit vào repo để cả team dùng):
+   - **PreToolUse** (`Edit|Write`): chặn sửa `.env*` (trừ `.env.example`) và `src/generated/`.
+   - **PostToolUse** (`Edit|Write`): chạy `eslint --fix` cho file `.ts`/`.html` vừa sửa; lỗi còn lại được trả về cho Claude.
+2. Viết hook bằng **Node script** (`.claude/hooks/*.mjs`) thay vì one-liner dùng `jq`.
+3. Thêm skill `.claude/skills/log-decision/SKILL.md` để ghi quyết định theo format của `AGENTS.md`.
+
+### Before
+
+- Chưa có `.claude/settings.json`, chưa có hook; quy tắc "không sửa `src/generated/`, không commit `.env`" chỉ nằm trong CLAUDE.md (dựa vào việc Claude tuân thủ).
+- Ghi `implementation-notes.md` làm thủ công.
+
+### After
+
+| File | Vai trò |
+|---|---|
+| `.claude/settings.json` | Khai báo 2 hook |
+| `.claude/hooks/block-protected-files.mjs` | Exit code 2 nếu `file_path` khớp `.env*` hoặc `src/generated/` |
+| `.claude/hooks/lint-on-edit.mjs` | `npx eslint --fix <file>`; exit code 2 nếu còn lỗi lint |
+| `.claude/skills/log-decision/SKILL.md` | Skill ghi decision + gợi ý commit message |
+
+### Reason
+
+- Hook thực thi quy tắc một cách xác định, không phụ thuộc vào trí nhớ của model.
+- Môi trường là Windows và máy không có `jq`; Node đã có sẵn (`.nvmrc`, Angular CLI) nên script chạy ổn định, xử lý được cả đường dẫn `\` và `/`.
+- Dùng `.claude/settings.json` (không phải `settings.local.json`) vì đây là quy ước của dự án, không phải sở thích cá nhân.
+
+### Alternatives Considered
+
+- One-liner `jq ... | xargs eslint`: cần cài `jq`, dễ lỗi với đường dẫn Windows/khoảng trắng.
+- Dùng `permissions.deny` (`Edit(.env*)`) thay cho hook: không cho thông điệp giải thích và khó mở rộng; hook linh hoạt hơn (có ngoại lệ `.env.example`).
+- Chạy `eslint` toàn dự án sau mỗi lần sửa: quá chậm; chỉ lint file vừa sửa.
+
+### Assumptions / Lưu ý
+
+- Hook PostToolUse chỉ lint file `.ts`/`.html`; không chạy typecheck hay test (để `/pre-pr-check` đảm nhiệm).
+- `src/generated/` hiện chưa tồn tại; hook phòng sẵn cho tương lai.
+- Hook không chặn được việc sửa file qua lệnh Bash (ví dụ `echo > .env.local`).
