@@ -1,4 +1,16 @@
 {
+  "permissions": {
+    "deny": [
+      "Read(./package-lock.json)",
+      "Read(./dist/**)",
+      "Read(./.angular/**)",
+      "Read(./node_modules/**)",
+      "Read(./docs/screenshots/**)",
+      "Read(./public/images/**)",
+      "Read(./.claude/skills/run-web/node_modules/**)",
+      "Read(./.claude/skills/run-web/screenshots/**)"
+    ]
+  },
   "hooks": {
     "PreToolUse": [
       {
