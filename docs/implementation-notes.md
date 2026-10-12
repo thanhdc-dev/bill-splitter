@@ -3501,3 +3501,41 @@ params: { client: environment.appKey }
 - Hook PostToolUse chỉ lint file `.ts`/`.html`; không chạy typecheck hay test (để `/pre-pr-check` đảm nhiệm).
 - `src/generated/` hiện chưa tồn tại; hook phòng sẵn cho tương lai.
 - Hook không chặn được việc sửa file qua lệnh Bash (ví dụ `echo > .env.local`).
+
+---
+
+## 2026-10-12 (thêm subagents `angular-reviewer` và `security-reviewer`)
+
+### Decision
+
+Thêm 2 subagent project-level (commit vào repo) tại `.claude/agents/`:
+- `angular-reviewer`: review code Angular 20 theo best practice và quy ước đặt tên/coding trong CLAUDE.md.
+- `security-reviewer`: audit bảo mật cho vùng auth/passkey/interceptor/guard/upload/`worker.js`.
+
+Cả hai chỉ có tool `Read, Grep, Glob, Bash` (không có `Edit`/`Write`).
+
+### Before
+
+Không có subagent chuyên biệt; review thực hiện ad-hoc trong cuộc hội thoại chính.
+
+### After
+
+| File | Vai trò |
+|---|---|
+| `.claude/agents/angular-reviewer.md` | Reviewer Angular + convention, báo cáo tiếng Việt |
+| `.claude/agents/security-reviewer.md` | Reviewer bảo mật, phân biệt "đã xác minh" và "nghi ngờ" |
+
+### Reason
+
+- Tách review ra ngữ cảnh riêng, tránh làm đầy context chính; checklist gắn với stack thật của dự án (passkey, interceptor refresh token, presigned URL).
+- Bỏ `Edit`/`Write` để reviewer không tự sửa code ngoài ý muốn.
+
+### Alternatives Considered
+
+- Một agent `code-reviewer` chung: checklist loãng, khó tập trung vào bảo mật.
+- Dùng skill `/code-review` có sẵn: không biết convention riêng của dự án.
+
+### Assumptions / Lưu ý
+
+- Giữ `Bash` để chạy `git diff`/`npx eslint`; chỉ dặn trong prompt là không chạy lệnh có tác dụng phụ (chưa có cơ chế chặn cứng).
+- Agent mới có thể cần `/agents` hoặc khởi động lại session mới nhận diện.
