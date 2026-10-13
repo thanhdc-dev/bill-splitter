@@ -11,7 +11,7 @@ import {
   IPasskeyRegisterVerifyRO,
 } from '../models';
 
-/** Số passkey tối đa backend cho phép trên mỗi user / appKey */
+/** Số passkey tối đa backend cho phép trên mỗi user / client */
 export const PASSKEY_MAX_CREDENTIALS = 10;
 
 /** Độ dài tối đa của deviceName theo validation của backend */
@@ -28,7 +28,7 @@ type SimpleWebAuthnModule = typeof import('@simplewebauthn/browser');
 export class PasskeyService {
   private readonly http = inject(HttpClient);
   private readonly API_URL = environment.apiUrl;
-  private readonly appKey = environment.appKey;
+  private readonly client = environment.appKey;
   private readonly endPoint = 'auth/passkey';
 
   /** Cache promise để chỉ tải @simplewebauthn/browser đúng một lần */
@@ -62,7 +62,7 @@ export class PasskeyService {
     return await firstValueFrom(
       this.http.get<IPasskeyCredentialRO[]>(
         `${this.API_URL}/${this.endPoint}/credentials`,
-        { params: { appKey: this.appKey } }
+        { params: { client: this.client } }
       )
     );
   }
@@ -176,7 +176,7 @@ export class PasskeyService {
     const optionsJSON = await firstValueFrom(
       this.http.post<IPasskeyRegisterOptionsRO>(
         `${this.API_URL}/${this.endPoint}/register/options`,
-        { appKey: this.appKey }
+        { client: this.client }
       )
     );
 
@@ -187,7 +187,7 @@ export class PasskeyService {
       this.http.post<IPasskeyRegisterVerifyRO>(
         `${this.API_URL}/${this.endPoint}/register/verify`,
         {
-          appKey: this.appKey,
+          client: this.client,
           attestationResponse,
           ...(deviceName ? { deviceName } : {}),
         }
@@ -201,7 +201,7 @@ export class PasskeyService {
     const { challengeId, options } = await firstValueFrom(
       this.http.post<IPasskeyLoginOptionsRO>(
         `${this.API_URL}/${this.endPoint}/login/options`,
-        { appKey: this.appKey }
+        { client: this.client }
       )
     );
 
@@ -212,7 +212,7 @@ export class PasskeyService {
     return await firstValueFrom(
       this.http.post<IPasskeyLoginRO>(
         `${this.API_URL}/${this.endPoint}/login/verify`,
-        { challengeId, appKey: this.appKey, assertionResponse }
+        { challengeId, client: this.client, assertionResponse }
       )
     );
   }
