@@ -36,7 +36,7 @@ Mỗi luồng gồm **2 request**: lấy `options` từ server → trình duyệ
 
 1. **Bắt buộc HTTPS.** Ngoại lệ duy nhất là `http://localhost` (và `http://127.0.0.1`) khi dev. Chạy trên `http://` domain thật → trình duyệt từ chối.
 2. **Passkey gắn chặt với domain.** Server cấu hình `rpId` (domain gốc) cho từng app; trang gọi WebAuthn phải nằm trên đúng `rpId` đó hoặc subdomain của nó. Passkey tạo ở `app-a.com` **không dùng được** ở `app-b.com` — không có cách nào vượt qua, kể cả backend dùng chung.
-3. **`appKey` là bắt buộc ở mọi request passkey.** Backend dùng nó để tra `rpId`/`rpName`/`origins`. Đây là cùng `appKey` đã dùng cho OAuth (xem `docs/auth-login-v2-integration.md`).
+3. **`client` là bắt buộc ở mọi request passkey.** Backend dùng nó để tra `rpId`/`rpName`/`origins`. Đây là cùng `client` đã dùng cho OAuth (xem `docs/auth-login-v2-integration.md`).
 4. **Ceremony chạy trong trình duyệt, không phải trên server.** User có tối đa **60 giây** để xác nhận (vân tay/PIN). Trong khi đó không có request nào tới API cả — timeout 5s của API không ảnh hưởng.
 
 ---
@@ -45,7 +45,7 @@ Mỗi luồng gồm **2 request**: lấy `options` từ server → trình duyệ
 
 ### 3.1. Backend phải cấu hình RP trước
 
-Trước khi FE gọi được bất kỳ API passkey nào, backend phải tạo cấu hình RP cho `appKey` của app (chỉ làm 1 lần). FE cần **cung cấp cho backend** 3 thông tin:
+Trước khi FE gọi được bất kỳ API passkey nào, backend phải tạo cấu hình RP cho `client` của app (chỉ làm 1 lần). FE cần **cung cấp cho backend** 3 thông tin:
 
 | Thông tin | Mô tả | Ví dụ |
 |---|---|---|
@@ -55,7 +55,7 @@ Trước khi FE gọi được bất kỳ API passkey nào, backend phải tạo
 
 > **Dev local:** yêu cầu backend thêm `rpId: "localhost"` + `origins: ["http://localhost:4200"]` (đúng port dev server). Vì `rpId` khác nhau nên passkey tạo ở local **không** dùng được trên production và ngược lại — cần đăng ký riêng ở từng môi trường.
 
-Nếu `appKey` chưa được cấu hình, mọi API passkey trả `400 ERR_PASSKEY_APP_NOT_CONFIGURED`.
+Nếu `client` chưa được cấu hình, mọi API passkey trả `400 ERR_PASSKEY_APP_NOT_CONFIGURED`.
 
 ### 3.2. Cài thư viện client
 
@@ -75,7 +75,7 @@ npm install @simplewebauthn/browser@^14.0.0
 |---|---|---|
 | `POST /auth/passkey/register/options` | Lấy option để tạo passkey mới | Bearer |
 | `POST /auth/passkey/register/verify` | Gửi kết quả đăng ký để server lưu | Bearer |
-| `GET /auth/passkey/credentials?appKey=` | Danh sách passkey của user trong app | Bearer |
+| `GET /auth/passkey/credentials?client=` | Danh sách passkey của user trong app | Bearer |
 | `DELETE /auth/passkey/credentials/:id` | Xoá 1 passkey | Bearer |
 | `POST /auth/passkey/login/options` | Lấy option để đăng nhập | Public |
 | `POST /auth/passkey/login/verify` | Xác minh & nhận token | Public |
@@ -117,7 +117,7 @@ const supportsAutofill = await browserSupportsWebAuthnAutofill();
 
 **Request:**
 ```json
-{ "appKey": "webA" }
+{ "client": "webA" }
 ```
 
 **Response** (cấu trúc chuẩn W3C — **truyền nguyên vẹn** cho thư viện, không sửa/lọc field):
@@ -155,7 +155,7 @@ const supportsAutofill = await browserSupportsWebAuthnAutofill();
 curl -X POST "https://api.thanhdc.app/auth/passkey/register/options" \
   -H "Authorization: Bearer <accessToken>" \
   -H "Content-Type: application/json" \
-  -d '{ "appKey": "webA" }'
+  -d '{ "client": "webA" }'
 ```
 
 > `excludeCredentials` chứa các passkey user đã đăng ký cho app này — trình duyệt dùng nó để **chặn đăng ký trùng thiết bị**. Nếu user cố tạo passkey lần 2 trên cùng thiết bị, thư viện ném lỗi `ERROR_AUTHENTICATOR_PREVIOUSLY_REGISTERED` (xem mục 9.2).
@@ -167,7 +167,7 @@ curl -X POST "https://api.thanhdc.app/auth/passkey/register/options" \
 **Request:**
 ```json
 {
-  "appKey": "webA",
+  "client": "webA",
   "attestationResponse": { "id": "...", "rawId": "...", "response": { "...": "..." }, "type": "public-key", "clientExtensionResults": {} },
   "deviceName": "iPhone 15 của Thanh"
 }
@@ -197,7 +197,7 @@ async function registerPasskey(accessToken: string, deviceName?: string) {
       Authorization: `Bearer ${accessToken}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ appKey: APP_KEY }),
+    body: JSON.stringify({ client: APP_KEY }),
   });
   if (!optionsRes.ok) throw await optionsRes.json();
   const optionsJSON = await optionsRes.json();
@@ -212,7 +212,7 @@ async function registerPasskey(accessToken: string, deviceName?: string) {
       Authorization: `Bearer ${accessToken}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ appKey: APP_KEY, attestationResponse, deviceName }),
+    body: JSON.stringify({ client: APP_KEY, attestationResponse, deviceName }),
   });
   if (!verifyRes.ok) throw await verifyRes.json();
 
@@ -220,7 +220,7 @@ async function registerPasskey(accessToken: string, deviceName?: string) {
 }
 ```
 
-> **Lưu ý:** challenge được lưu theo `user + appKey` và chỉ sống **5 phút**. Mỗi lần gọi `register/options` sẽ **ghi đè** challenge cũ → không chạy 2 ceremony đăng ký song song cho cùng 1 user. Sau khi verify (thành công hay thất bại), challenge bị xoá — muốn thử lại phải gọi `register/options` lần nữa.
+> **Lưu ý:** challenge được lưu theo `user + client` và chỉ sống **5 phút**. Mỗi lần gọi `register/options` sẽ **ghi đè** challenge cũ → không chạy 2 ceremony đăng ký song song cho cùng 1 user. Sau khi verify (thành công hay thất bại), challenge bị xoá — muốn thử lại phải gọi `register/options` lần nữa.
 
 ---
 
@@ -232,15 +232,15 @@ async function registerPasskey(accessToken: string, deviceName?: string) {
 
 **Request:**
 ```json
-{ "appKey": "webA" }
+{ "client": "webA" }
 ```
 
 `email` là **tuỳ chọn**:
 
 | Body | Hành vi |
 |---|---|
-| `{ "appKey": "webA" }` | Discoverable — trình duyệt tự liệt kê mọi passkey của site, user chọn tài khoản. **Khuyến nghị dùng cách này.** |
-| `{ "appKey": "webA", "email": "a@example.com" }` | Server trả `allowCredentials` giới hạn theo passkey của email đó. Nếu email không tồn tại hoặc chưa có passkey, `allowCredentials` là mảng rỗng (trình duyệt vẫn hiện mọi passkey, **không** báo lỗi — tránh lộ email nào đã đăng ký). |
+| `{ "client": "webA" }` | Discoverable — trình duyệt tự liệt kê mọi passkey của site, user chọn tài khoản. **Khuyến nghị dùng cách này.** |
+| `{ "client": "webA", "email": "a@example.com" }` | Server trả `allowCredentials` giới hạn theo passkey của email đó. Nếu email không tồn tại hoặc chưa có passkey, `allowCredentials` là mảng rỗng (trình duyệt vẫn hiện mọi passkey, **không** báo lỗi — tránh lộ email nào đã đăng ký). |
 
 **Response:**
 ```json
@@ -264,7 +264,7 @@ async function registerPasskey(accessToken: string, deviceName?: string) {
 ```json
 {
   "challengeId": "0f1c4c1e-6f6b-4d5e-9a3e-2b2a1c4f7e88",
-  "appKey": "webA",
+  "client": "webA",
   "assertionResponse": { "id": "...", "rawId": "...", "response": { "...": "..." }, "type": "public-key", "clientExtensionResults": {} }
 }
 ```
@@ -290,7 +290,7 @@ async function loginWithPasskey(email?: string) {
   const optionsRes = await fetch(`${API}/auth/passkey/login/options`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ appKey: APP_KEY, ...(email ? { email } : {}) }),
+    body: JSON.stringify({ client: APP_KEY, ...(email ? { email } : {}) }),
   });
   if (!optionsRes.ok) throw await optionsRes.json();
   const { challengeId, options } = await optionsRes.json();
@@ -302,7 +302,7 @@ async function loginWithPasskey(email?: string) {
   const verifyRes = await fetch(`${API}/auth/passkey/login/verify`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ challengeId, appKey: APP_KEY, assertionResponse }),
+    body: JSON.stringify({ challengeId, client: APP_KEY, assertionResponse }),
   });
   if (!verifyRes.ok) throw await verifyRes.json();
 
@@ -329,7 +329,7 @@ async function setupPasskeyAutofill() {
   const optionsRes = await fetch(`${API}/auth/passkey/login/options`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ appKey: APP_KEY }), // không truyền email
+    body: JSON.stringify({ client: APP_KEY }), // không truyền email
   });
   const { challengeId, options } = await optionsRes.json();
 
@@ -343,7 +343,7 @@ async function setupPasskeyAutofill() {
     const verifyRes = await fetch(`${API}/auth/passkey/login/verify`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ challengeId, appKey: APP_KEY, assertionResponse }),
+      body: JSON.stringify({ challengeId, client: APP_KEY, assertionResponse }),
     });
     const tokens = await verifyRes.json();
     // -> lưu token, chuyển trang
@@ -363,7 +363,7 @@ async function setupPasskeyAutofill() {
 
 ### 8.1. Danh sách passkey
 
-**Endpoint:** `GET /auth/passkey/credentials?appKey=webA` → `200`
+**Endpoint:** `GET /auth/passkey/credentials?client=webA` → `200`
 
 **Response:**
 ```json
@@ -373,12 +373,12 @@ async function setupPasskeyAutofill() {
 ]
 ```
 
-- Sắp xếp mới nhất trước; chỉ trả passkey **còn hiệu lực** của đúng `appKey` được truyền (passkey ở app khác hoặc đã bị thu hồi không xuất hiện).
+- Sắp xếp mới nhất trước; chỉ trả passkey **còn hiệu lực** của đúng `client` được truyền (passkey ở app khác hoặc đã bị thu hồi không xuất hiện).
 - `lastUsedAt: null` = chưa từng dùng để đăng nhập. `deviceName: null` = user không đặt tên — FE nên hiển thị nhãn mặc định kiểu "Thiết bị không tên".
 
 ```ts
 async function listPasskeys(accessToken: string) {
-  const res = await fetch(`${API}/auth/passkey/credentials?appKey=${APP_KEY}`, {
+  const res = await fetch(`${API}/auth/passkey/credentials?client=${APP_KEY}`, {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
   return res.json();
@@ -425,9 +425,9 @@ Format lỗi thống nhất toàn hệ thống:
 | HTTP | `code` | Ý nghĩa & cách xử lý |
 |---|---|---|
 | `400` | `VALIDATION_FAIL` | Thiếu/sai field. `error` là object map `{ tênField: ["thông báo"] }` — tiện hiển thị lỗi theo field. |
-| `400` | `ERR_PASSKEY_APP_NOT_CONFIGURED` | `appKey` chưa được backend cấu hình RP. Không phải lỗi user — báo backend (xem mục 3.1). |
+| `400` | `ERR_PASSKEY_APP_NOT_CONFIGURED` | `client` chưa được backend cấu hình RP. Không phải lỗi user — báo backend (xem mục 3.1). |
 | `400` | `ERR_PASSKEY_LIMIT_REACHED` | Đã đạt tối đa **10 passkey** cho app này. Yêu cầu user xoá bớt passkey cũ trước khi thêm mới. |
-| `400` | `ERR_PASSKEY_CHALLENGE_EXPIRED` | Challenge hết hạn (>5 phút), đã dùng rồi, `challengeId` sai, hoặc `appKey` không khớp với lúc lấy options. Gọi lại `*/options` và thử lại từ đầu. |
+| `400` | `ERR_PASSKEY_CHALLENGE_EXPIRED` | Challenge hết hạn (>5 phút), đã dùng rồi, `challengeId` sai, hoặc `client` không khớp với lúc lấy options. Gọi lại `*/options` và thử lại từ đầu. |
 | `400` | `ERR_PASSKEY_VERIFICATION_FAILED` | Dữ liệu ceremony không hợp lệ: sai origin/`rpId`, payload bị sửa, passkey đã tồn tại (đăng ký), hoặc không tìm thấy credential (đăng nhập). Kiểm tra lại cấu hình `origins`/`rpId` trước khi nghi ngờ phía user. |
 | `400` | `ERR_USER_NOT_FOUND` | Token hợp lệ nhưng user không còn tồn tại. Xoá token, đưa về màn hình đăng nhập. |
 | `401` | `ERR_PASSKEY_VERIFICATION_FAILED` | Chữ ký không hợp lệ khi đăng nhập. Cho phép thử lại từ `login/options`. |
@@ -478,12 +478,12 @@ try {
 
 | Hạng mục | Giá trị | Ảnh hưởng tới FE |
 |---|---|---|
-| Số passkey tối đa | **10** / user / `appKey` | Disable nút "Thêm passkey" khi danh sách đã đủ 10, kèm gợi ý xoá bớt. |
-| Độ dài field | `appKey` ≤ 50, `deviceName` ≤ 100 ký tự | Vượt quá → `400 VALIDATION_FAIL`. Nên giới hạn `maxlength` ngay trên input đặt tên thiết bị. |
+| Số passkey tối đa | **10** / user / `client` | Disable nút "Thêm passkey" khi danh sách đã đủ 10, kèm gợi ý xoá bớt. |
+| Độ dài field | `client` ≤ 50, `deviceName` ≤ 100 ký tự | Vượt quá → `400 VALIDATION_FAIL`. Nên giới hạn `maxlength` ngay trên input đặt tên thiết bị. |
 | Thời hạn challenge | **5 phút** | Trang đăng nhập mở lâu → phải lấy options mới. |
 | Thời hạn ceremony | **60 giây** | Do trình duyệt áp; quá hạn ném `ERROR_CEREMONY_ABORTED`. |
 | Throttle đăng nhập | 10 request / 60s / IP | Tính chung `login/options` + `login/verify`. Response **thành công** có kèm `X-RateLimit-Limit` / `X-RateLimit-Remaining` / `X-RateLimit-Reset` để biết còn bao nhiêu lượt; riêng response `429` **không** kèm các header này. |
-| Phạm vi passkey | Theo `appKey` **và** `rpId` | Passkey của app A không hiện ở app B; passkey ở `localhost` không dùng được trên production. |
+| Phạm vi passkey | Theo `client` **và** `rpId` | Passkey của app A không hiện ở app B; passkey ở `localhost` không dùng được trên production. |
 | Clone detection | Tự động thu hồi | Passkey bị thu hồi không thể khôi phục — chỉ có thể xoá và tạo lại. |
 | Đăng ký trùng thiết bị | Bị chặn | Trình duyệt tự chặn qua `excludeCredentials`. |
 
@@ -495,7 +495,7 @@ try {
 - [ ] App chạy trên HTTPS ở staging/production; dev dùng `http://localhost:<port>` đúng port đã đăng ký trong `origins`.
 - [ ] Ẩn toàn bộ UI passkey khi `browserSupportsWebAuthn()` trả `false`.
 - [ ] Truyền `optionsJSON` / `attestationResponse` / `assertionResponse` **nguyên vẹn**, không tự map lại field.
-- [ ] Giữ đúng `challengeId` giữa 2 bước đăng nhập; gửi `appKey` giống nhau ở cả 2 bước.
+- [ ] Giữ đúng `challengeId` giữa 2 bước đăng nhập; gửi `client` giống nhau ở cả 2 bước.
 - [ ] Xử lý `ERROR_CEREMONY_ABORTED` như thao tác huỷ bình thường, không hiện lỗi đỏ.
 - [ ] Xử lý `ERR_PASSKEY_CHALLENGE_EXPIRED` bằng cách tự lấy options mới + retry 1 lần.
 - [ ] Có thông báo riêng, rõ ràng cho `ERR_PASSKEY_CREDENTIAL_REVOKED` (cảnh báo bảo mật) và `ERR_PASSKEY_LIMIT_REACHED`.

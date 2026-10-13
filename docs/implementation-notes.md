@@ -79,3 +79,4 @@ Ghi chép quyết định triển khai theo quy ước tại `AGENTS.md`. File n
 - 2026-10-13 (tối ưu tải ảnh và cache headers Vercel, nhóm 2)
 - 2026-10-13 (router preloading, lazy login dialog, siết budget, nhóm 3)
 - 2026-10-13 (gộp tính toán chia tiền, auto-save debounce thật, thêm spec đầu tiên, nhóm 4)
+- 2026-10-13 (đổi param `appKey` → `client` ở API passkey)

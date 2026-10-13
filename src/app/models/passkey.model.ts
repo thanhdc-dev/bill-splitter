@@ -35,7 +35,7 @@ export interface IPasskeyLoginRO extends AuthTokens {
 
 /** Body của POST /auth/passkey/register/verify */
 export interface IPasskeyRegisterVerifyDTO {
-  appKey: string;
+  client: string;
   attestationResponse: RegistrationResponseJSON;
   deviceName?: string;
 }
@@ -43,7 +43,7 @@ export interface IPasskeyRegisterVerifyDTO {
 /** Body của POST /auth/passkey/login/verify */
 export interface IPasskeyLoginVerifyDTO {
   challengeId: string;
-  appKey: string;
+  client: string;
   assertionResponse: AuthenticationResponseJSON;
 }
 
