@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatDialog } from '@angular/material/dialog';
@@ -14,6 +14,7 @@ import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog';
 import { PasskeyNameDialogComponent } from '../passkey-name-dialog/passkey-name-dialog';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-passkey-manager',
   standalone: true,
   imports: [
@@ -35,13 +36,11 @@ export class PasskeyManager implements OnInit {
   readonly maxCredentials = PASSKEY_MAX_CREDENTIALS;
   readonly isSupported = this.passkeyService.isSupported();
 
-  credentials: IPasskeyCredentialRO[] = [];
-  isLoading = false;
-  isProcessing = false;
+  readonly credentials = signal<IPasskeyCredentialRO[]>([]);
+  readonly isLoading = signal(false);
+  readonly isProcessing = signal(false);
 
-  get isLimitReached(): boolean {
-    return this.credentials.length >= this.maxCredentials;
-  }
+  readonly isLimitReached = computed(() => this.credentials().length >= this.maxCredentials);
 
   ngOnInit(): void {
     if (this.isSupported) {
@@ -51,13 +50,13 @@ export class PasskeyManager implements OnInit {
 
   async loadCredentials(): Promise<void> {
     try {
-      this.isLoading = true;
-      this.credentials = await this.passkeyService.listCredentials();
+      this.isLoading.set(true);
+      this.credentials.set(await this.passkeyService.listCredentials());
     } catch (error) {
       console.error('Load passkeys error:', error);
       this.snackBar.open(this.passkeyService.getErrorMessage(error), 'Đóng');
     } finally {
-      this.isLoading = false;
+      this.isLoading.set(false);
     }
   }
 
@@ -69,7 +68,7 @@ export class PasskeyManager implements OnInit {
     if (deviceName === undefined) return;
 
     try {
-      this.isProcessing = true;
+      this.isProcessing.set(true);
       await this.passkeyService.register(deviceName || undefined);
       this.snackBar.open('Đã thêm passkey cho thiết bị này.', 'Đóng');
       await this.loadCredentials();
@@ -80,12 +79,12 @@ export class PasskeyManager implements OnInit {
         duration: 6000,
       });
     } finally {
-      this.isProcessing = false;
+      this.isProcessing.set(false);
     }
   }
 
   async removePasskey(credential: IPasskeyCredentialRO): Promise<void> {
-    const isLastOne = this.credentials.length === 1;
+    const isLastOne = this.credentials().length === 1;
     const confirmed = await firstValueFrom(
       this.dialog
         .open(ConfirmDialogComponent, {
@@ -103,7 +102,7 @@ export class PasskeyManager implements OnInit {
     if (!confirmed) return;
 
     try {
-      this.isProcessing = true;
+      this.isProcessing.set(true);
       await this.passkeyService.deleteCredential(credential.id);
       this.snackBar.open(
         'Đã xoá. Hãy xoá thêm trong trình quản lý mật khẩu của thiết bị (iCloud Keychain, Google Password Manager...) nếu muốn dọn sạch.',
@@ -114,7 +113,7 @@ export class PasskeyManager implements OnInit {
       console.error('Delete passkey error:', error);
       this.snackBar.open(this.passkeyService.getErrorMessage(error), 'Đóng');
     } finally {
-      this.isProcessing = false;
+      this.isProcessing.set(false);
       await this.loadCredentials();
     }
   }

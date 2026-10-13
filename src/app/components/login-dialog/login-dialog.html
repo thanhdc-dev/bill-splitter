@@ -14,7 +14,7 @@
         class="google-btn"
         aria-label="login with google"
         (click)="loginWith('google')"
-        [disabled]="isLoading"
+        [disabled]="isLoading()"
       >
         <mat-icon>
           <svg width="14" height="14" viewBox="0 0 24 24">
@@ -37,7 +37,7 @@
           </svg>
         </mat-icon>
 
-        <span>{{ isLoading ? 'Đang xử lý...' : 'Đăng nhập bằng Google' }}</span>
+        <span>{{ isLoading() ? 'Đang xử lý...' : 'Đăng nhập bằng Google' }}</span>
       </button>
 
       <button
@@ -46,7 +46,7 @@
         class="zalo-btn"
         aria-label="login with zalo"
         (click)="loginWith('zalo')"
-        [disabled]="isLoading"
+        [disabled]="isLoading()"
       >
         <mat-icon>
           <svg
@@ -97,7 +97,7 @@
           </svg>
         </mat-icon>
 
-        <span>{{ isLoading ? 'Đang xử lý...' : 'Đăng nhập bằng Zalo' }}</span>
+        <span>{{ isLoading() ? 'Đang xử lý...' : 'Đăng nhập bằng Zalo' }}</span>
       </button>
       <!-- <button
         mat-raised-button
@@ -105,7 +105,7 @@
         class="github-btn"
         aria-label="login with github"
         (click)="loginWith('github')"
-        [disabled]="isLoading"
+        [disabled]="isLoading()"
       >
         <mat-icon>
           <svg
@@ -124,7 +124,7 @@
           </svg>
         </mat-icon>
 
-        <span>{{ isLoading ? 'Đang xử lý...' : 'Đăng nhập với Github' }}</span>
+        <span>{{ isLoading() ? 'Đang xử lý...' : 'Đăng nhập với Github' }}</span>
       </button> -->
 
       @if (isPasskeySupported) {
@@ -133,10 +133,10 @@
         class="passkey-btn"
         aria-label="login with passkey"
         (click)="loginWithPasskey()"
-        [disabled]="isLoading"
+        [disabled]="isLoading()"
       >
         <mat-icon>fingerprint</mat-icon>
-        <span>{{ isLoading ? 'Đang xử lý...' : 'Đăng nhập bằng Passkey' }}</span>
+        <span>{{ isLoading() ? 'Đang xử lý...' : 'Đăng nhập bằng Passkey' }}</span>
       </button>
       }
     </div>

@@ -13,18 +13,18 @@
     không cần mật khẩu. Mỗi thiết bị đăng ký một passkey riêng.
   </p>
 
-  @if (isLoading) {
+  @if (isLoading()) {
   <div class="passkey-loading">
     <mat-spinner diameter="32"></mat-spinner>
   </div>
-  } @else if (!credentials.length) {
+  } @else if (!credentials().length) {
   <div class="passkey-empty">
     <mat-icon>fingerprint</mat-icon>
     <p>Bạn chưa có passkey nào.</p>
   </div>
   } @else {
   <ul class="passkey-list">
-    @for (credential of credentials; track credential.id) {
+    @for (credential of credentials(); track credential.id) {
     <li class="passkey-item">
       <mat-icon class="passkey-item-icon">fingerprint</mat-icon>
 
@@ -43,7 +43,7 @@
         color="warn"
         aria-label="delete passkey"
         matTooltip="Xoá passkey"
-        [disabled]="isProcessing"
+        [disabled]="isProcessing()"
         (click)="removePasskey(credential)"
       >
         <mat-icon>delete_outline</mat-icon>
@@ -57,7 +57,7 @@
     <button
       mat-raised-button
       color="primary"
-      [disabled]="isProcessing || isLoading || isLimitReached"
+      [disabled]="isProcessing() || isLoading() || isLimitReached()"
       (click)="addPasskey()"
     >
       <mat-icon>add</mat-icon>
@@ -65,7 +65,7 @@
     </button>
   </div>
 
-  @if (isLimitReached) {
+  @if (isLimitReached()) {
   <p class="passkey-warning">
     Bạn đã đạt tối đa {{ maxCredentials }} passkey. Hãy xoá bớt passkey cũ
     trước khi thêm mới.

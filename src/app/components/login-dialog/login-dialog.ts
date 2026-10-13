@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -14,6 +14,7 @@ export interface ILoginDialogData {
 }
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-login-dialog',
   standalone: true,
   imports: [MatButtonModule, MatIconModule, MatDialogModule],
@@ -30,12 +31,12 @@ export class LoginDialogComponent {
   private readonly data = inject<ILoginDialogData | null>(MAT_DIALOG_DATA, { optional: true });
 
   readonly message = this.data?.message;
-  isLoading = false;
+  readonly isLoading = signal(false);
   isPasskeySupported = this.passkeyService.isSupported();
 
   async loginWith(provider: string): Promise<void> {
     try {
-      this.isLoading = true;
+      this.isLoading.set(true);
       const authUrl = await this.authService.getAuthUrl(provider);
       this.dialogRef.close(true);
       sessionStorage.setItem('oauth_flow', provider);
@@ -46,13 +47,13 @@ export class LoginDialogComponent {
         duration: 3000,
       });
     } finally {
-      this.isLoading = false;
+      this.isLoading.set(false);
     }
   }
 
   async loginWithPasskey(): Promise<void> {
     try {
-      this.isLoading = true;
+      this.isLoading.set(true);
       const { accessToken, refreshToken, user } =
         await this.passkeyService.login();
       this.authService.setTokens({ accessToken, refreshToken });
@@ -75,7 +76,7 @@ export class LoginDialogComponent {
         duration: 6000,
       });
     } finally {
-      this.isLoading = false;
+      this.isLoading.set(false);
     }
   }
 

@@ -1,6 +1,6 @@
 import { AuthUser } from './models/auth.model';
 import { Observable } from 'rxjs';
-import { Component, OnInit, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink, RouterOutlet } from '@angular/router';
 import { AuthService } from './services/auth.service';
 import { LoginDialogComponent } from './components/login-dialog/login-dialog';
@@ -13,10 +13,12 @@ import { BillSplitterService, SeoService, ThemeService } from './services';
 import { PwaInstallPromptComponent } from './components/pwa-install-prompt/pwa-install-prompt';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-root',
   imports: [
     RouterOutlet,
-    AsyncPipe,
+    AsyncPipe,
+
     MatIconModule,
     MatButtonModule,
     MatTooltipModule,
@@ -42,7 +44,7 @@ export class App implements OnInit {
     this.themeService.mode() === 'dark' ? 'Chuyển sang giao diện Sáng' : 'Chuyển sang giao diện Tối'
   );
 
-  sidebarOpen = false;
+  readonly sidebarOpen = signal(false);
   user$: Observable<AuthUser | null>;
 
   constructor() {
@@ -58,11 +60,11 @@ export class App implements OnInit {
   }
 
   toggleSidebar() {
-    this.sidebarOpen = !this.sidebarOpen;
+    this.sidebarOpen.update((open) => !open);
   }
 
   closeSidebar() {
-    this.sidebarOpen = false;
+    this.sidebarOpen.set(false);
   }
 
   openLoginPopup(): void {

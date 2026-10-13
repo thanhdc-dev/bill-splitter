@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, OnInit, signal } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -24,6 +24,7 @@ import { BankSelectComponent } from '../bank-select/bank-select';
 const SECURITY_TAB_INDEX = 2;
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-setting',
   imports: [
     ReactiveFormsModule,
@@ -44,12 +45,13 @@ export class Setting implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly userService = inject(UserService);
   private readonly route = inject(ActivatedRoute);
+  private readonly cdr = inject(ChangeDetectorRef);
 
-  selectedTabIndex = 0;
+  readonly selectedTabIndex = signal(0);
   settingsForm!: FormGroup;
 
   get isSecurityTab(): boolean {
-    return this.selectedTabIndex === SECURITY_TAB_INDEX;
+    return this.selectedTabIndex() === SECURITY_TAB_INDEX;
   }
 
   get pageTitle(): string {
@@ -59,7 +61,7 @@ export class Setting implements OnInit {
   ngOnInit(): void {
     // Snackbar gợi ý passkey sau khi đăng nhập điều hướng tới đây kèm tab=security
     if (this.route.snapshot.queryParamMap.get('tab') === 'security') {
-      this.selectedTabIndex = SECURITY_TAB_INDEX;
+      this.selectedTabIndex.set(SECURITY_TAB_INDEX);
     }
 
     this.settingsForm = this.fb.group({
@@ -99,6 +101,8 @@ export class Setting implements OnInit {
         },
       };
       this.settingsForm.patchValue(settingsData);
+      // OnPush: patchValue chạy sau await, ngoài template event nên cần đánh dấu thủ công.
+      this.cdr.markForCheck();
     }).catch((error) => {
       // Form trống vì lỗi mạng dễ bị tưởng là "chưa có cài đặt" rồi lưu đè — báo rõ và cho thử lại.
       console.error('Lỗi khi tải cài đặt:', error);

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -10,10 +10,9 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { BillSplitterService } from '../../services/bill-splitter.service';
-import { AsyncPipe, CurrencyPipe } from '@angular/common';
+import { CurrencyPipe } from '@angular/common';
 import { ThousandSeparatorDirective } from '../../directives/thousand-separator';
-import { Observable } from 'rxjs';
-import { ExpenseItem, Member } from '../../models/bill-splitter.model';
+import { ExpenseItem } from '../../models/bill-splitter.model';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -25,7 +24,6 @@ import { EmptyStateComponent } from '../empty-state/empty-state';
   selector: 'app-expense-form',
   standalone: true,
   imports: [
-    AsyncPipe,
     CurrencyPipe,
     ReactiveFormsModule,
     MatFormFieldModule,
@@ -45,8 +43,19 @@ export class ExpenseFormComponent {
   private readonly snackBar = inject(MatSnackBar);
 
   expenseForm: FormGroup;
-  expenses$: Observable<ExpenseItem[]>;
-  members$: Observable<Member[]>;
+
+  /** Mỗi khoản mục kèm số người tham gia, tính một lần khi expenses/members đổi. */
+  readonly expenseRows = computed(() => {
+    const members = this.billSplitterService.members();
+    return this.billSplitterService.expenses().map((expense) => ({
+      expense,
+      // Số người đang chọn tham gia khoản mục này — hiện như dòng phụ dưới tên món.
+      participantCount: members.reduce(
+        (total, member) => total + (member.participations.get(expense.id) || 0),
+        0
+      ),
+    }));
+  });
 
   constructor() {
     this.expenseForm = this.fb.group({
@@ -54,16 +63,6 @@ export class ExpenseFormComponent {
       name: ['', [Validators.required]],
       amount: ['', [Validators.required, Validators.min(0)]],
     });
-    this.expenses$ = this.billSplitterService.expenses$;
-    this.members$ = this.billSplitterService.members$;
-  }
-
-  /** Số người đang chọn tham gia khoản mục này — hiện như dòng phụ dưới tên món. */
-  getParticipantCount(expense: ExpenseItem, members: Member[]): number {
-    return members.reduce(
-      (total, member) => total + (member.participations.get(expense.id) || 0),
-      0
-    );
   }
 
   removeExpense(expenseId: string) {
