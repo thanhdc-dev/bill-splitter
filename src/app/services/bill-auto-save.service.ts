@@ -11,11 +11,11 @@ export class BillAutoSaveService implements OnDestroy {
   private readonly router = inject(Router);
   private readonly billSplitterService = inject(BillSplitterService);
   private readonly ngZone = inject(NgZone);
-  
+
   private monitorSub?: Subscription;
   private readonly counterSubject = new BehaviorSubject<number>(0);
   public counter$ = this.counterSubject.asObservable();
-  
+
   // Tín hiệu hủy bộ đếm thủ công
   private cancel$ = new Subject<void>();
 
@@ -37,11 +37,13 @@ export class BillAutoSaveService implements OnDestroy {
 
   startMonitoring() {
     if (this.billSplitterService.isEditable()) {
-      this.monitorSub = this.billSplitterService.isChange$.pipe(
-        filter((isChange) => isChange),
+      // changeVersion$ phát ở MỖI lần sửa (isChange$ chỉ phát khi cờ đổi false -> true) nên
+      // switchMap bên dưới mới thực sự debounce: sửa tiếp thì đếm lại 3s từ đầu.
+      this.monitorSub = this.billSplitterService.changeVersion$.pipe(
+        filter(() => this.billSplitterService.getIsChange()),
         switchMap(() => {
-          // Bắt đầu một timer phát sinh mỗi 1 giây (1000ms), 
-          // Timer này sẽ bị tự động hủy và tạo mới lại vòng lặp nếu isChange$ phát dữ liệu mới.
+          // Bắt đầu một timer phát sinh mỗi 1 giây (1000ms),
+          // Timer này sẽ bị tự động hủy và tạo mới lại vòng lặp nếu changeVersion$ phát dữ liệu mới.
           // Chạy ngoài zone: các tick trung gian không ai render (counter$ chỉ được lắng nghe để
           // lưu khi về 0) nên không cần kích hoạt change detection mỗi giây.
           return this.timerOutsideZone(0, 1000).pipe(

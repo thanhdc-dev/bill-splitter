@@ -279,12 +279,20 @@ export class BillDetails implements OnInit, OnDestroy, AfterViewInit {
             }
           }
         }
+        // Chốt phiên bản trước khi gọi API: nếu người dùng sửa tiếp trong lúc đang lưu thì không
+        // được xoá cờ isChange, nếu không lần sửa đó sẽ không bao giờ được auto-save.
+        const savedVersion = this.billSplitterService.getChangeVersion();
         await this.billSplitterService.updateBill(this.code);
-        this.billSplitterService.updateIsChange(false);
+        const hasNewEdits = this.billSplitterService.getChangeVersion() !== savedVersion;
+        if (!hasNewEdits) {
+          this.billSplitterService.updateIsChange(false);
+        }
         this.snackBar.open('Hóa đơn đã được lưu!', 'Đóng', {
           duration: 3000,
         });
-        this.billAutoSaveService.stopCountdown();
+        if (!hasNewEdits) {
+          this.billAutoSaveService.stopCountdown();
+        }
         // Tải lại để đồng bộ id ảnh/dữ liệu server; bill đã lưu rồi nên lỗi ở đây chỉ log.
         this.init().catch((error) => console.error('Có lỗi khi tải lại hóa đơn:', error));
         if (failedCount) {
