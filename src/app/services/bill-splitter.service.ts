@@ -45,6 +45,8 @@ export class BillSplitterService {
   public readonly bankInfo = signal<BankInfoItem>(this.bankInfoDefault);
   public readonly isSaving = signal<boolean>(false);
   public readonly isChange = signal<boolean>(false);
+  /** Tăng mỗi lần có chỉnh sửa; auto-save dùng để debounce theo từng lần sửa, không chỉ lần đổi cờ isChange. */
+  public readonly changeVersion = signal<number>(0);
   public readonly fileIds = signal<number[]>([]);
 
   public readonly name$ = toObservable(this.name);
@@ -54,10 +56,11 @@ export class BillSplitterService {
   public readonly bankInfo$ = toObservable(this.bankInfo);
   public readonly isSaving$ = toObservable(this.isSaving);
   public readonly isChange$ = toObservable(this.isChange);
+  public readonly changeVersion$ = toObservable(this.changeVersion);
   public readonly fileIds$ = toObservable(this.fileIds);
 
   private markAsChanged() {
-    this.isChange.set(true);
+    this.updateIsChange(true);
   }
 
   private getNameDefault(): string {
@@ -133,31 +136,26 @@ export class BillSplitterService {
       participations,
       totalAmount: 0,
     };
-    this.members.update((mems) => [...mems, newMember]);
-    this.recalculateTotalAmounts();
+    this.setMembersWithTotals([...this.members(), newMember]);
     this.markAsChanged();
   }
 
   removeMember(id: string): void {
-    this.members.update((mems) => mems.filter((m) => m.id !== id));
-    this.recalculateTotalAmounts();
+    this.setMembersWithTotals(this.members().filter((m) => m.id !== id));
     this.markAsChanged();
   }
 
   /** Chèn lại thành viên đã xoá vào đúng vị trí cũ — dùng cho "Hoàn tác". */
   restoreMember(member: Member, index: number): void {
-    this.members.update((mems) => {
-      const copy = [...mems];
-      copy.splice(index, 0, member);
-      return copy;
-    });
-    this.recalculateTotalAmounts();
+    const copy = [...this.members()];
+    copy.splice(index, 0, member);
+    this.setMembersWithTotals(copy);
     this.markAsChanged();
   }
 
   updateParticipation(memberId: string, expenseId: string, quantity: number): void {
-    this.members.update((mems) =>
-      mems.map((member) => {
+    this.setMembersWithTotals(
+      this.members().map((member) => {
         if (member.id === memberId) {
           const updatedParticipations = new Map(member.participations);
           updatedParticipations.set(expenseId, quantity);
@@ -166,7 +164,6 @@ export class BillSplitterService {
         return member;
       })
     );
-    this.recalculateTotalAmounts();
     this.markAsChanged();
   }
 
@@ -198,10 +195,23 @@ export class BillSplitterService {
     );
   }
 
-  private recalculateTotalAmounts(): void {
-    const mems = this.members();
-    const exps = this.expenses();
+  /** Tính lại tổng từng người rồi ghi `members` đúng một lần (một lần phát signal mỗi thao tác). */
+  private setMembersWithTotals(mems: Member[]): void {
+    this.members.set(this.withTotals(mems, this.expenses()));
+    this.updateTotalAmount();
+  }
 
+  private recalculateTotalAmounts(): void {
+    this.setMembersWithTotals(this.members());
+  }
+
+  private updateTotalAmount(): void {
+    this.totalAmount.set(
+      this.expenses().reduce((total, expense) => total + expense.amount, 0)
+    );
+  }
+
+  private withTotals(mems: Member[], exps: ExpenseItem[]): Member[] {
     const expenseTotalQuantities = new Map<string, number>();
     mems.forEach((member) => {
       member.participations.forEach((quantity, expenseId) => {
@@ -214,7 +224,7 @@ export class BillSplitterService {
       });
     });
 
-    const updatedMembers = mems.map((member) => {
+    return mems.map((member) => {
       let totalAmount = 0;
       exps.forEach((expense) => {
         const quantity = member.participations.get(expense.id) || 0;
@@ -227,11 +237,6 @@ export class BillSplitterService {
       });
       return { ...member, totalAmount };
     });
-
-    this.members.set(updatedMembers);
-    this.totalAmount.set(
-      exps.reduce((total, expense) => total + expense.amount, 0)
-    );
   }
 
   private formatBillData() {
@@ -282,21 +287,7 @@ export class BillSplitterService {
   saveBillToStorage() {
     // Lưu theo kiểu "tự tạo bill sau login" -> huỷ cờ khôi phục nháp (nếu còn sót lại).
     sessionStorage.removeItem(RESTORE_DRAFT_FLAG);
-    const billData = {
-      name: this.name(),
-      data: {
-        expenses: this.expenses(),
-        members: this.members().map((member) => {
-          return {
-            ...member,
-            participations: Object.fromEntries(member.participations),
-          };
-        }),
-        totalAmount: this.totalAmount(),
-        bankInfo: this.bankInfo(),
-      },
-      fileIds: this.fileIds(),
-    };
+    const billData = this.formatBillData();
     localStorage.setItem('bill', JSON.stringify(billData));
   }
 
@@ -470,6 +461,13 @@ export class BillSplitterService {
 
   updateIsChange(isChange: boolean) {
     this.isChange.set(isChange);
+    if (isChange) {
+      this.changeVersion.update((version) => version + 1);
+    }
+  }
+
+  getChangeVersion(): number {
+    return this.changeVersion();
   }
 
   getIsChange() {

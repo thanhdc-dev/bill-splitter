@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnDestroy, OnInit, ViewChild, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, OnDestroy, OnInit, ViewChild, inject, signal } from '@angular/core';
 
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -8,6 +8,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 const PROMPT_OFFSET_VAR = '--pwa-prompt-offset';
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-pwa-install-prompt',
   standalone: true,
   imports: [MatButtonModule, MatIconModule],
@@ -18,7 +19,7 @@ export class PwaInstallPromptComponent implements OnInit, OnDestroy {
   private readonly snackBar = inject(MatSnackBar);
   private resizeObserver?: ResizeObserver;
 
-  showInstallPrompt = false;
+  readonly showInstallPrompt = signal(false);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private deferredPrompt: any;
 
@@ -26,7 +27,7 @@ export class PwaInstallPromptComponent implements OnInit, OnDestroy {
     window.addEventListener('beforeinstallprompt', (event) => {
       event.preventDefault();
       this.deferredPrompt = event;
-      this.showInstallPrompt = true;
+      this.showInstallPrompt.set(true);
     }, { once: true });
   }
 
@@ -62,11 +63,11 @@ export class PwaInstallPromptComponent implements OnInit, OnDestroy {
     }
 
     this.deferredPrompt = null;
-    this.showInstallPrompt = false;
+    this.showInstallPrompt.set(false);
   }
 
   dismissPrompt() {
-    this.showInstallPrompt = false;
+    this.showInstallPrompt.set(false);
   }
 
   private setOffset(height: number) {

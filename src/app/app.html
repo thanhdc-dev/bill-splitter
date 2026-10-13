@@ -2,7 +2,7 @@
   <header class="header">
     <h1>
       <a class="pointer logo-link" routerLink="/" aria-label="Home page">
-        <img src="/logo.png" width="48px" height="48px" alt="logo" />
+        <img src="/logo.png" width="48" height="48" alt="logo" fetchpriority="high" decoding="async" />
         <span class="hidden">Logo</span>
       </a>
     </h1>
@@ -25,8 +25,8 @@
           class="settings-btn"
           aria-label="settings"
           (click)="toggleSidebar()"
-          [class.active]="sidebarOpen"
-          [attr.aria-expanded]="sidebarOpen"
+          [class.active]="sidebarOpen()"
+          [attr.aria-expanded]="sidebarOpen()"
           >
           <mat-icon>settings</mat-icon>
         </button>
@@ -49,7 +49,7 @@
   </main>
 
   <!-- Sidebar -->
-  @if (sidebarOpen) {
+  @if (sidebarOpen()) {
     <div
       class="sidebar-overlay"
       (click)="closeSidebar()"
@@ -58,9 +58,9 @@
 
   <aside
     class="sidebar"
-    [class.open]="sidebarOpen"
-    [attr.aria-hidden]="!sidebarOpen"
-    [attr.inert]="sidebarOpen ? null : ''"
+    [class.open]="sidebarOpen()"
+    [attr.aria-hidden]="!sidebarOpen()"
+    [attr.inert]="sidebarOpen() ? null : ''"
     >
     <nav class="sidebar-content" aria-label="Menu tài khoản">
       <div class="sidebar-actions">

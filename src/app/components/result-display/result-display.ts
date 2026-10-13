@@ -1,18 +1,29 @@
-import { ChangeDetectorRef, ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { AsyncPipe, CurrencyPipe } from '@angular/common';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { CurrencyPipe } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { BillSplitterService } from '../../services/bill-splitter.service';
-import { ExpenseItem, Member } from '../../models/bill-splitter.model';
-import { Observable } from 'rxjs';
+import { Member } from '../../models/bill-splitter.model';
 import { MatIconModule } from '@angular/material/icon';
 import { QrPopupComponent } from '../qr-popup/qr-popup';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { removeVietnameseTones, roundedToThousand } from '../../shared/helpers';
-import { BankInfoItem } from '../../models/bank.model';
 import { MatButtonModule } from '@angular/material/button';
 import { QRService } from '../../services';
 import { EmptyStateComponent } from '../empty-state/empty-state';
+
+interface IExpenseRowVM {
+  id: string;
+  name: string;
+  amount: number;
+  participants: string;
+  participantCount: number;
+  perPerson: number | null;
+}
+
+interface IMemberRowVM {
+  member: Member;
+  displayAmount: number;
+}
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -20,7 +31,6 @@ import { EmptyStateComponent } from '../empty-state/empty-state';
   standalone: true,
   imports: [
     CurrencyPipe,
-    AsyncPipe,
     MatCardModule,
     MatIconModule,
     MatDialogModule,
@@ -30,74 +40,61 @@ import { EmptyStateComponent } from '../empty-state/empty-state';
   templateUrl: './result-display.html',
   styleUrls: ['./result-display.scss'],
 })
-export class ResultDisplayComponent implements OnInit {
+export class ResultDisplayComponent {
   private readonly dialog = inject(MatDialog);
   private readonly billSplitterService = inject(BillSplitterService);
   private readonly qrService = inject(QRService);
-  private readonly cdr = inject(ChangeDetectorRef);
 
-  billName$: Observable<string>;
-  billName = '';
-  expenses$: Observable<ExpenseItem[]>;
-  members$: Observable<Member[]>;
-  bankInfo$: Observable<BankInfoItem>;
-  bankInfo!: BankInfoItem;
-  isShowBankInfo = false;
-  isShowMomoInfo = false;
+  private readonly expenses = this.billSplitterService.expenses;
+  private readonly members = this.billSplitterService.members;
+  private readonly bankInfo = this.billSplitterService.bankInfo;
 
-  constructor() {
-    this.billName$ = this.billSplitterService.name$;
-    // `billName` chỉ dùng trong showQRPopup/showMomoQRPopup (không qua template),
-    // nên vẫn cần subscribe thủ công ở đây - huỷ theo lifecycle component.
-    this.billName$.pipe(takeUntilDestroyed()).subscribe((billName) => {
-      this.billName = billName;
-    });
-    // expenses$/members$ chỉ được đọc qua `| async` trong template.
-    this.expenses$ = this.billSplitterService.expenses$;
-    this.members$ = this.billSplitterService.members$;
+  readonly hasExpenses = computed(() => this.expenses().length > 0);
+  readonly hasMembers = computed(() => this.members().length > 0);
 
-    this.bankInfo$ = this.billSplitterService.bankInfo$;
-    this.bankInfo$.pipe(takeUntilDestroyed()).subscribe((bankInfo) => {
-      if (bankInfo) {
-        this.bankInfo = bankInfo;
-        this.fetchIsShowBankInfo();
-        this.fetchIsShowMomoInfo();
-        // OnPush: cờ hiển thị QR được gán ngoài template/async pipe nên phải đánh dấu thủ công.
-        this.cdr.markForCheck();
-      }
-    });
-  }
-
-  ngOnInit(): void {
-    this.bankInfo = this.billSplitterService.getBankInfo();
-  }
-
-  getParticipants(expense: ExpenseItem, members: Member[]): string {
-    return members
-      .filter((member) => member.participations.get(expense.id))
-      .map((member) => {
+  /** View-model tính một lần mỗi khi expenses/members đổi, template chỉ đọc field. */
+  readonly expenseRows = computed<IExpenseRowVM[]>(() => {
+    const members = this.members();
+    return this.expenses().map((expense) => {
+      let participantCount = 0;
+      const names: string[] = [];
+      for (const member of members) {
         const quantity = member.participations.get(expense.id) || 0;
-        return quantity === 1
-          ? `${member.name}`
-          : `${member.name}(x${quantity})`;
-      })
-      .join(', ');
-  }
+        if (!quantity) continue;
+        participantCount += quantity;
+        names.push(quantity === 1 ? member.name : `${member.name}(x${quantity})`);
+      }
+      return {
+        id: expense.id,
+        name: expense.name,
+        amount: expense.amount,
+        participants: names.join(', '),
+        participantCount,
+        perPerson: participantCount > 0 ? expense.amount / participantCount : null,
+      };
+    });
+  });
 
-  getParticipantCount(expense: ExpenseItem, members: Member[]): number {
-    return members.reduce((total, member) => {
-      const quantity = member.participations.get(expense.id) || 0;
-      return total + quantity;
-    }, 0);
-  }
+  readonly totalAmount = computed(() =>
+    this.expenses().reduce((total, expense) => total + expense.amount, 0)
+  );
 
-  calculatePerPerson(amount: number, participantCount: number): number | null {
-    return participantCount > 0 ? amount / participantCount : null;
-  }
+  readonly memberRows = computed<IMemberRowVM[]>(() =>
+    this.members().map((member) => ({
+      member,
+      displayAmount: roundedToThousand(member.totalAmount),
+    }))
+  );
 
-  getTotalAmount(expenses: ExpenseItem[]): number {
-    return expenses.reduce((total, expense) => total + expense.amount, 0);
-  }
+  readonly isShowBankInfo = computed(() => {
+    const info = this.bankInfo();
+    return !!(info.accountNumber && info.bin);
+  });
+
+  readonly isShowMomoInfo = computed(() => {
+    const info = this.bankInfo();
+    return !!(info.accountNameMomo && info.phoneNumberMomo);
+  });
 
   formatUserAmount(amount: number) {
     return roundedToThousand(amount);
@@ -105,15 +102,15 @@ export class ResultDisplayComponent implements OnInit {
 
   showQRPopup(member: Member) {
     const totalAmountFormatted = this.formatUserAmount(member.totalAmount);
-    const description = `${member.name} TT ${this.billName}`;
+    const description = `${member.name} TT ${this.billSplitterService.name()}`;
     const qrImageUrl = this.qrService.buildQRCodeUrl(
-      this.bankInfo.accountNumber,
-      this.bankInfo.bin,
+      this.bankInfo().accountNumber,
+      this.bankInfo().bin,
       { amount: totalAmountFormatted, description }
     );
     const qrImageDownloadUrl = this.qrService.buildQRCodeUrl(
-      this.bankInfo.accountNumber,
-      this.bankInfo.bin,
+      this.bankInfo().accountNumber,
+      this.bankInfo().bin,
       {
         amount: totalAmountFormatted,
         description,
@@ -121,7 +118,7 @@ export class ResultDisplayComponent implements OnInit {
       }
     );
     const fileName = `${removeVietnameseTones(
-      this.billName
+      this.billSplitterService.name()
     )}-${removeVietnameseTones(member.name)}-qr.png`;
     this.dialog.open(QrPopupComponent, {
       data: {
@@ -134,13 +131,13 @@ export class ResultDisplayComponent implements OnInit {
 
   showMomoQRPopup(member: Member) {
     const totalAmountFormatted = this.formatUserAmount(member.totalAmount);
-    const description = `${member.name} TT ${this.billName}`;
+    const description = `${member.name} TT ${this.billSplitterService.name()}`;
     const qrImageUrl = this.qrService.buildMomoQRCodeUrl(
-      this.bankInfo.accountNumberMomo,
+      this.bankInfo().accountNumberMomo,
       { amount: totalAmountFormatted, description }
     );
     const qrImageDownloadUrl = this.qrService.buildMomoQRCodeUrl(
-      this.bankInfo.accountNumberMomo,
+      this.bankInfo().accountNumberMomo,
       {
         amount: totalAmountFormatted,
         description,
@@ -148,7 +145,7 @@ export class ResultDisplayComponent implements OnInit {
       }
     );
     const fileName = `${removeVietnameseTones(
-      this.billName
+      this.billSplitterService.name()
     )}-${removeVietnameseTones(member.name)}-qr-momo.png`;
     this.dialog.open(QrPopupComponent, {
       data: {
@@ -157,17 +154,5 @@ export class ResultDisplayComponent implements OnInit {
         qrImageDownloadUrl,
       },
     });
-  }
-
-  fetchIsShowBankInfo() {
-    this.isShowBankInfo = !!(
-      this.bankInfo.accountNumber && this.bankInfo.bin
-    );
-  }
-
-  fetchIsShowMomoInfo() {
-    this.isShowMomoInfo = !!(
-      this.bankInfo.accountNameMomo && this.bankInfo.phoneNumberMomo
-    );
   }
 }

@@ -75,3 +75,7 @@ Ghi chép quyết định triển khai theo quy ước tại `AGENTS.md`. File n
 - 2026-10-12 (thêm Claude Code hooks và skill `log-decision`)
 - 2026-10-12 (thêm subagents `angular-reviewer` và `security-reviewer`)
 - 2026-10-12 (tối ưu token cho agent: chia notes theo tháng, CLAUDE.md, deny list)
+- 2026-10-13 (tối ưu change detection: computed thay hàm trong template, OnPush cho 7 component)
+- 2026-10-13 (tối ưu tải ảnh và cache headers Vercel, nhóm 2)
+- 2026-10-13 (router preloading, lazy login dialog, siết budget, nhóm 3)
+- 2026-10-13 (gộp tính toán chia tiền, auto-save debounce thật, thêm spec đầu tiên, nhóm 4)

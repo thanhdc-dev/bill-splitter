@@ -1,19 +1,19 @@
 <div class="list-container">
   <div class="list-header">
     <h2 class="list-title">Hoá đơn của bạn</h2>
-    @if (!isLoading && !hasError && bills.length) {
-    <p class="list-subtitle">{{ bills.length }} hoá đơn đã lưu · chạm để mở lại</p>
+    @if (!isLoading() && !hasError() && bills().length) {
+    <p class="list-subtitle">{{ bills().length }} hoá đơn đã lưu · chạm để mở lại</p>
     }
   </div>
 
-  @if (isLoading) {
+  @if (isLoading()) {
   <div class="list-loading" role="status" aria-live="polite">
     <mat-spinner diameter="40"></mat-spinner>
     <p>Đang tải danh sách hóa đơn...</p>
   </div>
   }
 
-  @else if (hasError) {
+  @else if (hasError()) {
   <app-empty-state
     icon="cloud_off"
     title="Không tải được danh sách"
@@ -26,7 +26,7 @@
   </app-empty-state>
   }
 
-  @else if (!bills.length) {
+  @else if (!bills().length) {
   <app-empty-state
     icon="receipt_long"
     title="Chưa có hóa đơn nào được chia sẻ"
@@ -41,19 +41,20 @@
 
   @else {
   <div class="bill-wrapper">
-    @for (item of bills; track item.code) {
+    @for (row of billRows(); track row.bill.code) {
+      @let item = row.bill;
       <div
         class="bill receipt-ticket"
         role="button"
         tabindex="0"
-        [title]="formatDate(item.createdAt)"
+        [title]="row.dateLabel"
         (click)="onItemClick(item.code)"
         (keydown.enter)="onItemClick(item.code)"
         (keydown.space)="$event.preventDefault(); onItemClick(item.code)"
       >
         <div class="bill-stub receipt-ticket__stub">
-          <span class="bill-stub__day">{{ getStubDay(item.createdAt) }}</span>
-          <span class="bill-stub__month">{{ getStubMonth(item.createdAt) }}</span>
+          <span class="bill-stub__day">{{ row.stubDay }}</span>
+          <span class="bill-stub__month">{{ row.stubMonth }}</span>
         </div>
 
         <div class="bill-content">

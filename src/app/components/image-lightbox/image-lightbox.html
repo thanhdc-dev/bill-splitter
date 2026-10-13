@@ -15,7 +15,7 @@
   </button>
   }
 
-  <img [src]="currentUrl" class="lightbox__image" [alt]="'Ảnh ' + (index + 1) + ' / ' + data.images.length" />
+  <img [src]="currentUrl" decoding="async" class="lightbox__image" [alt]="'Ảnh ' + (index + 1) + ' / ' + data.images.length" />
 
   @if (hasMultiple) {
   <button mat-icon-button class="lightbox__nav lightbox__nav--next" aria-label="Ảnh tiếp theo" (click)="next()">

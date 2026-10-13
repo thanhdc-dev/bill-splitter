@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { BillSplitterService } from '../../services/bill-splitter.service';
 import { BillShareService } from '../../services/bill-share.service';
 import { Router, RouterLink } from '@angular/router';
@@ -23,6 +23,7 @@ interface Bill {
 }
 
 @Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-bills',
   imports: [
     CurrencyPipe,
@@ -42,27 +43,41 @@ export class Bills implements OnInit {
   private readonly billSplitterService = inject(BillSplitterService);
   private readonly billShareService = inject(BillShareService);
 
-  bills: Bill[] = [];
+  readonly bills = signal<Bill[]>([]);
   /** Tách "đang tải" / "lỗi" / "không có hóa đơn nào" để không hiện nhầm empty state. */
-  isLoading = true;
-  hasError = false;
+  readonly isLoading = signal(true);
+  readonly hasError = signal(false);
+
+  /** Ngày hiển thị được format một lần khi danh sách đổi, thay vì mỗi lần change detection. */
+  readonly billRows = computed(() =>
+    this.bills().map((bill) => {
+      const date = new Date(bill.createdAt);
+      return {
+        bill,
+        dateLabel: date.toLocaleDateString('vi-VN'),
+        // "cuống vé": ngày "12" và tháng viết tắt "thg 9"
+        stubDay: date.getDate().toString().padStart(2, '0'),
+        stubMonth: `thg ${date.getMonth() + 1}`,
+      };
+    })
+  );
 
   ngOnInit() {
     this.loadData();
   }
 
   async loadData() {
-    this.isLoading = true;
-    this.hasError = false;
+    this.isLoading.set(true);
+    this.hasError.set(false);
     try {
-      this.bills = await this.billSplitterService.getBills();
+      this.bills.set(await this.billSplitterService.getBills());
     } catch (err) {
       // Không có dữ liệu vì lỗi mạng là chuyện khác hẳn với "chưa có hóa đơn nào".
       console.error('Lỗi khi tải danh sách hóa đơn:', err);
-      this.bills = [];
-      this.hasError = true;
+      this.bills.set([]);
+      this.hasError.set(true);
     } finally {
-      this.isLoading = false;
+      this.isLoading.set(false);
     }
   }
 
@@ -73,21 +88,6 @@ export class Bills implements OnInit {
   onShareUrl(event: Event, bill: Bill): void {
     event.stopPropagation(); // Ngăn việc trigger click của item
     void this.billShareService.share(bill.code, bill.name);
-  }
-
-  formatDate(dateString: string): string {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('vi-VN');
-  }
-
-  /** Ngày trong tháng cho "cuống vé" — vd "12". */
-  getStubDay(dateString: string): string {
-    return new Date(dateString).getDate().toString().padStart(2, '0');
-  }
-
-  /** Tháng viết tắt cho "cuống vé" — vd "thg 9". */
-  getStubMonth(dateString: string): string {
-    return `thg ${new Date(dateString).getMonth() + 1}`;
   }
 
   async onDelete(event: Event, billCode: string) {

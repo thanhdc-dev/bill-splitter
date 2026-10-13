@@ -4,7 +4,7 @@
     @if (selectedBank(); as bank) {
     <mat-select-trigger>
       <div class="bank-info">
-        <img [src]="bank.logo" width="24" [alt]="bank.short_name" />
+        <img [src]="bank.logo" width="24" decoding="async" [alt]="bank.short_name" />
         <span class="bank-name">{{ bank.label }}</span>
       </div>
     </mat-select-trigger>
@@ -19,7 +19,7 @@
     @for (bank of filteredBanks | async; track bank.bin) {
     <mat-option [value]="valueField === 'bin' ? bank.bin : bank.code">
       <div class="bank-info">
-        <img [src]="bank.logo" width="70" [alt]="bank.short_name" />
+        <img [src]="bank.logo" width="70" loading="lazy" decoding="async" [alt]="bank.short_name" />
         <span class="bank-name">{{ bank.label }}</span>
       </div>
     </mat-option>

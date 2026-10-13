@@ -37,35 +37,34 @@
       </button>
     </form>
 
-    @if (expenses$ | async; as expenses) {
-      @if (!expenses.length) {
-        <app-empty-state
-          icon="receipt_long"
-          title="Chưa có khoản mục nào"
-          description="Thêm từng món trong hóa đơn ở ô phía trên, sau đó chọn ai tham gia món nào ở phần Thành viên."
-          [compact]="true"
-        ></app-empty-state>
-      } @else {
-        <ul class="expense-list">
-          @for (expense of expenses; track expense.id) {
-            <li class="expense-row">
-              <button type="button" class="expense-row__name" aria-label="Sửa tên khoản mục {{ expense.name }}" (click)="updateExpenseName(expense)">
-                <span class="expense-row__label">{{ expense.name }}</span>
-                <mat-icon class="expense-row__edit" aria-hidden="true">edit</mat-icon>
-              </button>
-              <button mat-icon-button class="expense-row__delete" aria-label="Xoá khoản mục" (click)="removeExpense(expense.id)">
-                <mat-icon>delete</mat-icon>
-              </button>
-              <span class="expense-row__meta">
-                {{ getParticipantCount(expense, (members$ | async) || []) }} người ăn chung
-              </span>
-              <button type="button" class="expense-row__amount mono-amount" aria-label="Sửa số tiền khoản mục {{ expense.name }}" (click)="updateExpenseAmount(expense)">
-                {{ expense.amount | currency: 'VND': 'symbol' : '1.0-0' : 'vi' }}
-                <mat-icon class="expense-row__edit" aria-hidden="true">edit</mat-icon>
-              </button>
-            </li>
-          }
-        </ul>
-      }
+    @if (!expenseRows().length) {
+      <app-empty-state
+        icon="receipt_long"
+        title="Chưa có khoản mục nào"
+        description="Thêm từng món trong hóa đơn ở ô phía trên, sau đó chọn ai tham gia món nào ở phần Thành viên."
+        [compact]="true"
+      ></app-empty-state>
+    } @else {
+      <ul class="expense-list">
+        @for (row of expenseRows(); track row.expense.id) {
+          @let expense = row.expense;
+          <li class="expense-row">
+            <button type="button" class="expense-row__name" aria-label="Sửa tên khoản mục {{ expense.name }}" (click)="updateExpenseName(expense)">
+              <span class="expense-row__label">{{ expense.name }}</span>
+              <mat-icon class="expense-row__edit" aria-hidden="true">edit</mat-icon>
+            </button>
+            <button mat-icon-button class="expense-row__delete" aria-label="Xoá khoản mục" (click)="removeExpense(expense.id)">
+              <mat-icon>delete</mat-icon>
+            </button>
+            <span class="expense-row__meta">
+              {{ row.participantCount }} người ăn chung
+            </span>
+            <button type="button" class="expense-row__amount mono-amount" aria-label="Sửa số tiền khoản mục {{ expense.name }}" (click)="updateExpenseAmount(expense)">
+              {{ expense.amount | currency: 'VND': 'symbol' : '1.0-0' : 'vi' }}
+              <mat-icon class="expense-row__edit" aria-hidden="true">edit</mat-icon>
+            </button>
+          </li>
+        }
+      </ul>
     }
   </div>
