@@ -3,7 +3,6 @@ import { Observable } from 'rxjs';
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink, RouterOutlet } from '@angular/router';
 import { AuthService } from './services/auth.service';
-import { LoginDialogComponent } from './components/login-dialog/login-dialog';
 import { MatDialog } from '@angular/material/dialog';
 import { AsyncPipe } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
@@ -67,10 +66,12 @@ export class App implements OnInit {
     this.sidebarOpen.set(false);
   }
 
-  openLoginPopup(): void {
+  async openLoginPopup(): Promise<void> {
     if (!this.billSplitterService.isBillDataEmpty()) {
       this.billSplitterService.saveBillToStorage();
     }
+    // Tải dialog khi cần để không đưa nó vào initial bundle.
+    const { LoginDialogComponent } = await import('./components/login-dialog/login-dialog');
     this.dialog.open(LoginDialogComponent);
   }
 

@@ -5,7 +5,7 @@ import {
   provideBrowserGlobalErrorListeners,
   provideZoneChangeDetection,
 } from '@angular/core';
-import { provideRouter, withRouterConfig } from '@angular/router';
+import { PreloadAllModules, provideRouter, withPreloading, withRouterConfig } from '@angular/router';
 
 import { routes } from './app.routes';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
@@ -33,7 +33,9 @@ export const appConfig: ApplicationConfig = {
       routes,
       withRouterConfig({
         onSameUrlNavigation: 'reload',
-      })
+      }),
+      // Tải sẵn các chunk lazy sau lần điều hướng đầu để chuyển trang không phải chờ mạng.
+      withPreloading(PreloadAllModules)
     ),
     provideHttpClient(withInterceptors([authInterceptor])),
     {
