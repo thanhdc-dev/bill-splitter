@@ -76,3 +76,4 @@ Ghi chép quyết định triển khai theo quy ước tại `AGENTS.md`. File n
 - 2026-10-12 (thêm subagents `angular-reviewer` và `security-reviewer`)
 - 2026-10-12 (tối ưu token cho agent: chia notes theo tháng, CLAUDE.md, deny list)
 - 2026-10-13 (tối ưu change detection: computed thay hàm trong template, OnPush cho 7 component)
+- 2026-10-13 (tối ưu tải ảnh và cache headers Vercel, nhóm 2)
