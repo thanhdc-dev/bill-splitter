@@ -64,7 +64,7 @@ export class ImageUploadComponent {
     this.images = images.map(({ id, storagePath }) => ({
       id,
       storagePath,
-      previewUrl: this.cdn.url(storagePath, { width: 800, quality: 85 }),
+      previewUrl: this.cdn.url(storagePath, { width: 960, quality: 85 }),
     }));
     this.emitImages();
   }
