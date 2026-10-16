@@ -1,6 +1,10 @@
 import { Injectable } from '@angular/core';
 import { environment } from '../../../environments/environment';
-import type { ImageResizeOptions } from './image-cdn.types';
+import {
+  IMAGE_WIDTH_PRESETS,
+  type ImageResizeOptions,
+  type ImageWidthPreset,
+} from './image-cdn.types';
 
 @Injectable({ providedIn: 'root' })
 export class ImageCdnUrlService {
@@ -28,7 +32,11 @@ export class ImageCdnUrlService {
    * Responsive images srcset — `"url 300w, url 600w, ..."`.
    * Dùng với thuộc tính `srcset` và `sizes` của `<img>`.
    */
-  srcset(storagePath: string, widths: number[], quality = 75): string {
+  srcset(
+    storagePath: string,
+    widths: readonly ImageWidthPreset[] = IMAGE_WIDTH_PRESETS,
+    quality = 75,
+  ): string {
     return widths
       .map((w) => `${this.url(storagePath, { width: w, quality })} ${w}w`)
       .join(', ');

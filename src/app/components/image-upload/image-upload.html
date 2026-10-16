@@ -72,7 +72,7 @@
                 @if (image.storagePath) {
                   <img
                     [src]="image.previewUrl"
-                    [attr.srcset]="cdn.srcset(image.storagePath, [200, 400, 600, 800])"
+                    [attr.srcset]="cdn.srcset(image.storagePath, [128, 320, 640, 960])"
                     sizes="(max-width: 767px) 50vw, (min-width: 768px) 300px, 100vw"
                     [alt]="'preview-item-' + i"
                     loading="lazy"

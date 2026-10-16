@@ -3,6 +3,6 @@ export const environment = {
   appUrl: 'http://localhost:4200',
   apiUrl: 'http://localhost:3000',
   appKey: 'chiatien',
-  cdnBase: 'https://image-resize.d-c-thanh1997.workers.dev',
+  cdnBase: 'https://cdn-chiatien.thanhdc.app',
 };
 
