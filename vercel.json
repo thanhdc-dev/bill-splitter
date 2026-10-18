@@ -4,7 +4,20 @@
   "installCommand": "npm ci",
   "buildCommand": "npm run build:prod",
   "outputDirectory": "dist/browser",
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }],
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
+    },
+    {
+      "source": "/:code((?!bills$|setting$|auth(?:/.*)?$|images/|icons/|favicon\\.png$|manifest\\.webmanifest$|robots\\.txt$|sitemap\\.xml$|thumbnail\\.webp$|api/|.*\\.(?:js|css|woff2?|png|jpg|webp|ico|svg|json)$).*)",
+      "destination": "/api/og?code=:code"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ],
   "headers": [
     {
       "source": "/(ngsw-worker.js|ngsw.json|safety-worker.js|worker-basic.min.js)",

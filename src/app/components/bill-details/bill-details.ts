@@ -39,6 +39,7 @@ import {
 } from 'rxjs';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { environment } from '../../../environments/environment';
 import {
   AuthService,
   BillAutoSaveService,
@@ -211,11 +212,18 @@ export class BillDetails implements OnInit, OnDestroy, AfterViewInit {
     }
 
 
+    const totalFormatted = formatAmount(bill.data.totalAmount);
+    const memberCount = bill.data.members?.length ?? 0;
+    const domain = environment.appUrl.replace(/\/+$/, '');
+    const billUrl = `${domain}/${this.code}`;
+    const dynamicOgImage = `${domain}/api/og-image?code=${encodeURIComponent(this.code)}`;
+
     this.seoService.generateTags({
-      title: `Hóa đơn ${bill.name}`,
-      description: `Tổng tiền: ${formatAmount(
-        bill.data.totalAmount,
-      )} - Số thành viên tham gia: ${bill.data.members.length}.`,
+      title: `Hóa đơn: ${bill.name}`,
+      description: `Tổng tiền: ${totalFormatted} • ${memberCount} người tham gia. Bấm để xem chi tiết và quét QR thanh toán.`,
+      url: billUrl,
+      image: dynamicOgImage,
+      imageType: 'image/png',
     });
     // OnPush: oldImages/nameCtrl được gán sau await nên phải đánh dấu thủ công.
     this.cdr.markForCheck();
