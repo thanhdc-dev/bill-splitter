@@ -13,15 +13,60 @@ function formatVND(amount: number): string {
   );
 }
 
+interface IFontConfig {
+  name: string;
+  data: ArrayBuffer;
+  weight: 500 | 700;
+  style: 'normal';
+}
+
+const INTER_500_URL =
+  'https://fonts.gstatic.com/s/inter/v20/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuI6fMZg.ttf';
+const INTER_700_URL =
+  'https://fonts.gstatic.com/s/inter/v20/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuFuYMZg.ttf';
+
+let cachedFontsPromise: Promise<IFontConfig[]> | null = null;
+
+async function loadInterFonts(): Promise<IFontConfig[]> {
+  if (!cachedFontsPromise) {
+    cachedFontsPromise = (async () => {
+      try {
+        const [res500, res700] = await Promise.all([
+          fetch(INTER_500_URL, { signal: AbortSignal.timeout(4000) }),
+          fetch(INTER_700_URL, { signal: AbortSignal.timeout(4000) }),
+        ]);
+
+        if (!res500.ok || !res700.ok) {
+          throw new Error(`Failed to fetch fonts: ${res500.status}/${res700.status}`);
+        }
+
+        const [data500, data700] = await Promise.all([res500.arrayBuffer(), res700.arrayBuffer()]);
+
+        return [
+          { name: 'Inter', data: data500, weight: 500, style: 'normal' },
+          { name: 'Inter', data: data700, weight: 700, style: 'normal' },
+        ];
+      } catch (err) {
+        console.warn('Không thể tải font Inter tùy biến, fallback font mặc định:', err);
+        cachedFontsPromise = null;
+        return [];
+      }
+    })();
+  }
+  return cachedFontsPromise;
+}
+
 export async function GET(request: Request): Promise<Response> {
   const { searchParams } = new URL(request.url);
   const code = (searchParams.get('code') ?? '').trim();
   const apiBase = (process.env['API_BASE_URL']?.trim() || DEFAULT_API_BASE_URL).replace(/\/+$/, '');
 
-  let billName = 'Hóa đơn chia tiền';
-  let totalAmount = 0;
-  let memberCount = 0;
-  let hasData = false;
+  let billName =
+    (searchParams.get('title') ?? searchParams.get('name') ?? 'Hóa đơn chia tiền').trim() ||
+    'Hóa đơn chia tiền';
+  let totalAmount = Number(searchParams.get('amount')) || 0;
+  let memberCount = Number(searchParams.get('members')) || 0;
+  let hasData = totalAmount > 0 || memberCount > 0;
 
   if (code) {
     try {
@@ -65,6 +110,8 @@ export async function GET(request: Request): Promise<Response> {
   // Cắt ngắn tên nếu quá dài để hiển thị vừa vặn trong khung
   const displayTitle = billName.length > 55 ? `${billName.slice(0, 52)}...` : billName;
 
+  const fonts = await loadInterFonts();
+
   return new ImageResponse(
     (
       <div
@@ -77,7 +124,7 @@ export async function GET(request: Request): Promise<Response> {
           justifyContent: 'center',
           backgroundColor: '#0F172A',
           backgroundImage: 'radial-gradient(circle at 50% 20%, #1E3A40 0%, #0F172A 70%)',
-          fontFamily: 'sans-serif',
+          fontFamily: 'Inter, sans-serif',
           padding: '40px',
         }}
       >
@@ -112,7 +159,7 @@ export async function GET(request: Request): Promise<Response> {
                 <span
                   style={{
                     fontSize: '26px',
-                    fontWeight: 800,
+                    fontWeight: 700,
                     color: '#1B6B72',
                     letterSpacing: '-0.5px',
                   }}
@@ -169,7 +216,7 @@ export async function GET(request: Request): Promise<Response> {
               <span
                 style={{
                   fontSize: '34px',
-                  fontWeight: 800,
+                  fontWeight: 700,
                   color: '#0F172A',
                   lineHeight: '1.25',
                 }}
@@ -205,7 +252,7 @@ export async function GET(request: Request): Promise<Response> {
                 <span
                   style={{
                     fontSize: '44px',
-                    fontWeight: 900,
+                    fontWeight: 700,
                     color: '#0F766E',
                     letterSpacing: '-1px',
                     marginTop: '2px',
@@ -217,14 +264,14 @@ export async function GET(request: Request): Promise<Response> {
 
               <div style={{ display: 'flex', gap: '32px' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                  <span style={{ fontSize: '13px', color: '#64748B', fontWeight: 600 }}>Thành viên</span>
-                  <span style={{ fontSize: '24px', fontWeight: 800, color: '#1E293B', marginTop: '2px' }}>
+                  <span style={{ fontSize: '13px', color: '#64748B', fontWeight: 500 }}>Thành viên</span>
+                  <span style={{ fontSize: '24px', fontWeight: 700, color: '#1E293B', marginTop: '2px' }}>
                     {hasData && memberCount > 0 ? `${memberCount} người` : '—'}
                   </span>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                  <span style={{ fontSize: '13px', color: '#64748B', fontWeight: 600 }}>Thanh toán</span>
-                  <span style={{ fontSize: '24px', fontWeight: 800, color: '#1E293B', marginTop: '2px' }}>
+                  <span style={{ fontSize: '13px', color: '#64748B', fontWeight: 500 }}>Thanh toán</span>
+                  <span style={{ fontSize: '24px', fontWeight: 700, color: '#1E293B', marginTop: '2px' }}>
                     Mã QR
                   </span>
                 </div>
@@ -241,7 +288,7 @@ export async function GET(request: Request): Promise<Response> {
                 paddingTop: '16px',
               }}
             >
-              <span style={{ fontSize: '16px', fontWeight: 600, color: '#0D9488' }}>
+              <span style={{ fontSize: '16px', fontWeight: 500, color: '#0D9488' }}>
                 👉 Bấm vào để xem chi tiết tiền chia & quét mã QR
               </span>
               <span style={{ fontSize: '15px', fontWeight: 700, color: '#64748B' }}>
@@ -255,6 +302,8 @@ export async function GET(request: Request): Promise<Response> {
     {
       width: 1200,
       height: 630,
+      emoji: 'twemoji',
+      ...(fonts.length > 0 ? { fonts } : {}),
       headers: {
         'content-type': 'image/png',
         'cache-control': 'public, s-maxage=60, stale-while-revalidate=300',
