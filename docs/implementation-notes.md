@@ -85,3 +85,4 @@ Ghi chép quyết định triển khai theo quy ước tại `AGENTS.md`. File n
 - 2026-10-18 (tích hợp Dynamic Open Graph & thẻ preview mạng xã hội)
 - 2026-10-20 (fix lỗi Vercel deploy: Edge Function api/og-image referencing unsupported modules @vercel)
 - 2026-10-20 (nạp font Inter tiếng Việt có cache & bật Twemoji cho api/og-image)
+- 2026-10-20 (bật "type": "module" trong package.json và chuyển eslint.config.js sang ESM cho Vercel Serverless Function)
