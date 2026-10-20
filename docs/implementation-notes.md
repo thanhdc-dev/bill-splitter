@@ -87,3 +87,4 @@ Ghi chép quyết định triển khai theo quy ước tại `AGENTS.md`. File n
 - 2026-10-20 (nạp font Inter tiếng Việt có cache & bật Twemoji cho api/og-image)
 - 2026-10-20 (bật "type": "module" trong package.json và chuyển eslint.config.js sang ESM cho Vercel Serverless Function)
 - 2026-10-20 (thêm api/package.json và cấu hình includeFiles cho Serverless Function og-image)
+- 2026-10-20 (lập tài liệu kế hoạch tối ưu hoá tốc độ sinh ảnh Open Graph)

@@ -540,3 +540,11 @@ curl -o /dev/null -s -w 'HTTP Status: %{http_code}\nTTFB: %{time_starttransfer}s
 | **Bot mạng xã hội bị timeout** | Edge Function gọi Backend API mất hơn 3 giây do câu truy vấn nặng. | Đặt `AbortSignal.timeout(4000)`, tối ưu DB query chỉ lấy cột cần thiết và bổ sung header HTTP Cache `s-maxage=60`. |
 | **Trang xem trước (Vercel Preview) không cào được** | Tính năng *Vercel Deployment Protection* chặn truy cập bằng mã HTTP `401 Unauthorized`. | Cấu hình forward header `x-vercel-protection-bypass` hoặc kiểm thử trên môi trường Production / Public Domain. |
 | **Facebook vẫn hiện thông tin cũ sau khi sửa** | Facebook CDN lưu cache metadata của link theo chu kỳ 7 ngày. | Truy cập Facebook Sharing Debugger bấm nút **Scrape Again** để xóa cache. |
+
+---
+
+## 8. Kế hoạch tối ưu hoá hiệu năng sinh ảnh OG (Performance Optimization)
+
+Để tìm hiểu chi tiết các giải pháp tăng tốc độ sinh ảnh OG động, triệt tiêu cold-start, tối ưu hóa Edge CDN Caching và lộ trình triển khai theo từng pha, tham khảo tài liệu riêng:
+👉 **[Kế hoạch tối ưu hoá tốc độ sinh ảnh Open Graph](og-optimization-plan.md)**
+
