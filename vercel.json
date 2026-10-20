@@ -4,6 +4,11 @@
   "installCommand": "npm ci",
   "buildCommand": "npm run build:prod",
   "outputDirectory": "dist/browser",
+  "functions": {
+    "api/og-image.tsx": {
+      "includeFiles": "api/package.json"
+    }
+  },
   "rewrites": [
     {
       "source": "/api/(.*)",
