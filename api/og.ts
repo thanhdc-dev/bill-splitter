@@ -35,7 +35,11 @@ interface IBackendBillResponse {
   files?: Array<{ id: number; storagePath: string }>;
 }
 
-export async function GET(request: Request): Promise<Response> {
+interface IRequestContext {
+  waitUntil?: (promise: Promise<unknown>) => void;
+}
+
+export async function GET(request: Request, context?: IRequestContext): Promise<Response> {
   const requestUrl = new URL(request.url);
   const host = request.headers.get('x-forwarded-host') ?? requestUrl.host;
   const proto = request.headers.get('x-forwarded-proto') ?? 'https';
@@ -113,13 +117,23 @@ export async function GET(request: Request): Promise<Response> {
     }
 
     // 3. Inject thẻ meta động vào index.html
-    const enrichedHtml = injectOgMeta(html, buildBillOgMeta(billInput, origin));
+    const ogMeta = buildBillOgMeta(billInput, origin);
+    const enrichedHtml = injectOgMeta(html, ogMeta);
+
+    // 4. Chained Pre-warming: Kích hoạt sinh trước ảnh OG với đầy đủ tham số (code, d, s) vào Edge CDN
+    if (ogMeta.image && ogMeta.image.startsWith(origin)) {
+      const prewarmPromise = fetch(ogMeta.image).catch(() => undefined);
+      if (context && typeof context.waitUntil === 'function') {
+        context.waitUntil(prewarmPromise);
+      }
+    }
+
     return new Response(enrichedHtml, {
       status: 200,
       headers: CACHE_HEADERS,
     });
   } catch (err) {
-    // 4. Fallback an toàn: Khi có lỗi mạng hoặc timeout, vẫn trả HTML gốc không crash
+    // 5. Fallback an toàn: Khi có lỗi mạng hoặc timeout, vẫn trả HTML gốc không crash
     console.error('Lỗi khi tải thông tin OG cho bill:', err);
     return new Response(html, {
       status: 200,
@@ -128,7 +142,7 @@ export async function GET(request: Request): Promise<Response> {
   }
 }
 
-export async function HEAD(request: Request): Promise<Response> {
-  const res = await GET(request);
+export async function HEAD(request: Request, context?: IRequestContext): Promise<Response> {
+  const res = await GET(request, context);
   return new Response(null, { status: res.status, headers: res.headers });
 }

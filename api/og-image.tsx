@@ -57,48 +57,7 @@ function formatVND(amount: number): string {
   );
 }
 
-interface IFontConfig {
-  name: string;
-  data: ArrayBuffer;
-  weight: 500 | 700;
-  style: 'normal';
-}
-
-const INTER_500_URL =
-  'https://fonts.gstatic.com/s/inter/v20/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuI6fMZg.ttf';
-const INTER_700_URL =
-  'https://fonts.gstatic.com/s/inter/v20/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuFuYMZg.ttf';
-
-let cachedFontsPromise: Promise<IFontConfig[]> | null = null;
-
-async function loadInterFonts(): Promise<IFontConfig[]> {
-  if (!cachedFontsPromise) {
-    cachedFontsPromise = (async () => {
-      try {
-        const [res500, res700] = await Promise.all([
-          fetch(INTER_500_URL, { signal: AbortSignal.timeout(4000) }),
-          fetch(INTER_700_URL, { signal: AbortSignal.timeout(4000) }),
-        ]);
-
-        if (!res500.ok || !res700.ok) {
-          throw new Error(`Failed to fetch fonts: ${res500.status}/${res700.status}`);
-        }
-
-        const [data500, data700] = await Promise.all([res500.arrayBuffer(), res700.arrayBuffer()]);
-
-        return [
-          { name: 'Inter', data: data500, weight: 500, style: 'normal' },
-          { name: 'Inter', data: data700, weight: 700, style: 'normal' },
-        ];
-      } catch (err) {
-        console.warn('Không thể tải font Inter tùy biến, fallback font mặc định:', err);
-        cachedFontsPromise = null;
-        return [];
-      }
-    })();
-  }
-  return cachedFontsPromise;
-}
+import { getInterFonts } from './_fonts/inter-subset.js';
 
 export async function GET(request: Request): Promise<Response> {
   const { searchParams } = new URL(request.url);
@@ -177,7 +136,7 @@ export async function GET(request: Request): Promise<Response> {
     ? 'public, s-maxage=604800, stale-while-revalidate=86400'
     : 'public, s-maxage=60, stale-while-revalidate=300';
 
-  const fonts = await loadInterFonts();
+  const fonts = getInterFonts();
 
   return new ImageResponse(
     (
@@ -190,7 +149,7 @@ export async function GET(request: Request): Promise<Response> {
           alignItems: 'center',
           justifyContent: 'center',
           backgroundColor: '#0F172A',
-          backgroundImage: 'radial-gradient(circle at 50% 20%, #1E3A40 0%, #0F172A 70%)',
+          backgroundImage: 'linear-gradient(135deg, #0F172A 0%, #16383E 50%, #0F172A 100%)',
           fontFamily: 'Inter, sans-serif',
           padding: '40px',
         }}
@@ -204,8 +163,8 @@ export async function GET(request: Request): Promise<Response> {
             flexDirection: 'column',
             backgroundColor: '#FFFFFF',
             borderRadius: '24px',
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
-            border: '2px solid rgba(27, 107, 114, 0.2)',
+            border: '2px solid rgba(27, 107, 114, 0.3)',
+            outline: '6px solid rgba(255, 255, 255, 0.08)',
             overflow: 'hidden',
           }}
         >

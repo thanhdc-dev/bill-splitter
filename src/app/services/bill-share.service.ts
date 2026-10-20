@@ -9,7 +9,24 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 export class BillShareService {
   private readonly snackBar = inject(MatSnackBar);
 
+  /**
+   * Pre-warm cache ngầm: Khi người dùng bấm chia sẻ, gửi request ngầm đến /api/og?code=...
+   * Edge Function api/og.ts sẽ tự động tính toán URL ảnh đầy đủ (gồm checksum & payload &d=...&s=...)
+   * và kích hoạt sinh trước ảnh trên Vercel Edge CDN. Khi bot crawler quét link, cả HTML và ảnh đều đạt 100% Cache HIT (0ms render).
+   */
+  prewarm(code: string): void {
+    if (!code || typeof window === 'undefined' || typeof fetch !== 'function') return;
+    try {
+      const origin = window.location.origin;
+      const fetchOpts = { mode: 'no-cors' as RequestMode, priority: 'low' as unknown as string };
+      void fetch(`${origin}/api/og?code=${encodeURIComponent(code)}`, fetchOpts as RequestInit).catch(() => undefined);
+    } catch {
+      // Bỏ qua mọi lỗi phát sinh từ request ngầm
+    }
+  }
+
   async share(code: string, name?: string): Promise<void> {
+    this.prewarm(code);
     const data = this.buildShareData(code, name);
     if (await this.tryNativeShare(data)) return;
     await this.copyWithShareAction(data);
