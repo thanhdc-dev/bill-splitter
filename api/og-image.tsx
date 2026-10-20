@@ -1,18 +1,16 @@
+import React from 'react';
 import { ImageResponse } from '@vercel/og';
 
-export const config = {
-  runtime: 'edge',
-};
 
 const DEFAULT_API_BASE_URL = 'https://api.thanhdc.app';
 
 function formatVND(amount: number): string {
-  if (typeof amount !== 'number' || isNaN(amount)) return '0 ₫';
-  return new Intl.NumberFormat('vi-VN', {
-    style: 'currency',
-    currency: 'VND',
-    maximumFractionDigits: 0,
-  }).format(amount);
+  if (typeof amount !== 'number' || isNaN(amount)) return '0 đ';
+  return (
+    new Intl.NumberFormat('vi-VN', {
+      maximumFractionDigits: 0,
+    }).format(amount) + ' đ'
+  );
 }
 
 export async function GET(request: Request): Promise<Response> {

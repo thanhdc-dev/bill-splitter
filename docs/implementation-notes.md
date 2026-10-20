@@ -83,3 +83,4 @@ Ghi chép quyết định triển khai theo quy ước tại `AGENTS.md`. File n
 - 2026-10-16 (đồng bộ `angular-integration-cdn.md` với source)
 - 2026-10-16 (ép `width` về preset của Worker, sửa srcset `image-upload`)
 - 2026-10-18 (tích hợp Dynamic Open Graph & thẻ preview mạng xã hội)
+- 2026-10-20 (fix lỗi Vercel deploy: Edge Function api/og-image referencing unsupported modules @vercel)
