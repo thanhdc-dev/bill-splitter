@@ -31,15 +31,25 @@ Tài liệu này tổng hợp toàn bộ các phân tích, điểm nghẽn và p
 
 ```mermaid
 graph TD
-    A["Pha 1: Low Hanging Fruit (Zero Backend Call & Long Cache)"] --> B["Pha 2: Tối ưu Cold Start & Assets (Local Fonts & Inline SVG)"]
-    B --> C["Pha 3: Client Pre-warm & Kiến trúc Static CDN"]
+    A["Pha 1: Low Hanging Fruit (Zero Backend Call & Long Cache)<br/><b>[ĐÃ HOÀN THÀNH]</b>"]:::done --> B["Pha 2: Tối ưu Cold Start & Assets (Local Fonts)"]:::pending
+    B --> C["Pha 3: Client Pre-warm & Kiến trúc Static CDN"]:::pending
+    classDef done fill:#d1fae5,stroke:#059669,stroke-width:2px,color:#065f46;
+    classDef pending fill:#f1f5f9,stroke:#94a3b8,stroke-width:1px,color:#334155;
 ```
+
+### Bảng theo dõi trạng thái tổng thể
+
+| Pha | Mục tiêu chính | Trạng thái | Thời điểm | Kết quả đạt được |
+| :--- | :--- | :---: | :---: | :--- |
+| **Pha 1** | Zero Backend Call (Base64URL + Checksum), Cache CDN 7 ngày, Inline SVG | <span style="color:#059669;font-weight:700">ĐÃ HOÀN THÀNH</span> | 2026-10-20 | Warm render: **10.4ms**, loại bỏ 3 network calls |
+| **Pha 2** | Local Inter TTF Subset, tinh giản Satori CSS Layout | <span style="color:#64748B;font-weight:600">CHƯA BẮT ĐẦU</span> | Sắp tới | Mục tiêu Cold-start: `< 350ms` |
+| **Pha 3** | Client Pre-warm ngầm khi bấm Lưu/Chia sẻ & Static CDN Offload | <span style="color:#64748B;font-weight:600">CHƯA BẮT ĐẦU</span> | Tương lai | Pre-warm bot crawl: `0ms` (Hit CDN tức thì) |
 
 ---
 
 ## 3. Chi tiết các Pha triển khai
 
-### Pha 1: Low Hanging Fruits (Hiệu quả tức thì — Triển khai trước)
+### Pha 1: Low Hanging Fruits (Hiệu quả tức thì) — [ĐÃ HOÀN THÀNH (2026-10-20)]
 
 #### Task 1.1: Data Pass-through từ `api/og.ts` sang `api/og-image`
 * **Vấn đề:** Khi crawler vào `https://chiatien.thanhdc.app/:code`, Edge function `api/og.ts` đã fetch backend để lấy `title`, `totalAmount`, `memberCount`. Nhưng sau đó thẻ `og:image` chỉ trỏ tới `/api/og-image?code=:code`, khiến `api/og-image` phải gọi lại backend lần thứ 2.
@@ -93,7 +103,7 @@ graph TD
 
 ---
 
-### Pha 2: Tối ưu Cold-Start & Tài nguyên cục bộ
+### Pha 2: Tối ưu Cold-Start & Tài nguyên cục bộ — [CHƯA THỰC HIỆN]
 
 #### Task 2.1: Đóng gói Font Inter Subset nội bộ (Local TTF)
 * **Vấn đề:** Khi container serverless khởi động lạnh (cold-start), hàm `loadInterFonts()` phải tải 2 file TTF từ Google Fonts CDN (`fonts.gstatic.com`).
@@ -123,7 +133,7 @@ graph TD
 
 ---
 
-### Pha 3: Tối ưu Trải nghiệm & Mở rộng hệ sinh thái
+### Pha 3: Tối ưu Trải nghiệm & Mở rộng hệ sinh thái — [CHƯA THỰC HIỆN]
 
 #### Task 3.1: Pre-warming Cache ngầm từ Client
 * **Ý tưởng:** Khi người dùng nhấn nút **"Lưu & Chia sẻ"** (hoặc mở popup chia sẻ), client Angular thực hiện một request ngầm dạng `fetch(ogImageUrl, { mode: 'no-cors' })`.
