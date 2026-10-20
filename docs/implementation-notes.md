@@ -88,3 +88,4 @@ Ghi chép quyết định triển khai theo quy ước tại `AGENTS.md`. File n
 - 2026-10-20 (bật "type": "module" trong package.json và chuyển eslint.config.js sang ESM cho Vercel Serverless Function)
 - 2026-10-20 (thêm api/package.json và cấu hình includeFiles cho Serverless Function og-image)
 - 2026-10-20 (lập tài liệu kế hoạch tối ưu hoá tốc độ sinh ảnh Open Graph)
+- 2026-10-20 (triển khai Phase 1 tối ưu OG image: Base64URL payload, zero backend call, cache 7 ngày, inline SVG)

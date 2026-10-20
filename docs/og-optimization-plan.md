@@ -145,10 +145,10 @@ graph TD
 
 Các session tiếp theo có thể đánh dấu `[x]` vào các mục bên dưới khi hoàn thành:
 
-- [ ] **Pha 1: Triển khai nhanh (Low-hanging fruits)**
-  - [ ] `Task 1.1`: Data Pass-through query params từ `api/og.ts` sang `api/og-image.tsx`.
-  - [ ] `Task 1.2`: Tăng CDN Cache TTL (`s-maxage=604800`) + Thêm hash version `v` chống stale data.
-  - [ ] `Task 1.3`: Thay Twemoji bằng Inline SVG Vector Icon (loại bỏ `emoji: 'twemoji'`).
+- [x] **Pha 1: Triển khai nhanh (Low-hanging fruits)**
+  - [x] `Task 1.1`: Data Pass-through qua Base64URL payload (`d`) & Checksum (`s`) từ `api/og.ts` sang `api/og-image.tsx` (triệt tiêu gọi backend lần 2).
+  - [x] `Task 1.2`: Tăng CDN Cache TTL (`s-maxage=604800, stale-while-revalidate=86400`) kết hợp tự động Cache Busting theo Checksum payload.
+  - [x] `Task 1.3`: Thay Twemoji bằng Inline SVG Vector Icon (loại bỏ hoàn toàn `emoji: 'twemoji'` và dependency jsDelivr CDN).
 - [ ] **Pha 2: Tối ưu Cold-Start**
   - [ ] `Task 2.1`: Tạo file Inter TTF subset (Latin + Tiếng Việt ~35KB) và đọc từ disk nội bộ.
   - [ ] `Task 2.2`: Đơn giản hóa CSS gradient và box-shadow trong JSX template.

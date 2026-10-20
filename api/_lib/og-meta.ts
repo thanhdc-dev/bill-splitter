@@ -1,3 +1,5 @@
+import { encodeOgPayload, type IOgPayload } from './og-payload.js';
+
 export interface IOgMeta {
   title: string;
   description: string;
@@ -108,7 +110,14 @@ export function buildBillOgMeta(bill: IBillDataInput, origin: string): IOgMeta {
 
   if (billCode) {
     // Luôn ưu tiên Dynamic OG Image Card chuẩn tỉ lệ 1.91:1
-    fullImage = `${cleanOrigin}/api/og-image?code=${encodeURIComponent(billCode)}`;
+    const payload: IOgPayload = { c: billCode };
+    const nameToPass = bill.name?.trim() || bill.title?.trim();
+    if (nameToPass) payload.n = nameToPass;
+    if (typeof bill.totalAmount === 'number' && bill.totalAmount > 0) payload.a = bill.totalAmount;
+    if (typeof bill.memberCount === 'number' && bill.memberCount > 0) payload.m = bill.memberCount;
+
+    const { d, s } = encodeOgPayload(payload);
+    fullImage = `${cleanOrigin}/api/og-image?code=${encodeURIComponent(billCode)}&d=${encodeURIComponent(d)}&s=${encodeURIComponent(s)}`;
     imageType = 'image/png';
   } else if (bill.image) {
     fullImage = toAbsoluteUrl(bill.image, cleanOrigin);

@@ -1,5 +1,49 @@
 import React from 'react';
 import { ImageResponse } from '@vercel/og';
+import { decodeAndVerifyOgPayload } from './_lib/og-payload.js';
+
+function ReceiptIcon() {
+  return (
+    <svg
+      width="38"
+      height="38"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="#1B6B72"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path
+        d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"
+        fill="#E0F2F1"
+      />
+      <path d="M16 8h-8" />
+      <path d="M16 12h-8" />
+      <path d="M13 16h-5" />
+    </svg>
+  );
+}
+
+function PointerIcon() {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="#0D9488"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      style={{ marginRight: '8px' }}
+    >
+      <circle cx="12" cy="12" r="10" />
+      <polyline points="12 16 16 12 12 8" />
+      <line x1="8" y1="12" x2="16" y2="12" />
+    </svg>
+  );
+}
 
 
 const DEFAULT_API_BASE_URL = 'https://api.thanhdc.app';
@@ -58,57 +102,80 @@ async function loadInterFonts(): Promise<IFontConfig[]> {
 
 export async function GET(request: Request): Promise<Response> {
   const { searchParams } = new URL(request.url);
-  const code = (searchParams.get('code') ?? '').trim();
+  const d = searchParams.get('d') ?? '';
+  const s = searchParams.get('s') ?? '';
+  let code = (searchParams.get('code') ?? '').trim();
   const apiBase = (process.env['API_BASE_URL']?.trim() || DEFAULT_API_BASE_URL).replace(/\/+$/, '');
 
-  let billName =
-    (searchParams.get('title') ?? searchParams.get('name') ?? 'Hóa đơn chia tiền').trim() ||
-    'Hóa đơn chia tiền';
-  let totalAmount = Number(searchParams.get('amount')) || 0;
-  let memberCount = Number(searchParams.get('members')) || 0;
-  let hasData = totalAmount > 0 || memberCount > 0;
+  let billName = 'Hóa đơn chia tiền';
+  let totalAmount = 0;
+  let memberCount = 0;
+  let hasData = false;
 
-  if (code) {
-    try {
-      // 1. Thử gọi endpoint /og nếu có
-      let fetched = false;
+  // 1. Thử giải mã và xác thực payload Base64URL + Checksum trước (Fast path - 0 backend call)
+  const verifiedPayload = decodeAndVerifyOgPayload(d, s);
+  if (verifiedPayload) {
+    if (verifiedPayload.c) code = verifiedPayload.c;
+    if (verifiedPayload.n?.trim()) billName = verifiedPayload.n.trim();
+    if (typeof verifiedPayload.a === 'number') totalAmount = verifiedPayload.a;
+    if (typeof verifiedPayload.m === 'number') memberCount = verifiedPayload.m;
+    hasData = Boolean(verifiedPayload.n) || totalAmount > 0 || memberCount > 0;
+  } else {
+    // 2. Fallback kiểm tra query params truyền trực tiếp (name, amount, members)
+    const directName = (searchParams.get('title') ?? searchParams.get('name') ?? '').trim();
+    const directAmount = Number(searchParams.get('amount')) || 0;
+    const directMembers = Number(searchParams.get('members')) || 0;
+
+    if (directName) billName = directName;
+    if (directAmount > 0) totalAmount = directAmount;
+    if (directMembers > 0) memberCount = directMembers;
+    hasData = Boolean(directName) || totalAmount > 0 || memberCount > 0;
+
+    // 3. Nếu chưa có data và có code, fallback gọi backend (chỉ chạy khi gọi direct thiếu params)
+    if (!hasData && code) {
       try {
-        const ogRes = await fetch(`${apiBase}/bills/${encodeURIComponent(code)}/og`, {
-          signal: AbortSignal.timeout(2500),
-        });
-        if (ogRes.ok) {
-          const og = await ogRes.json();
-          billName = og.title || og.name || billName;
-          totalAmount = Number(og.totalAmount) || 0;
-          memberCount = Number(og.memberCount) || 0;
-          fetched = true;
-          hasData = true;
+        let fetched = false;
+        try {
+          const ogRes = await fetch(`${apiBase}/bills/${encodeURIComponent(code)}/og`, {
+            signal: AbortSignal.timeout(2500),
+          });
+          if (ogRes.ok) {
+            const og = await ogRes.json();
+            billName = og.title || og.name || billName;
+            totalAmount = Number(og.totalAmount) || 0;
+            memberCount = Number(og.memberCount) || 0;
+            fetched = true;
+            hasData = true;
+          }
+        } catch {
+          fetched = false;
+        }
+
+        if (!fetched) {
+          const res = await fetch(`${apiBase}/bills/${encodeURIComponent(code)}`, {
+            signal: AbortSignal.timeout(3000),
+          });
+          if (res.ok) {
+            const bill = await res.json();
+            billName = bill.name || billName;
+            totalAmount = Number(bill.data?.totalAmount) || 0;
+            memberCount = Array.isArray(bill.data?.members) ? bill.data.members.length : 0;
+            hasData = true;
+          }
         }
       } catch {
-        fetched = false;
+        hasData = false;
       }
-
-      // 2. Fallback gọi endpoint /bills/:code hiện có
-      if (!fetched) {
-        const res = await fetch(`${apiBase}/bills/${encodeURIComponent(code)}`, {
-          signal: AbortSignal.timeout(3000),
-        });
-        if (res.ok) {
-          const bill = await res.json();
-          billName = bill.name || billName;
-          totalAmount = Number(bill.data?.totalAmount) || 0;
-          memberCount = Array.isArray(bill.data?.members) ? bill.data.members.length : 0;
-          hasData = true;
-        }
-      }
-    } catch {
-      // Lỗi mạng hoặc timeout: render thẻ mặc định
-      hasData = false;
     }
   }
 
   // Cắt ngắn tên nếu quá dài để hiển thị vừa vặn trong khung
   const displayTitle = billName.length > 55 ? `${billName.slice(0, 52)}...` : billName;
+
+  const isCachedLong = hasData && Boolean(code);
+  const cacheControl = isCachedLong
+    ? 'public, s-maxage=604800, stale-while-revalidate=86400'
+    : 'public, s-maxage=60, stale-while-revalidate=300';
 
   const fonts = await loadInterFonts();
 
@@ -154,7 +221,7 @@ export async function GET(request: Request): Promise<Response> {
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-              <span style={{ fontSize: '36px' }}>🧾</span>
+              <ReceiptIcon />
               <div style={{ display: 'flex', flexDirection: 'column' }}>
                 <span
                   style={{
@@ -288,9 +355,12 @@ export async function GET(request: Request): Promise<Response> {
                 paddingTop: '16px',
               }}
             >
-              <span style={{ fontSize: '16px', fontWeight: 500, color: '#0D9488' }}>
-                👉 Bấm vào để xem chi tiết tiền chia & quét mã QR
-              </span>
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <PointerIcon />
+                <span style={{ fontSize: '16px', fontWeight: 500, color: '#0D9488' }}>
+                  Bấm vào để xem chi tiết tiền chia & quét mã QR
+                </span>
+              </div>
               <span style={{ fontSize: '15px', fontWeight: 700, color: '#64748B' }}>
                 chiatien.thanhdc.app
               </span>
@@ -302,11 +372,12 @@ export async function GET(request: Request): Promise<Response> {
     {
       width: 1200,
       height: 630,
-      emoji: 'twemoji',
       ...(fonts.length > 0 ? { fonts } : {}),
       headers: {
         'content-type': 'image/png',
-        'cache-control': 'public, s-maxage=60, stale-while-revalidate=300',
+        'cache-control': cacheControl,
+        'cdn-cache-control': cacheControl,
+        'vercel-cdn-cache-control': cacheControl,
       },
     }
   );

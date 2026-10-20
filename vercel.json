@@ -6,7 +6,7 @@
   "outputDirectory": "dist/browser",
   "functions": {
     "api/og-image.tsx": {
-      "includeFiles": "api/package.json"
+      "includeFiles": "api/**"
     }
   },
   "rewrites": [
