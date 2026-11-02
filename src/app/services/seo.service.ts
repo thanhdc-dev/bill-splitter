@@ -12,6 +12,11 @@ export interface ISeoConfig {
   keywords?: string;
 }
 
+// Giữ đồng bộ với <title>/<meta description> trong src/index.html
+const DEFAULT_TITLE = 'Bill Splitter – Chia tiền, chia hóa đơn nhóm';
+const DEFAULT_DESCRIPTION =
+  'Bạn cứ chill – bill tôi chia. Chia hóa đơn nhóm nhanh, chia đều hoặc theo món, tạo mã QR chuyển khoản ngân hàng.';
+
 @Injectable({
   providedIn: 'root',
 })
@@ -24,11 +29,12 @@ export class SeoService {
     const domain = environment.appUrl.replace(/\/+$/, '');
     const title = config?.title
       ? (config.title.includes('Bill Splitter') ? config.title : `${config.title} — Bill Splitter`)
-      : 'Bill Splitter';
-    const description = config?.description || 'Bạn cứ chill – bill tôi chia';
+      : DEFAULT_TITLE;
+    const description = config?.description || DEFAULT_DESCRIPTION;
     const image = config?.image || `${domain}/thumbnail.webp`;
     const imageType = config?.imageType || (image.endsWith('.png') ? 'image/png' : 'image/webp');
-    const url = config?.url || domain;
+    // Trailing slash khớp canonical/og:url tĩnh trong index.html
+    const url = config?.url || `${domain}/`;
     const keywords = config?.keywords || 'Bill splitter, Chia tiền, Chia hóa đơn, Thanhdc';
 
     this.title.setTitle(title);

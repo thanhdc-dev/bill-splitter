@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" type="image/x-icon" href="favicon.png">
+  <link rel="icon" type="image/png" href="favicon.png">
 
   <!-- Mở sớm kết nối tới API (ảnh QR) và CDN ảnh để giảm độ trễ request đầu tiên. -->
   <link rel="preconnect" href="https://api.thanhdc.app" crossorigin>
@@ -15,23 +15,56 @@
   <!-- google search console -->
   <meta name="google-site-verification" content="zCYiNhX7d6zZSEeocN-o-CKMD3S3anbXEZIeR4A4RYE"/>
   <!-- Primary Meta Tags -->
-  <title>Bill Splitter</title>
-  <meta name="title" content="Bill Splitter"/>
-  <meta name="description" content="Bạn cứ chill – bill tôi chia"/>
+  <title>Bill Splitter – Chia tiền, chia hóa đơn nhóm</title>
+  <meta name="description" content="Bạn cứ chill – bill tôi chia. Chia hóa đơn nhóm nhanh, chia đều hoặc theo món, tạo mã QR chuyển khoản ngân hàng."/>
   <meta name="keywords" content="Bill splitter, Chia tiền, Chia hóa đơn, Thanhdc"/>
-  <!-- Open Graph / Facebook -->
-  <meta name="og:type" content="website"/>
-  <meta name="og:locale" content="vi"/>
-  <meta name="og:url" content="https://chiatien.thanhdc.app/"/>
-  <meta name="og:title" content="Bill Splitter"/>
-  <meta name="og:description" content="Bạn cứ chill – bill tôi chia"/>
-  <meta name="og:image" content="https://chiatien.thanhdc.app/thumbnail.webp"/>
+  <link rel="canonical" href="https://chiatien.thanhdc.app/"/>
+  <!-- Open Graph / Facebook (dùng property=, khớp SeoService) -->
+  <meta property="og:type" content="website"/>
+  <meta property="og:site_name" content="Bill Splitter"/>
+  <meta property="og:locale" content="vi_VN"/>
+  <meta property="og:url" content="https://chiatien.thanhdc.app/"/>
+  <meta property="og:title" content="Bill Splitter – Chia tiền, chia hóa đơn nhóm"/>
+  <meta property="og:description" content="Bạn cứ chill – bill tôi chia. Chia hóa đơn nhóm nhanh, chia đều hoặc theo món, tạo mã QR chuyển khoản ngân hàng."/>
+  <meta property="og:image" content="https://chiatien.thanhdc.app/thumbnail.webp"/>
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image"/>
   <meta name="twitter:url" content="https://chiatien.thanhdc.app/"/>
-  <meta name="twitter:title" content="Bill Splitter"/>
-  <meta name="twitter:description" content="Bạn cứ chill – bill tôi chia"/>
+  <meta name="twitter:title" content="Bill Splitter – Chia tiền, chia hóa đơn nhóm"/>
+  <meta name="twitter:description" content="Bạn cứ chill – bill tôi chia. Chia hóa đơn nhóm nhanh, chia đều hoặc theo món, tạo mã QR chuyển khoản ngân hàng."/>
   <meta name="twitter:image" content="https://chiatien.thanhdc.app/thumbnail.webp"/>
+
+  <!-- Structured data (tĩnh để có trong raw HTML cho crawler không chạy JS) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": "https://chiatien.thanhdc.app/#website",
+        "url": "https://chiatien.thanhdc.app/",
+        "name": "Bill Splitter",
+        "inLanguage": "vi"
+      },
+      {
+        "@type": "WebApplication",
+        "@id": "https://chiatien.thanhdc.app/#app",
+        "name": "Bill Splitter",
+        "alternateName": "Chia tiền",
+        "url": "https://chiatien.thanhdc.app/",
+        "description": "Ứng dụng web chia hóa đơn và chia tiền nhóm, tạo mã QR chuyển khoản ngân hàng.",
+        "applicationCategory": "FinanceApplication",
+        "operatingSystem": "Any",
+        "browserRequirements": "Requires JavaScript",
+        "inLanguage": "vi",
+        "image": "https://chiatien.thanhdc.app/thumbnail.webp",
+        "isPartOf": { "@id": "https://chiatien.thanhdc.app/#website" },
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "VND" },
+        "author": { "@type": "Person", "name": "ThanhDC" }
+      }
+    ]
+  }
+  </script>
 
   <!-- PWA Configuration -->
   <link rel="manifest" href="manifest.webmanifest">
@@ -58,6 +91,6 @@
 </head>
 <body class="mat-typography">
   <app-root></app-root>
-  <noscript>Please enable JavaScript to continue using this application.</noscript>
+  <noscript>Bill Splitter – ứng dụng chia tiền, chia hóa đơn nhóm và tạo mã QR chuyển khoản. Vui lòng bật JavaScript để sử dụng ứng dụng.</noscript>
 </body>
 </html>

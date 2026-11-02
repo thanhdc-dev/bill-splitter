@@ -91,3 +91,7 @@ Ghi chép quyết định triển khai theo quy ước tại `AGENTS.md`. File n
 - 2026-10-20 (triển khai Phase 1 tối ưu OG image: Base64URL payload, zero backend call, cache 7 ngày, inline SVG)
 - 2026-10-20 (triển khai Phase 2 tối ưu OG image: font Inter subset module, CSS rasterize & Angular pre-warm)
 - 2026-10-20 (cập nhật & chuẩn hoá tài liệu og-integration-guide.md sát với code thực tế)
+
+## 2026-11 → [notes/2026-11.md](notes/2026-11.md)
+
+- 2026-11-02 (SEO quick wins: title/description/H1 tiếng Việt, canonical + OG tĩnh, JSON-LD WebApplication)
