@@ -12,7 +12,6 @@
         mat-raised-button
         color="primary"
         class="google-btn"
-        aria-label="login with google"
         (click)="loginWith('google')"
         [disabled]="isLoading()"
       >
@@ -44,7 +43,6 @@
         mat-raised-button
         color="primary"
         class="zalo-btn"
-        aria-label="login with zalo"
         (click)="loginWith('zalo')"
         [disabled]="isLoading()"
       >
@@ -103,7 +101,6 @@
         mat-raised-button
         color="primary"
         class="github-btn"
-        aria-label="login with github"
         (click)="loginWith('github')"
         [disabled]="isLoading()"
       >
@@ -131,7 +128,6 @@
       <button
         mat-raised-button
         class="passkey-btn"
-        aria-label="login with passkey"
         (click)="loginWithPasskey()"
         [disabled]="isLoading()"
       >
@@ -143,6 +139,6 @@
   </mat-dialog-content>
 
   <mat-dialog-actions align="end">
-    <button aria-label="cancel" mat-button (click)="onCancel()">Hủy</button>
+    <button mat-button (click)="onCancel()">Hủy</button>
   </mat-dialog-actions>
 </div>

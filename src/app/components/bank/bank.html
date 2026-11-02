@@ -11,7 +11,7 @@
             <mat-icon>download</mat-icon>
           </a>
           }
-          <button mat-icon-button aria-label="settings" (click)="onSettingClick()">
+          <button mat-icon-button aria-label="Cài đặt" (click)="onSettingClick()">
             <mat-icon>settings</mat-icon>
           </button>
         </div>
@@ -27,8 +27,8 @@
         <span class="value value--account">
           <span class="mono-text account-number">{{ bankInfo.accountNumber }}</span>
           <button class="copy-btn" [class.copy-btn--copied]="isAccountNumberCopied"
-            (click)="onCopyAccountNumber($event)" title="Copy account number"
-            aria-label="Copy account number">
+            (click)="onCopyAccountNumber($event)" title="Sao chép số tài khoản"
+            aria-label="Sao chép số tài khoản">
             <mat-icon>{{ isAccountNumberCopied ? 'check' : 'content_copy' }}</mat-icon>
           </button>
         </span>
@@ -59,7 +59,7 @@
           </a>
           }
           @if(isEditable()) {
-          <button mat-icon-button aria-label="settings" (click)="onSettingClick()">
+          <button mat-icon-button aria-label="Cài đặt" (click)="onSettingClick()">
             <mat-icon>settings</mat-icon>
           </button>
           }
@@ -73,8 +73,8 @@
         <span class="value value--account">
           <span class="mono-text account-number">{{ bankInfo.phoneNumberMomo }}</span>
           <button class="copy-btn" [class.copy-btn--copied]="isMomoNumberCopied"
-            (click)="onCopyMomoAccountNumber($event)" title="Copy account number"
-            aria-label="Copy account number">
+            (click)="onCopyMomoAccountNumber($event)" title="Sao chép số tài khoản"
+            aria-label="Sao chép số tài khoản">
             <mat-icon>{{ isMomoNumberCopied ? 'check' : 'content_copy' }}</mat-icon>
           </button>
         </span>

@@ -8,7 +8,7 @@
     padding: 2rem;
     text-align: center;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: border-color 0.3s ease, background-color 0.3s ease, transform 0.3s ease;
     background-color: var(--surface-muted);
     position: relative;
 
@@ -149,7 +149,7 @@
           align-items: center;
           justify-content: center;
           opacity: 0;
-          transition: all 0.2s;
+          transition: opacity 0.2s, background-color 0.2s, transform 0.2s;
 
           svg {
             width: 1.25rem;

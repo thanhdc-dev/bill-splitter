@@ -18,6 +18,6 @@
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">
-  <button mat-button aria-label="cancel" (click)="cancel()">Hủy</button>
-  <button mat-raised-button color="primary" aria-label="save" [disabled]="!!error" (click)="save()">Lưu</button>
+  <button mat-button (click)="cancel()">Hủy</button>
+  <button mat-raised-button color="primary" [disabled]="!!error" (click)="save()">Lưu</button>
 </mat-dialog-actions>

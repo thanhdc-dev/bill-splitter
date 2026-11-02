@@ -95,3 +95,4 @@ Ghi chép quyết định triển khai theo quy ước tại `AGENTS.md`. File n
 ## 2026-11 → [notes/2026-11.md](notes/2026-11.md)
 
 - 2026-11-02 (SEO quick wins: title/description/H1 tiếng Việt, canonical + OG tĩnh, JSON-LD WebApplication)
+- 2026-11-02 (Audit fixes: aria-label tiếng Việt, reduced-motion giữ fade, bỏ transition: all/side-stripe/bounce easing)

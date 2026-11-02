@@ -289,14 +289,16 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--accent-soft-fg);
 }
 
-/* Respect the OS-level "reduce motion" setting — collapse all transitions/animations
-   to near-instant instead of removing them outright, so state changes (hover, focus,
-   dialogs) still register visually without the motion. */
+/* Respect the OS-level "reduce motion" setting — drop movement (animations, transforms,
+   smooth scroll) but keep a short fade on colour/opacity so state changes (hover, focus,
+   dialogs) still register. transition-property is whitelisted: its default is `all`,
+   which would otherwise re-enable transitions on layout properties and transform. */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 0.001ms !important;
+    transition-property: opacity, color, background-color, border-color, box-shadow !important;
+    transition-duration: 120ms !important;
     scroll-behavior: auto !important;
   }
 }
