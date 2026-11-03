@@ -47,14 +47,23 @@ export class ExpenseFormComponent {
   /** Mỗi khoản mục kèm số người tham gia, tính một lần khi expenses/members đổi. */
   readonly expenseRows = computed(() => {
     const members = this.billSplitterService.members();
-    return this.billSplitterService.expenses().map((expense) => ({
-      expense,
-      // Số người đang chọn tham gia khoản mục này — hiện như dòng phụ dưới tên món.
-      participantCount: members.reduce(
-        (total, member) => total + (member.participations.get(expense.id) || 0),
-        0
-      ),
-    }));
+    return this.billSplitterService.expenses().map((expense) => {
+      const quantities = members
+        .map((member) => member.participations.get(expense.id) || 0)
+        .filter((quantity) => quantity > 0);
+      const portions = quantities.reduce((total, quantity) => total + quantity, 0);
+      return {
+        expense,
+        // Số NGƯỜI đang chọn tham gia khoản mục này — hiện như dòng phụ dưới tên món. Đếm người,
+        // không cộng số suất: hai người ăn nửa suất là 2 người, không phải 1.
+        participantCount: quantities.length,
+        // Chỉ khi có ai ăn suất lẻ/nhiều suất mới hiện thêm tổng số suất. Cùng tiêu chí với nhãn
+        // "/suất" ở result-display (so từng suất với 1, không so tổng: 1,5 + 0,5 cũng phải hiện).
+        portionLabel: quantities.some((quantity) => quantity !== 1)
+          ? `${portions.toLocaleString('vi-VN')} suất`
+          : null,
+      };
+    });
   });
 
   constructor() {

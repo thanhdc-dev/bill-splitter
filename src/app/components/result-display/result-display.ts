@@ -16,8 +16,10 @@ interface IExpenseRowVM {
   name: string;
   amount: number;
   participants: string;
-  participantCount: number;
+  totalPortions: number;
   perPerson: number | null;
+  /** Đơn vị của `perPerson`: "người" khi mọi người đều ăn đúng 1 suất, "suất" khi có suất lẻ. */
+  perUnit: 'người' | 'suất';
 }
 
 interface IMemberRowVM {
@@ -56,21 +58,29 @@ export class ResultDisplayComponent {
   readonly expenseRows = computed<IExpenseRowVM[]>(() => {
     const members = this.members();
     return this.expenses().map((expense) => {
-      let participantCount = 0;
+      let totalPortions = 0;
+      let hasPartialPortion = false;
       const names: string[] = [];
       for (const member of members) {
         const quantity = member.participations.get(expense.id) || 0;
         if (!quantity) continue;
-        participantCount += quantity;
-        names.push(quantity === 1 ? member.name : `${member.name}(x${quantity})`);
+        totalPortions += quantity;
+        if (quantity !== 1) hasPartialPortion = true;
+        // "0,5 suất" (dấu phẩy thập phân kiểu Việt) thay cho "x0.5" trông như mã.
+        names.push(
+          quantity === 1 ? member.name : `${member.name} (${quantity.toLocaleString('vi-VN')} suất)`
+        );
       }
       return {
         id: expense.id,
         name: expense.name,
         amount: expense.amount,
         participants: names.join(', '),
-        participantCount,
-        perPerson: participantCount > 0 ? expense.amount / participantCount : null,
+        totalPortions,
+        perPerson: totalPortions > 0 ? expense.amount / totalPortions : null,
+        // Chia theo suất: khi ai đó ăn nửa suất hay nhiều suất, số tiền này là giá MỖI SUẤT, không
+        // phải mỗi người, nên không được ghi "/người".
+        perUnit: hasPartialPortion ? 'suất' : 'người',
       };
     });
   });

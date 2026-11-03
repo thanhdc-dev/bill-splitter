@@ -57,7 +57,7 @@
               <mat-icon>delete</mat-icon>
             </button>
             <span class="expense-row__meta">
-              {{ row.participantCount }} người ăn chung
+              {{ row.participantCount }} người ăn chung@if (row.portionLabel) { ({{ row.portionLabel }})}
             </span>
             <button type="button" class="expense-row__amount mono-amount" aria-label="Sửa số tiền khoản mục {{ expense.name }}" (click)="updateExpenseAmount(expense)">
               {{ expense.amount | currency: 'VND': 'symbol' : '1.0-0' : 'vi' }}

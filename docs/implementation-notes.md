@@ -101,3 +101,4 @@ Ghi chép quyết định triển khai theo quy ước tại `AGENTS.md`. File n
 - 2026-11-03 (đồng bộ FAB bill-details: icon/nhãn theo hành động thật, offset PWA mọi viewport)
 - 2026-11-03 (colorize create-bill: token --primary-fg/--on-gold, sửa contrast chữ/icon teal và icon FAB ở dark mode)
 - 2026-11-03 (polish create-bill: track bank-select theo code, focus ring FAB, hover FAB theo reduced-motion)
+- 2026-11-03 (clarify create-bill: nhãn /suất khi chia suất lẻ, đếm số người ăn chung đúng)
