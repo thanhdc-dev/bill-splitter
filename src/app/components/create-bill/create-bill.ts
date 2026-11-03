@@ -1,5 +1,5 @@
 import { AsyncPipe, NgClass } from '@angular/common';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -32,6 +32,7 @@ import {
   distinctUntilChanged,
   filter,
   firstValueFrom,
+  map,
   Observable,
 } from 'rxjs';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -95,6 +96,10 @@ export class CreateBill implements OnInit, AfterViewInit {
   expenses$: Observable<ExpenseItem[]>;
   members$: Observable<Member[]>;
   isSaving$: Observable<boolean>;
+  /** Khách chưa đăng nhập vẫn tính tiền được; chỉ nút lưu cần đổi nhãn để không gây bất ngờ. */
+  readonly isLoggedIn = toSignal(this.authService.user$.pipe(map((user) => !!user)), {
+    initialValue: this.authService.isLoggedIn(),
+  });
   files: File[] = [];
   /** null = không đang upload; 0-100 = % tiến trình của batch upload ảnh hiện tại. */
   uploadProgress: number | null = null;
@@ -153,6 +158,15 @@ export class CreateBill implements OnInit, AfterViewInit {
           this.tabGroup.selectedIndex = index;
         }
       });
+  }
+
+  /** Chỉ chặn ở nút FAB: luồng `?save=true` sau đăng nhập gọi thẳng `save()` với bill đã khôi phục. */
+  onSaveClick() {
+    if (!this.billSplitterService.expenses().length) {
+      this.snackBar.open('Thêm ít nhất một khoản mục trước khi lưu', 'Đóng', { duration: 5000 });
+      return;
+    }
+    void this.save(true);
   }
 
   async save(isShare?: boolean) {

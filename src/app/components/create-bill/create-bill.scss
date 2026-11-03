@@ -32,14 +32,10 @@
      FAB không che chữ cuối trang. Xem docs/implementation-notes.md. */
   .buttons {
     z-index: 999;
-    bottom: 1.75rem;
-
-    /* Mobile: PWA install prompt (cố định đáy, z-index 1000) cao `--pwa-prompt-offset` (do
-       PwaInstallPromptComponent đặt) — đẩy FAB lên trên nó thay vì bị che. Từ 768px prompt nằm
-       giữa đáy, không chạm góc phải nên không cần. */
-    @media screen and (max-width: 767px) {
-      bottom: calc(1.75rem + var(--pwa-prompt-offset, 0px));
-    }
+    /* PWA install prompt (cố định đáy, z-index 1000) cao `--pwa-prompt-offset` (do
+       PwaInstallPromptComponent đặt) — đẩy FAB lên trên nó ở mọi kích thước, không chỉ
+       mobile, để prompt giữa đáy không đè lên FAB ở tablet. */
+    bottom: calc(1.75rem + var(--pwa-prompt-offset, 0px));
 
     button {
       transition: transform 0.2s cubic-bezier(0.25, 1, 0.5, 1);
@@ -119,7 +115,7 @@
 .upload-progress {
   z-index: 999;
   /* Nằm ngay trên FAB (56px) thay vì chồng lên nó. */
-  bottom: calc(1.75rem + 56px + 12px);
+  bottom: calc(1.75rem + 56px + 12px + var(--pwa-prompt-offset, 0px));
 
   display: flex;
   align-items: center;
@@ -134,10 +130,5 @@
     font-size: 0.8rem;
     font-weight: 600;
     color: var(--text-secondary);
-  }
-
-  /* Mobile: cộng thêm chiều cao PWA prompt. Đặt cuối rule vì Sass yêu cầu khai báo đứng trước rule lồng. */
-  @media screen and (max-width: 767px) {
-    bottom: calc(1.75rem + 56px + 12px + var(--pwa-prompt-offset, 0px));
   }
 }

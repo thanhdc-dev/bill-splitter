@@ -96,3 +96,4 @@ Ghi chép quyết định triển khai theo quy ước tại `AGENTS.md`. File n
 
 - 2026-11-02 (SEO quick wins: title/description/H1 tiếng Việt, canonical + OG tĩnh, JSON-LD WebApplication)
 - 2026-11-02 (Audit fixes: aria-label tiếng Việt, reduced-motion giữ fade, bỏ transition: all/side-stripe/bounce easing)
+- 2026-11-03 (create-bill: FAB chỉ icon (save cho khách, share khi đã đăng nhập), chặn bấm khi bill rỗng)
