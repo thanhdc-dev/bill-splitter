@@ -285,11 +285,18 @@ h1, h2, h3, h4, h5, h6 {
 .mat-mdc-raised-button:focus-visible,
 .mat-mdc-unelevated-button:focus-visible,
 .mat-mdc-outlined-button:focus-visible,
-.mat-mdc-icon-button:focus-visible,
-.mat-mdc-fab:focus-visible,
-.mat-mdc-mini-fab:focus-visible {
+.mat-mdc-icon-button:focus-visible {
   outline: 2px solid var(--text-primary);
   outline-offset: 2px;
+}
+
+/* FAB và mini-FAB cần `!important`: rule chung phía trên bị Material đè với hai loại nút này (đo
+   trên trình duyệt: `:focus-visible` khớp nhưng outline `none`), nên người dùng bàn phím không thấy
+   nút đang focus. Offset 3px để vòng nằm ngoài nền gold/teal của nút, trên nền trang. */
+.mat-mdc-fab:focus-visible,
+.mat-mdc-mini-fab:focus-visible {
+  outline: 2px solid var(--text-primary) !important;
+  outline-offset: 3px !important;
 }
 
 /* Brand-consistent text selection color instead of the browser's default blue. */

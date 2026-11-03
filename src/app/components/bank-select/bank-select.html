@@ -16,7 +16,7 @@
         noEntriesFoundLabel="Không tìm thấy ngân hàng phù hợp"
       ></ngx-mat-select-search>
     </mat-option>
-    @for (bank of filteredBanks | async; track bank.bin) {
+    @for (bank of filteredBanks | async; track bank.code) {
     <mat-option [value]="valueField === 'bin' ? bank.bin : bank.code">
       <div class="bank-info">
         <img [src]="bank.logo" width="70" loading="lazy" decoding="async" [alt]="bank.short_name" />
