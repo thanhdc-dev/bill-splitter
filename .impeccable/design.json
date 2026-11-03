@@ -1,0 +1,99 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-02T00:00:00.000Z",
+  "title": "Design System: Bill Splitter",
+  "extensions": {
+    "colorMeta": {
+      "primary": { "role": "primary", "displayName": "Teal tờ 500k", "canonical": "#1B6B72", "tonalRamp": ["#0A2528", "#123F44", "#17565C", "#1B6B72", "#3F8E95", "#6FBFC4", "#9FDEE2", "#E3EFEE"] },
+      "gold": { "role": "secondary", "displayName": "Vàng đồng", "canonical": "#B8722E", "tonalRamp": ["#2E1B08", "#5A3715", "#7A4A1D", "#B8722E", "#C98A42", "#DDAD78", "#F0C99A", "#F5E6D3"] },
+      "green": { "role": "tertiary", "displayName": "Xanh đã thanh toán", "canonical": "#2F7D4F", "tonalRamp": ["#0E2A19", "#14532d", "#1F6B40", "#2F7D4F", "#4E9C6E", "#86efac", "#B7E8C7", "#E1F0E5"] },
+      "paper": { "role": "neutral", "displayName": "Giấy ấm", "canonical": "#F7F3EC", "tonalRamp": ["#17140F", "#211D17", "#2A2419", "#332C1F", "#EAE3D5", "#F1ECE1", "#F7F3EC", "#FFFFFF"] }
+    },
+    "typographyMeta": {
+      "body": { "displayName": "Body", "purpose": "Nội dung chung; sàn 0.875rem." },
+      "label": { "displayName": "Label", "purpose": "Chữ trên nút, 500, tracking 0.3px." },
+      "amount": { "displayName": "Amount", "purpose": "Mọi số tiền và số lượng, mono tabular." },
+      "account-number": { "displayName": "Account number", "purpose": "Số tài khoản, số điện thoại; không đậm." }
+    },
+    "shadows": [
+      { "name": "shadow-sm", "value": "0 1px 2px 0 rgba(0, 0, 0, 0.05)", "purpose": "Card và FAB khi nghỉ." },
+      { "name": "shadow-md", "value": "0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)", "purpose": "Card khi hover, dialog." },
+      { "name": "shadow-lg", "value": "0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.03)", "purpose": "Lớp nổi lớn." }
+    ],
+    "motion": [
+      { "name": "ease-out-quart", "value": "cubic-bezier(0.25, 1, 0.5, 1)", "purpose": "Hover/scale của nút; thay cho bounce." },
+      { "name": "fade-reduced", "value": "120ms opacity/color", "purpose": "Khi prefers-reduced-motion: chỉ giữ fade." }
+    ],
+    "breakpoints": [
+      { "name": "xs", "value": "480px" },
+      { "name": "sm", "value": "600px" },
+      { "name": "md", "value": "768px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Hành động thường; nền teal, chữ trắng.",
+      "html": "<button class=\"ds-btn-primary\">Thêm thành viên</button>",
+      "css": ".ds-btn-primary{background:#1B6B72;color:#fff;border:none;border-radius:8px;height:44px;padding:0 20px;font:500 14px Inter,sans-serif;letter-spacing:.3px;cursor:pointer;transition:background-color .2s ease}.ds-btn-primary:hover{background:#17565C}.ds-btn-primary:focus-visible{outline:2px solid #1C1B1A;outline-offset:2px}"
+    },
+    {
+      "name": "Gold CTA",
+      "kind": "button",
+      "refersTo": "button-gold",
+      "description": "CTA chính duy nhất của màn hình (Lưu & chia sẻ).",
+      "html": "<button class=\"ds-btn-gold\">Lưu &amp; chia sẻ</button>",
+      "css": ".ds-btn-gold{background:#B8722E;color:#fff;border:none;border-radius:8px;height:44px;padding:0 20px;font:500 14px Inter,sans-serif;letter-spacing:.3px;cursor:pointer;transition:background-color .2s ease}.ds-btn-gold:hover{background:#9E5F22}.ds-btn-gold:focus-visible{outline:2px solid #1C1B1A;outline-offset:2px}"
+    },
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Container phẳng viền mảnh, bóng nâng khi hover.",
+      "html": "<div class=\"ds-card\"><strong>Bữa tối nhóm</strong><p>4 thành viên</p></div>",
+      "css": ".ds-card{background:#fff;color:#1C1B1A;border:1px solid rgba(28,27,26,.16);border-radius:16px;padding:16px;box-shadow:0 1px 2px 0 rgba(0,0,0,.05);font:14px Inter,sans-serif;transition:box-shadow .3s ease}.ds-card:hover{box-shadow:0 4px 6px -1px rgba(0,0,0,.05),0 2px 4px -1px rgba(0,0,0,.03)}.ds-card p{margin:4px 0 0;color:#6E6862}"
+    },
+    {
+      "name": "Receipt Ticket",
+      "kind": "custom",
+      "refersTo": "receipt-ticket",
+      "description": "Cuống vé: stub teal + thân trắng, hai notch tròn ở điểm nối.",
+      "html": "<div class=\"ds-ticket\"><div class=\"ds-stub\">4</div><div class=\"ds-body\"><span>Bữa tối nhóm</span><span class=\"ds-amt\">1.250.000đ</span></div></div>",
+      "css": ".ds-ticket{--notch:#F7F3EC;position:relative;display:flex;background:#fff;border:1px solid rgba(28,27,26,.16);border-radius:12px;overflow:hidden;font:14px Inter,sans-serif;color:#1C1B1A}.ds-stub{position:relative;display:flex;align-items:center;justify-content:center;padding:10px 14px;background:#1B6B72;color:#fff;font-weight:600}.ds-stub::before,.ds-stub::after{content:'';position:absolute;right:-7px;width:14px;height:14px;border-radius:50%;background:var(--notch)}.ds-stub::before{top:-7px}.ds-stub::after{bottom:-7px}.ds-body{display:flex;flex:1;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px}.ds-amt{font:600 14px 'IBM Plex Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Cuống vé ở quán",
+    "overview": "Giao diện giống tờ hóa đơn giấy ở quán: nền giấy ấm, viền mảnh, cuống vé có notch tròn, số tiền in bằng font mono thẳng cột. Màu lấy từ tiền Việt Nam, teal như tờ 500k và vàng đồng như các tờ 10–20k, nên thân quen mà không màu mè. Mọi thứ được thiết kế cho một tay trên điện thoại ở bàn ăn: gọn, đọc nhanh, số tiền luôn là thứ rõ nhất.",
+    "keyCharacteristics": [
+      "Nền giấy ấm (#F7F3EC), card trắng viền mảnh 1px.",
+      "Teal là giọng chính; vàng đồng chỉ cho một hành động chính mỗi màn hình.",
+      "Số tiền và số tài khoản dùng IBM Plex Mono, tabular.",
+      "Cuống vé có notch tròn làm chữ ký hình ảnh.",
+      "Phẳng ở trạng thái nghỉ; bóng chỉ xuất hiện khi tương tác."
+    ],
+    "rules": [
+      { "name": "The One Gold Rule", "body": "Vàng đồng chỉ dùng cho đúng một hành động chính trên mỗi màn hình. Nút khác giữ teal. Độ hiếm của nó là điểm mấu chốt.", "section": "colors" },
+      { "name": "The Fill-Not-Text Rule", "body": "--teal (#1B6B72) được giữ nguyên ở dark mode vì là màu nền với chữ trắng. Không dùng nó làm màu chữ hoặc icon trên nền tối; dùng bản đã đảo tông.", "section": "colors" },
+      { "name": "The Mono-For-Numbers Rule", "body": "Mono chỉ dành cho số tiền, số lượng, số tài khoản. Không dùng cho nhãn hay chữ thường.", "section": "typography" },
+      { "name": "The Flat-By-Default Rule", "body": "Bề mặt phẳng khi nghỉ. Bóng là phản hồi cho trạng thái, không phải trang trí.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do dùng `mono-amount` (Plex Mono 600, tabular) cho mọi số tiền.",
+      "Do giữ vàng đồng cho một CTA chính mỗi màn hình.",
+      "Do giữ vùng chạm ≥ 44px và contrast chữ ≥ 4.5:1 (icon và thành phần UI ≥ 3:1) ở cả hai theme.",
+      "Do đặt `--notch-bg` cho đúng màu nền khi đặt cuống vé trong card hoặc dialog.",
+      "Do viết nhãn cho screen reader bằng tiếng Việt, và bỏ `aria-label` nếu nút đã có chữ hiển thị."
+    ],
+    "donts": [
+      "Don't dùng `--teal` làm màu chữ hoặc icon trên nền tối (2.71:1); dùng bản đã đảo tông.",
+      "Don't dùng viền màu một cạnh dày hơn 1px (side-stripe) trên card hay list item.",
+      "Don't dùng easing bounce; dùng ease-out (`cubic-bezier(0.25, 1, 0.5, 1)`).",
+      "Don't viết `transition: all`; liệt kê thuộc tính cụ thể.",
+      "Don't dùng mono cho nhãn hoặc chữ thường.",
+      "Don't thêm shadow nặng khi nghỉ."
+    ]
+  }
+}
