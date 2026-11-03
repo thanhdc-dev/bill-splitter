@@ -115,13 +115,16 @@
   }
 
   <div class="buttons fixed bottom-7 right-7">
-    <!-- FAB nổi cố định (khớp create-bill, quyết định 2026-09-22). Không gate theo isEditable —
-         người xem hoá đơn ở chế độ chỉ đọc vẫn cần sao chép được link chia sẻ. -->
-    <button mat-fab class="fab-gold share-button" aria-label="Lưu và sao chép link chia sẻ"
-      matTooltip="Lưu và sao chép link chia sẻ" matTooltipPosition="left"
+    <!-- FAB nổi cố định (quyết định 2026-09-22). Không gate theo isEditable — người xem hoá đơn ở
+         chế độ chỉ đọc vẫn cần sao chép được link chia sẻ. Icon và tên truy cập theo hành động
+         thật (quyết định 2026-11-03): chỉ `save`/`login` khi có thay đổi chưa lưu; khác create-bill
+         vì bill ở đây đã có mã và có tự lưu. -->
+    @let fab = fabView();
+    <button mat-fab class="fab-gold share-button" [attr.aria-label]="fab.label"
+      [matTooltip]="fab.label" matTooltipPosition="left"
       [ngClass]="{'share-button__syncing': (isSaving$ | async)}" [disabled]="(isSaving$ | async)"
       (click)="save(true)">
-      <mat-icon>{{(isSaving$ | async) ? 'sync' : 'share'}}</mat-icon>
+      <mat-icon>{{(isSaving$ | async) ? 'sync' : fab.icon}}</mat-icon>
     </button>
   </div>
   }

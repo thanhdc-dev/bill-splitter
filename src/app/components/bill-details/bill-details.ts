@@ -1,6 +1,6 @@
 import { AsyncPipe, NgClass } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
@@ -34,6 +34,7 @@ import {
   distinctUntilChanged,
   filter,
   firstValueFrom,
+  map,
   Observable,
   Subscription,
 } from 'rxjs';
@@ -55,6 +56,14 @@ import { ImageUploadComponent, ImagePreview } from '../image-upload/image-upload
 /* Cùng ngưỡng với create-bill.ts/member-table.ts — dưới 768px thấy tab, từ 768px thấy layout
    2 cột, để 2 trang nhất quán về hành vi responsive. */
 const MOBILE_BREAKPOINT = '(max-width: 767px)';
+
+type FabMode = 'share' | 'save' | 'login';
+
+const FAB_VIEWS: Record<FabMode, { icon: string; label: string }> = {
+  share: { icon: 'share', label: 'Sao chép link chia sẻ' },
+  save: { icon: 'save', label: 'Lưu và sao chép link chia sẻ' },
+  login: { icon: 'save', label: 'Đăng nhập để lưu và chia sẻ' },
+};
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -117,7 +126,24 @@ export class BillDetails implements OnInit, OnDestroy, AfterViewInit {
   uploadProgress: number | null = null;
   /** Dưới 768px: tab Khoản mục/Thành viên. Từ 768px: 2 cột song song, không có tabGroup. */
   isMobile = false;
+  private readonly isLoggedIn = toSignal(this.authService.user$.pipe(map((user) => !!user)), {
+    initialValue: this.authService.isLoggedIn(),
+  });
 
+  /**
+   * Hành động thật của FAB, khớp nhánh trong `save(true)`: người xem hoặc không có thay đổi chỉ
+   * sao chép link (không bao giờ đòi đăng nhập); có thay đổi thì lưu rồi mới chia sẻ, và khách
+   * sẽ bị chặn đăng nhập.
+   */
+  fabMode(): FabMode {
+    if (!this.isEditable || !this.billSplitterService.isChange()) return 'share';
+    return this.isLoggedIn() ? 'save' : 'login';
+  }
+
+  /** Icon + tên truy cập của FAB. Khách có thay đổi vẫn thấy `save` (khớp create-bill). */
+  fabView(): { icon: string; label: string } {
+    return FAB_VIEWS[this.fabMode()];
+  }
 
   constructor() {
     this.expenses$ = this.billSplitterService.expenses$;
