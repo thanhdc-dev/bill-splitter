@@ -6,6 +6,14 @@
           <mat-label>Tên hóa đơn</mat-label>
           <input matInput [formControl]="nameCtrl" placeholder="Tên hóa đơn, cửa hàng, quán ăn..." />
         </mat-form-field>
+        @if (hasDraft()) {
+        <!-- Nháp được giữ qua lần quay lại/tải lại trang nên cần lối "làm lại"; hoàn tác bằng snackbar
+             thay vì modal xác nhận. -->
+        <button mat-button type="button" class="top-bar__clear" (click)="discardDraft()">
+          <mat-icon>delete_sweep</mat-icon>
+          Xoá nháp
+        </button>
+        }
       </div>
 
       @if (isMobile) {

@@ -16,6 +16,21 @@ import { BankInfoItem } from '../models/bank.model';
 
 /** Cờ sessionStorage: nháp trong localStorage cần được khôi phục (không tự tạo bill) sau login. */
 const RESTORE_DRAFT_FLAG = 'bill_restore_draft';
+/** Nháp tự lưu của khách đang nhập bill (xem `saveDraft`); khác với 'bill' dùng cho luồng login. */
+const DRAFT_KEY = 'bill_draft';
+const DRAFT_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+
+/** Bill ở dạng lưu trữ/gửi đi: `participations` là object thuần thay cho Map. */
+export interface IStoredBill {
+  name: string;
+  data: {
+    expenses: ExpenseItem[];
+    members: (Omit<Member, 'participations'> & { participations: Record<string, number> })[];
+    bankInfo?: BankInfoItem;
+    totalAmount: number;
+  };
+  fileIds?: number[];
+}
 
 @Injectable({
   providedIn: 'root',
@@ -25,6 +40,8 @@ export class BillSplitterService {
   private readonly authService = inject(AuthService);
 
   private userId = 0;
+  /** true sau khi tạo bill thành công đến lần `resetBill()` kế tiếp: không ghi lại nháp. */
+  private draftSuspended = false;
   private readonly endPoint = 'bills';
   private readonly bankInfoDefault: BankInfoItem = {
     bank: '',
@@ -177,6 +194,7 @@ export class BillSplitterService {
   }
 
   resetBill() {
+    this.draftSuspended = false;
     this.name.set(this.getNameDefault());
     this.expenses.set([]);
     this.members.set([]);
@@ -270,6 +288,9 @@ export class BillSplitterService {
         )
       );
       this.clearBillStorage();
+      // Bill đã lên server: xoá nháp và chặn lần ghi debounce còn treo ghi lại nháp cũ.
+      this.clearDraft();
+      this.draftSuspended = true;
 
       return response.code;
     } catch (error) {
@@ -332,17 +353,20 @@ export class BillSplitterService {
     if (!billString) {
         return;
     }
-    const bill = JSON.parse(billString);
+    this.applyStoredBill(JSON.parse(billString));
+  }
+
+  /** Nạp bill ở định dạng `formatBillData()` (participations là object, không phải Map) vào state. */
+  private applyStoredBill(bill: IStoredBill) {
     const { name, data, fileIds } = bill;
     const expenses = data.expenses || [];
-    const members = (data.members || []).map((member: Member) => {
+    const members: Member[] = (data.members || []).map((member) => {
       return {
         ...member,
-        participations: new Map(
-          Object.entries(member.participations).map(([key, value]) => [
-            key,
-            value ? Number(value) : 0,
-          ])
+        participations: new Map<string, number>(
+          Object.entries(member.participations).map(
+            ([key, value]): [string, number] => [key, value ? Number(value) : 0],
+          ),
         ),
       };
     });
@@ -359,6 +383,58 @@ export class BillSplitterService {
   clearBillStorage() {
     localStorage.removeItem('bill');
     this.fileIds.set([]);
+  }
+
+  /**
+   * Nháp tự lưu của màn tạo bill: sống sót qua điều hướng đi/quay lại `/`, tải lại trang và app bị
+   * tắt giữa chừng. Key riêng (không phải 'bill') vì 'bill' còn là tín hiệu "tự tạo bill sau login".
+   */
+  saveDraft() {
+    if (this.draftSuspended) return;
+    if (this.isBillDataEmpty()) {
+      this.clearDraft();
+      return;
+    }
+    // Không lưu fileIds: ảnh chưa gắn vào bill nào thì khôi phục lên cũng không có ảnh xem trước.
+    const bill = { ...this.formatBillData(), fileIds: [] };
+    try {
+      // Nội dung không đổi (vd. ngay sau khi khôi phục) thì giữ nguyên savedAt, nếu không mỗi lần mở
+      // trang sẽ làm mới hạn 7 ngày và nháp không bao giờ hết hạn.
+      const existing = localStorage.getItem(DRAFT_KEY);
+      if (existing && JSON.stringify(JSON.parse(existing).bill) === JSON.stringify(bill)) return;
+      localStorage.setItem(DRAFT_KEY, JSON.stringify({ savedAt: Date.now(), bill }));
+    } catch {
+      // Hết quota / chế độ riêng tư: bỏ qua, nháp chỉ là tiện ích.
+    }
+  }
+
+  /** Nạp nháp còn hạn vào state; trả về true nếu đã khôi phục. Nháp hỏng hoặc quá hạn bị xoá. */
+  restoreDraft(): boolean {
+    const raw = localStorage.getItem(DRAFT_KEY);
+    if (!raw) return false;
+    try {
+      const { savedAt, bill } = JSON.parse(raw);
+      if (typeof savedAt !== 'number' || Date.now() - savedAt > DRAFT_TTL_MS) throw new Error('expired');
+      this.applyStoredBill(bill);
+      return !this.isBillDataEmpty();
+    } catch {
+      this.clearDraft();
+      this.resetBill();
+      return false;
+    }
+  }
+
+  clearDraft() {
+    localStorage.removeItem(DRAFT_KEY);
+  }
+
+  /** Chụp state hiện tại để hoàn tác thao tác "Xoá nháp". */
+  snapshotBill(): IStoredBill {
+    return this.formatBillData();
+  }
+
+  restoreSnapshot(snapshot: IStoredBill) {
+    this.applyStoredBill(snapshot);
   }
 
   async updateBill(code: string) {

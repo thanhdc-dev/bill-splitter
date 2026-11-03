@@ -25,6 +25,17 @@
       flex: 1;
       margin-bottom: 0;
     }
+
+    /* Mobile: gap 24px + nút ~110px làm hẹp ô tên, nên thu gap và không cho nút co lại. */
+    &__clear {
+      flex: none;
+      min-height: var(--touch-target);
+      white-space: nowrap;
+
+      @media screen and (max-width: 767px) {
+        margin-inline-start: -12px;
+      }
+    }
   }
 
   /* Floating Action Button — hiện ngay từ đầu (quyết định 2026-10-02, thay cho "ẩn đến khi cuộn"

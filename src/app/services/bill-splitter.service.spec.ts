@@ -200,6 +200,88 @@ describe('BillSplitterService - chia tiền', () => {
     expect(service.totalAmount()).toBe(0);
   });
 
+  describe('nháp tự lưu (bill_draft)', () => {
+    it('lưu rồi khôi phục sau reset: giữ khoản mục, thành viên và tổng từng người', () => {
+      seedTwoMembersTwoExpenses();
+      service.saveDraft();
+
+      service.resetBill();
+      expect(service.isBillDataEmpty()).toBeTrue();
+
+      expect(service.restoreDraft()).toBeTrue();
+      expect(service.expenses().length).toBe(2);
+      expect(memberTotal('An')).toBe(150000);
+      expect(memberTotal('Bình')).toBe(250000);
+    });
+
+    it('bill rỗng thì xoá nháp thay vì lưu', () => {
+      seedTwoMembersTwoExpenses();
+      service.saveDraft();
+      service.resetBill();
+
+      service.saveDraft();
+
+      expect(localStorage.getItem('bill_draft')).toBeNull();
+    });
+
+    it('nháp quá 7 ngày bị bỏ và xoá', () => {
+      seedTwoMembersTwoExpenses();
+      service.saveDraft();
+      const saved = JSON.parse(localStorage.getItem('bill_draft')!);
+      saved.savedAt = Date.now() - 8 * 24 * 60 * 60 * 1000;
+      localStorage.setItem('bill_draft', JSON.stringify(saved));
+      service.resetBill();
+
+      expect(service.restoreDraft()).toBeFalse();
+      expect(service.isBillDataEmpty()).toBeTrue();
+      expect(localStorage.getItem('bill_draft')).toBeNull();
+    });
+
+    it('nháp hỏng không làm vỡ trang: trả false và dọn key', () => {
+      localStorage.setItem('bill_draft', '{không phải json');
+
+      expect(service.restoreDraft()).toBeFalse();
+      expect(localStorage.getItem('bill_draft')).toBeNull();
+    });
+
+    it('lưu lại nội dung không đổi thì giữ nguyên savedAt (không làm mới hạn 7 ngày)', () => {
+      seedTwoMembersTwoExpenses();
+      service.saveDraft();
+      const saved = JSON.parse(localStorage.getItem('bill_draft')!);
+      saved.savedAt = 123;
+      localStorage.setItem('bill_draft', JSON.stringify(saved));
+
+      service.saveDraft();
+
+      expect(JSON.parse(localStorage.getItem('bill_draft')!).savedAt).toBe(123);
+    });
+
+    it('không lưu fileIds vào nháp', () => {
+      seedTwoMembersTwoExpenses();
+      service.setFileIds([7, 8]);
+      service.saveDraft();
+
+      expect(JSON.parse(localStorage.getItem('bill_draft')!).bill.fileIds).toEqual([]);
+    });
+
+    it('không đụng tới key "bill" của luồng đăng nhập', () => {
+      seedTwoMembersTwoExpenses();
+      service.saveDraft();
+
+      expect(localStorage.getItem('bill')).toBeNull();
+    });
+
+    it('snapshot + restoreSnapshot hoàn tác được việc xoá', () => {
+      seedTwoMembersTwoExpenses();
+      const snapshot = service.snapshotBill();
+      service.resetBill();
+
+      service.restoreSnapshot(snapshot);
+
+      expect(memberTotal('Bình')).toBe(250000);
+    });
+  });
+
   it('lưu nháp vào localStorage giữ nguyên participations và tổng tiền', () => {
     seedTwoMembersTwoExpenses();
     service.saveBillToStorage();

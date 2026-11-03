@@ -87,6 +87,10 @@ export class App implements OnInit {
 
   logout(): void {
     this.authService.logout();
+    // Nháp có thể chứa thông tin ngân hàng lấy từ cài đặt của tài khoản: không để lại cho người
+    // dùng kế tiếp trên máy dùng chung.
+    this.billSplitterService.clearDraft();
+    this.billSplitterService.resetBill();
     this.router.navigate(['/']);
     this.closeSidebar();
   }

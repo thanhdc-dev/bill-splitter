@@ -1,11 +1,13 @@
 import { AsyncPipe, NgClass } from '@angular/common';
-import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
 import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   AfterViewInit,
   Component,
+  computed,
   DestroyRef,
+  Injector,
   OnInit,
   ViewChild,
   inject,
@@ -88,6 +90,7 @@ export class CreateBill implements OnInit, AfterViewInit {
   private readonly billTabControlService = inject(BillTabControlService);
   private readonly userService = inject(UserService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly injector = inject(Injector);
   private readonly breakpointObserver = inject(BreakpointObserver);
   private readonly cdr = inject(ChangeDetectorRef);
   @ViewChild('tabGroup') tabGroup?: MatTabGroup;
@@ -100,6 +103,15 @@ export class CreateBill implements OnInit, AfterViewInit {
   readonly isLoggedIn = toSignal(this.authService.user$.pipe(map((user) => !!user)), {
     initialValue: this.authService.isLoggedIn(),
   });
+  /** Có dữ liệu để xoá: hiện nút "Xoá nháp". */
+  readonly hasDraft = computed(() => !this.billSplitterService.isBillDataEmpty());
+  /** Đổi tham chiếu mỗi khi một phần của bill đổi; chỉ dùng làm tín hiệu tự lưu nháp. */
+  private readonly billSnapshotKey = computed(() => ({
+    name: this.billSplitterService.name(),
+    expenses: this.billSplitterService.expenses(),
+    members: this.billSplitterService.members(),
+    bankInfo: this.billSplitterService.bankInfo(),
+  }));
   files: File[] = [];
   /** null = không đang upload; 0-100 = % tiến trình của batch upload ảnh hiện tại. */
   uploadProgress: number | null = null;
@@ -132,10 +144,26 @@ export class CreateBill implements OnInit, AfterViewInit {
         this.patchValueNameCtrl();
         this.cdr.markForCheck();
       } else {
+        // Vào `/` mới: reset để bill đã lưu mà bill-details nạp vào service không lẫn sang bill
+        // mới, rồi khôi phục nháp tự lưu (nếu có) để đi/quay lại hay tải lại trang không mất dữ liệu.
         this.billSplitterService.resetBill();
+        this.billSplitterService.restoreDraft();
+        this.patchValueNameCtrl();
+        this.cdr.markForCheck();
         this.fetchUserSetting();
       }
     });
+    // Tự lưu nháp mỗi khi bill đổi. Đăng ký SAU khi khôi phục ở trên để lần phát đầu không xoá nháp.
+    toObservable(this.billSnapshotKey, { injector: this.injector })
+      .pipe(debounceTime(500), takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.billSplitterService.saveDraft());
+    // Debounce bị huỷ khi rời trang / đưa app xuống nền: ghi nốt để không mất lần sửa cuối.
+    this.destroyRef.onDestroy(() => this.billSplitterService.saveDraft());
+    const flushOnHidden = () => {
+      if (document.visibilityState === 'hidden') this.billSplitterService.saveDraft();
+    };
+    document.addEventListener('visibilitychange', flushOnHidden);
+    this.destroyRef.onDestroy(() => document.removeEventListener('visibilitychange', flushOnHidden));
     this.nameCtrl.valueChanges
       .pipe(
         debounceTime(300), // tránh spam khi người dùng gõ liên tục
@@ -158,6 +186,26 @@ export class CreateBill implements OnInit, AfterViewInit {
           this.tabGroup.selectedIndex = index;
         }
       });
+  }
+
+  discardDraft() {
+    const snapshot = this.billSplitterService.snapshotBill();
+    this.billSplitterService.resetBill();
+    this.billSplitterService.clearDraft();
+    this.patchValueNameCtrl();
+    // Bill đăng nhập lấy lại thông tin ngân hàng từ cài đặt, giống lúc mới vào trang.
+    this.fetchUserSetting();
+    const undoRef = this.snackBar.open('Đã xoá nháp', 'Hoàn tác', { duration: 5000 });
+    undoRef
+      .onAction()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        this.billSplitterService.restoreSnapshot(snapshot);
+        this.patchValueNameCtrl();
+        this.cdr.markForCheck();
+      });
+    // Rời trang thì huỷ luôn cơ hội hoàn tác: state lúc đó có thể đã là của bill-details.
+    this.destroyRef.onDestroy(() => undoRef.dismiss());
   }
 
   /** Chỉ chặn ở nút FAB: luồng `?save=true` sau đăng nhập gọi thẳng `save()` với bill đã khôi phục. */
