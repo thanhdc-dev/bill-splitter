@@ -99,3 +99,4 @@ Ghi chép quyết định triển khai theo quy ước tại `AGENTS.md`. File n
 - 2026-11-03 (create-bill: FAB chỉ icon (save cho khách, share khi đã đăng nhập), chặn bấm khi bill rỗng)
 - 2026-11-03 (harden create-bill: tự lưu nháp bền `bill_draft` 7 ngày, nút "Xoá nháp" + hoàn tác)
 - 2026-11-03 (đồng bộ FAB bill-details: icon/nhãn theo hành động thật, offset PWA mọi viewport)
+- 2026-11-03 (colorize create-bill: token --primary-fg/--on-gold, sửa contrast chữ/icon teal và icon FAB ở dark mode)

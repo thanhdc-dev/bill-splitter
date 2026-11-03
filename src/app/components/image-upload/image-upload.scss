@@ -13,12 +13,12 @@
     position: relative;
 
     &:hover {
-      border-color: var(--primary-color);
+      border-color: var(--primary-fg);
       background-color: var(--accent-soft-bg);
     }
 
     &.drag-over {
-      border-color: var(--primary-color);
+      border-color: var(--primary-fg);
       background-color: var(--accent-soft-bg);
       transform: scale(1.02);
     }
@@ -104,7 +104,7 @@
         cursor: pointer;
 
         &:focus-visible {
-          outline: 2px solid var(--primary-color);
+          outline: 2px solid var(--primary-fg);
           outline-offset: 2px;
         }
 

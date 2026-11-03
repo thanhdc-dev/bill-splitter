@@ -9,8 +9,8 @@
   background: var(--surface-color);
 
   &:focus-within {
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 1px var(--primary-color);
+    border-color: var(--primary-fg);
+    box-shadow: 0 0 0 1px var(--primary-fg);
   }
 }
 

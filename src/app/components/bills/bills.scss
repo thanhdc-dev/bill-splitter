@@ -50,15 +50,15 @@
   transition: border-color 0.2s ease, background-color 0.2s ease;
 
   &:hover {
-    border-color: var(--teal);
+    border-color: var(--primary-fg);
     background: var(--surface-muted);
 
     .bill-name {
-      color: var(--teal);
+      color: var(--primary-fg);
     }
 
     .copy-icon {
-      color: var(--teal);
+      color: var(--primary-fg);
     }
 
     .copy-btn {
@@ -67,7 +67,7 @@
   }
 
   &:focus-visible {
-    outline: 2px solid var(--teal);
+    outline: 2px solid var(--primary-fg);
     outline-offset: 2px;
   }
 }

@@ -104,6 +104,13 @@ html.dark {
 
   --primary-color: var(--teal);
   --on-primary-color: #FFFFFF;
+  /* Teal dùng làm CHỮ / ICON / VIỀN trên nền theme (nhãn tab, viền focus, icon): khác
+     `--primary-color` là màu NỀN fill (FAB teal, ticket-stub, nút Thêm) nên không đảo theo theme.
+     Sáng: teal gốc (≥5:1 trên trắng). Tối: xem html.dark (teal gốc chỉ 2.71:1 trên nền tối). */
+  --primary-fg: var(--teal);
+  /* Chữ/icon trên nền gold (CTA chính). Sáng: trắng (icon 3.83:1; chữ thường chưa đạt 4.5:1, xem
+     docs/notes/2026-11.md). Tối: gold sáng hơn nên cần chữ tối. */
+  --on-gold: #FFFFFF;
   /* Soft "container" của primary — KHÔNG đổi thành gold để tránh side-effect ngầm ở những
      nơi đang dùng biến này (badge, hover dropzone...). Gold có biến riêng --gold-soft-*,
      chỉ dành cho CTA chính (xem Pha 1/3). */
@@ -151,6 +158,8 @@ html.dark {
      được trên nền tối. Tương tự cho gold/green. */
   --teal-dark: #9FDEE2;
   --teal-soft: #1B3A3D;
+  --primary-fg: #6FBFC4;
+  --on-gold: #17140F;
   --gold: #C98A42;
   --gold-dark: #F0C99A;
   --gold-soft: #3A2A18;
@@ -266,7 +275,7 @@ h1, h2, h3, h4, h5, h6 {
 .btn-gold.mat-mdc-unelevated-button,
 .btn-gold.mat-mdc-outlined-button {
   background-color: var(--gold) !important;
-  color: #fff !important;
+  color: var(--on-gold) !important;
   border-color: var(--gold) !important;
 }
 
@@ -554,7 +563,7 @@ h1, h2, h3, h4, h5, h6 {
   &.mat-focused .mdc-notched-outline__leading,
   &.mat-focused .mdc-notched-outline__notch,
   &.mat-focused .mdc-notched-outline__trailing {
-    border-color: var(--teal) !important;
+    border-color: var(--primary-fg) !important;
   }
 
   .mdc-floating-label {

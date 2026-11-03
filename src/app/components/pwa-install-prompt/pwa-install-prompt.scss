@@ -43,7 +43,7 @@
     font-size: 32px;
     width: 32px;
     height: 32px;
-    color: var(--primary-color, var(--primary-color));
+    color: var(--primary-fg);
 
     @media (max-width: 767px) {
       font-size: 28px;
@@ -92,7 +92,7 @@
   button {
     &.close-btn {
       mat-icon {
-        color: var(--primary-color, var(--surface-color));
+        color: var(--primary-fg);
       }
     }
 

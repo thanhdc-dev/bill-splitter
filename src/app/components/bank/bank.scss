@@ -109,11 +109,11 @@ h3 {
 
   &:hover {
     background: var(--border-color);
-    color: var(--primary-color);
+    color: var(--primary-fg);
   }
 
   &--copied {
-    color: var(--primary-color);
+    color: var(--primary-fg);
   }
 }
 
