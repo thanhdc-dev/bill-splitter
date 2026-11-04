@@ -137,6 +137,48 @@ describe('BillSplitterService - chia tiền', () => {
     expect(service.members()[0].participations.get(expenseId('Lẩu'))).toBe(0);
   });
 
+  it('addMember với defaultPortion = 1 chia đều và làm giảm phần của người cũ', () => {
+    service.addExpense('Lẩu', 100000);
+    service.addMember('An', 1);
+    expect(memberTotal('An')).toBe(100000);
+
+    service.addMember('Bình', 1);
+    expect(service.members()[1].participations.get(expenseId('Lẩu'))).toBe(1);
+    expect(memberTotal('An')).toBe(50000);
+    expect(memberTotal('Bình')).toBe(50000);
+  });
+
+  it('addMember với defaultPortion = 1 khi chưa có khoản mục: participation rỗng', () => {
+    service.addMember('An', 1);
+
+    expect(service.members()[0].participations.size).toBe(0);
+  });
+
+  it('resetMemberParticipations đưa các thành viên chỉ định về 0 và tính lại tổng', () => {
+    service.addExpense('Lẩu', 100000);
+    service.addMember('An', 1);
+    const binhId = service.addMember('Bình', 1);
+
+    service.resetMemberParticipations([binhId]);
+
+    expect(memberTotal('Bình')).toBe(0);
+    expect(memberTotal('An')).toBe(100000);
+  });
+
+  it('resetMemberParticipations giữ nguyên ô người dùng đã sửa sau khi chia đều', () => {
+    service.addExpense('Lẩu', 100000);
+    service.addExpense('Bia', 60000);
+    service.addMember('An', 1);
+    const binhId = service.addMember('Bình', 1);
+    service.updateParticipation(binhId, expenseId('Bia'), 2);
+
+    service.resetMemberParticipations([binhId]);
+
+    const binh = service.members().find((m) => m.id === binhId)!;
+    expect(binh.participations.get(expenseId('Lẩu'))).toBe(0);
+    expect(binh.participations.get(expenseId('Bia'))).toBe(2);
+  });
+
   it('updateParticipation tính lại phần của các thành viên cùng khoản mục', () => {
     seedTwoMembersTwoExpenses();
     const binhBefore = service.members().find((m) => m.name === 'Bình')!;

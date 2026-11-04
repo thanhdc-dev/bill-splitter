@@ -49,6 +49,14 @@
     }
   }
 
+  /* Hàng riêng dưới form để input không bị bóp trên mobile. Gap 16px của panel quá thoáng
+     cho một công tắc thuộc về form, nên kéo sát lại. */
+  &__auto-split {
+    margin-top: -6px;
+    font-size: 14px;
+    color: var(--text-secondary);
+  }
+
   &__submit {
     flex-shrink: 0;
     width: 48px;

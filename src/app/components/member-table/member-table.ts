@@ -10,6 +10,7 @@ import {
 } from '@angular/forms';
 import { MatTableModule } from '@angular/material/table';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -22,6 +23,7 @@ import { EmptyStateComponent } from '../empty-state/empty-state';
 
 /** Dưới ngưỡng này bảng ma trận thành viên × khoản mục đổi sang layout card. */
 const MOBILE_BREAKPOINT = '(max-width: 767px)';
+const AUTO_SPLIT_STORAGE_KEY = 'bs.autoSplitNewMember';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -33,6 +35,7 @@ const MOBILE_BREAKPOINT = '(max-width: 767px)';
     MatFormFieldModule,
     MatTableModule,
     MatCheckboxModule,
+    MatSlideToggleModule,
     MatButtonModule,
     MatIconModule,
     MatInputModule,
@@ -55,6 +58,8 @@ export class MemberTableComponent {
   /** Cột của mat-table, tính lại mỗi khi danh sách khoản mục đổi. */
   displayedColumns: string[] = [];
   isMobile = false;
+  /** Thành viên mới tự có 1 suất ở mọi khoản mục. Mặc định bật, nhớ theo thiết bị. */
+  autoSplit = this.readAutoSplit();
 
   constructor() {
     this.memberForm = this.fb.group({
@@ -94,18 +99,56 @@ export class MemberTableComponent {
   onSubmit(): void {
     if (this.memberForm.valid) {
       const { name }: { name: string } = this.memberForm.value;
-      const names = name.split(',').map((memberName) => memberName.trim());
+      // Bỏ chuỗi rỗng ("An," ) và tên trùng nhau trong cùng một lần nhập
+      const names = [
+        ...new Set(
+          name
+            .split(',')
+            .map((memberName) => memberName.trim())
+            .filter(Boolean)
+        ),
+      ];
       const namesExist = this.filterNameExists(names);
       if (namesExist.length) {
         this.snackBar.open(`${namesExist.join(', ')} đã tồn tại`, 'Đóng', {
           duration: 3000,
         });
-      } else {
-        names.forEach((memberName) => {
-          this.billSplitterService.addMember(memberName.trim());
-        });
+      } else if (names.length) {
+        const portion = this.autoSplit && this.expenses.length ? 1 : 0;
+        const addedIds = names.map((memberName) =>
+          this.billSplitterService.addMember(memberName, portion)
+        );
+        if (portion) {
+          this.snackBar
+            .open(
+              `Đã chia đều ${names.join(', ')} vào ${this.expenses.length} khoản mục`,
+              'Hoàn tác',
+              { duration: 5000 }
+            )
+            .onAction()
+            .subscribe(() => {
+              this.billSplitterService.resetMemberParticipations(addedIds);
+            });
+        }
       }
       this.memberForm.reset();
+    }
+  }
+
+  onAutoSplitChange(checked: boolean): void {
+    this.autoSplit = checked;
+    try {
+      localStorage.setItem(AUTO_SPLIT_STORAGE_KEY, String(checked));
+    } catch {
+      // Storage bị chặn: bỏ qua, lựa chọn chỉ có hiệu lực trong phiên này
+    }
+  }
+
+  private readAutoSplit(): boolean {
+    try {
+      return localStorage.getItem(AUTO_SPLIT_STORAGE_KEY) !== 'false';
+    } catch {
+      return true;
     }
   }
 

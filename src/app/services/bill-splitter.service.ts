@@ -140,10 +140,11 @@ export class BillSplitterService {
     return this.expenses();
   }
 
-  addMember(name: string): void {
+  /** `defaultPortion`: số suất gán sẵn cho mọi khoản mục hiện có (0 = chưa chia, 1 = chia đều). Trả về id thành viên mới. */
+  addMember(name: string, defaultPortion = 0): string {
     const participations = new Map<string, number>();
     this.expenses().forEach((expense) => {
-      participations.set(expense.id, 0);
+      participations.set(expense.id, defaultPortion);
     });
 
     const newMember: Member = {
@@ -154,6 +155,26 @@ export class BillSplitterService {
       totalAmount: 0,
     };
     this.setMembersWithTotals([...this.members(), newMember]);
+    this.markAsChanged();
+    return newMember.id;
+  }
+
+  /**
+   * Hoàn tác chia đều: đưa về 0 các ô của những thành viên chỉ định còn đúng bằng `fromPortion`.
+   * Ô đã bị người dùng sửa sang giá trị khác được giữ nguyên.
+   */
+  resetMemberParticipations(memberIds: string[], fromPortion = 1): void {
+    const ids = new Set(memberIds);
+    this.setMembersWithTotals(
+      this.members().map((member) => {
+        if (!ids.has(member.id)) return member;
+        const participations = new Map<string, number>();
+        member.participations.forEach((quantity, expenseId) =>
+          participations.set(expenseId, quantity === fromPortion ? 0 : quantity)
+        );
+        return { ...member, participations };
+      })
+    );
     this.markAsChanged();
   }
 

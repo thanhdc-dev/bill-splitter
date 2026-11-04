@@ -20,6 +20,11 @@
     </button>
   </form>
 
+  <mat-slide-toggle class="member-panel__auto-split" [checked]="autoSplit"
+    (change)="onAutoSplitChange($event.checked)">
+    Tự chia đều cho thành viên mới
+  </mat-slide-toggle>
+
   @if (!members.length) {
     <app-empty-state
       icon="groups"
