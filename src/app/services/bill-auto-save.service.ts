@@ -1,8 +1,14 @@
-import { inject, Injectable, NgZone, OnDestroy } from '@angular/core';
+import { inject, Injectable, InjectionToken, NgZone, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
-import { BehaviorSubject, Observable, Subject, Subscription, timer } from 'rxjs';
+import { asyncScheduler, BehaviorSubject, Observable, SchedulerLike, Subject, Subscription, timer } from 'rxjs';
 import { filter, map, switchMap, takeUntil, takeWhile, tap } from 'rxjs/operators';
 import { BillSplitterService } from './bill-splitter.service';
+
+/** Scheduler của bộ đếm tự lưu. Production dùng `asyncScheduler`; test thay bằng scheduler ảo. */
+export const AUTO_SAVE_SCHEDULER = new InjectionToken<SchedulerLike>('AUTO_SAVE_SCHEDULER', {
+  providedIn: 'root',
+  factory: () => asyncScheduler,
+});
 
 @Injectable({
   providedIn: 'root',
@@ -11,6 +17,7 @@ export class BillAutoSaveService implements OnDestroy {
   private readonly router = inject(Router);
   private readonly billSplitterService = inject(BillSplitterService);
   private readonly ngZone = inject(NgZone);
+  private readonly scheduler = inject(AUTO_SAVE_SCHEDULER);
 
   private monitorSub?: Subscription;
   private readonly counterSubject = new BehaviorSubject<number>(0);
@@ -60,7 +67,7 @@ export class BillAutoSaveService implements OnDestroy {
   /** `timer()` có `setInterval` bên dưới được đăng ký ngoài NgZone. */
   private timerOutsideZone(dueTime: number, period: number): Observable<number> {
     return new Observable<number>((subscriber) =>
-      this.ngZone.runOutsideAngular(() => timer(dueTime, period).subscribe(subscriber)),
+      this.ngZone.runOutsideAngular(() => timer(dueTime, period, this.scheduler).subscribe(subscriber)),
     );
   }
 
