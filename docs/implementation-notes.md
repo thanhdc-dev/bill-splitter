@@ -103,3 +103,6 @@ Ghi chép quyết định triển khai theo quy ước tại `AGENTS.md`. File n
 - 2026-11-03 (polish create-bill: track bank-select theo code, focus ring FAB, hover FAB theo reduced-motion)
 - 2026-11-03 (clarify create-bill: nhãn /suất khi chia suất lẻ, đếm số người ăn chung đúng)
 - 2026-11-04 (member-table: công tắc "Tự chia đều cho thành viên mới" mặc định bật + hoàn tác, lọc tên rỗng/trùng)
+- 2026-11-04 (result-display: nút "Chia đều cho mọi người" trong cảnh báo khoản mục chưa ai tham gia; công tắc 44px)
+- 2026-11-04 (result-display: giá/suất luôn sát phải, danh sách người dài tự xuống dòng)
+- 2026-11-04 (result-display: nút "Chia đều" chuyển thành nút chữ cùng dòng, sát phải)
