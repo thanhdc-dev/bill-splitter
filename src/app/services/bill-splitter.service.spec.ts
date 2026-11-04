@@ -179,6 +179,19 @@ describe('BillSplitterService - chia tiền', () => {
     expect(binh.participations.get(expenseId('Bia'))).toBe(2);
   });
 
+  it('splitExpenseEvenly cho mọi thành viên 1 suất ở đúng khoản mục đó', () => {
+    service.addExpense('Lẩu', 100000);
+    service.addExpense('Bia', 60000);
+    service.addMember('An');
+    service.addMember('Bình');
+
+    service.splitExpenseEvenly(expenseId('Lẩu'));
+
+    expect(memberTotal('An')).toBe(50000);
+    expect(memberTotal('Bình')).toBe(50000);
+    expect(service.members()[0].participations.get(expenseId('Bia'))).toBe(0);
+  });
+
   it('updateParticipation tính lại phần của các thành viên cùng khoản mục', () => {
     seedTwoMembersTwoExpenses();
     const binhBefore = service.members().find((m) => m.name === 'Bình')!;

@@ -52,7 +52,10 @@
   /* Hàng riêng dưới form để input không bị bóp trên mobile. Gap 16px của panel quá thoáng
      cho một công tắc thuộc về form, nên kéo sát lại. */
   &__auto-split {
-    margin-top: -6px;
+    display: flex;
+    align-items: center;
+    min-height: var(--touch-target);
+    margin-top: -12px;
     font-size: 14px;
     color: var(--text-secondary);
   }

@@ -69,23 +69,39 @@
       .expense-meta {
         margin-top: 4px;
         font-size: var(--font-size-sm);
+        /* Giá/suất luôn dính mép phải; danh sách người dài thì xuống dòng ở cột trái. */
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        column-gap: 12px;
 
         .expense-meta__participants {
-          color: var(--text-secondary);
-        }
-
-        .expense-meta__sep {
-          margin: 0 6px;
+          flex: 1 1 0;
+          min-width: 0;
+          overflow-wrap: anywhere;
           color: var(--text-secondary);
         }
 
         .expense-meta__per-person {
+          flex: 0 0 auto;
+          margin-left: auto;
+          white-space: nowrap;
           color: var(--text-primary);
           font-weight: 600;
         }
 
         .expense-meta__warning {
+          flex: 1 1 0;
+          min-width: 0;
           color: var(--danger-color);
+        }
+
+        /* Cùng vị trí cột giá/suất của các dòng khác; nút chữ để không nặng hơn tên khoản mục. */
+        .expense-meta__split {
+          flex: 0 0 auto;
+          margin-left: auto;
+          min-height: var(--touch-target);
+          color: var(--primary-fg);
         }
       }
     }

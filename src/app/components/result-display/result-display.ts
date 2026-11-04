@@ -1,4 +1,6 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, computed, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { CurrencyPipe } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { BillSplitterService } from '../../services/bill-splitter.service';
@@ -8,7 +10,7 @@ import { QrPopupComponent } from '../qr-popup/qr-popup';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { removeVietnameseTones, roundedToThousand } from '../../shared/helpers';
 import { MatButtonModule } from '@angular/material/button';
-import { QRService } from '../../services';
+import { AuthService, QRService } from '../../services';
 import { EmptyStateComponent } from '../empty-state/empty-state';
 
 interface IExpenseRowVM {
@@ -46,6 +48,9 @@ export class ResultDisplayComponent {
   private readonly dialog = inject(MatDialog);
   private readonly billSplitterService = inject(BillSplitterService);
   private readonly qrService = inject(QRService);
+  private readonly authService = inject(AuthService);
+  private readonly snackBar = inject(MatSnackBar);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   private readonly expenses = this.billSplitterService.expenses;
   private readonly members = this.billSplitterService.members;
@@ -53,6 +58,29 @@ export class ResultDisplayComponent {
 
   readonly hasExpenses = computed(() => this.expenses().length > 0);
   readonly hasMembers = computed(() => this.members().length > 0);
+
+  constructor() {
+    // isEditable() phụ thuộc phiên đăng nhập, vốn khôi phục bất đồng bộ lúc khởi động.
+    this.authService.user$.pipe(takeUntilDestroyed()).subscribe(() => this.cdr.markForCheck());
+  }
+
+  /** Người xem bill chia sẻ (không phải chủ) không được sửa. */
+  isEditable(): boolean {
+    return this.billSplitterService.isEditable();
+  }
+
+  splitEvenly(expense: IExpenseRowVM): void {
+    if (!this.isEditable()) return;
+    const memberIds = this.members().map((member) => member.id);
+    this.billSplitterService.splitExpenseEvenly(expense.id);
+    // Nút biến mất sau khi chia nên focus rơi về body: báo kết quả qua snackbar (aria-live) + hoàn tác.
+    this.snackBar
+      .open(`Đã chia đều "${expense.name}" cho ${memberIds.length} người`, 'Hoàn tác', { duration: 5000 })
+      .onAction()
+      .subscribe(() => {
+        memberIds.forEach((id) => this.billSplitterService.updateParticipation(id, expense.id, 0));
+      });
+  }
 
   /** View-model tính một lần mỗi khi expenses/members đổi, template chỉ đọc field. */
   readonly expenseRows = computed<IExpenseRowVM[]>(() => {

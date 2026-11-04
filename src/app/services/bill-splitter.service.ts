@@ -159,6 +159,18 @@ export class BillSplitterService {
     return newMember.id;
   }
 
+  /** Cho mọi thành viên 1 suất ở khoản mục này — dùng khi khoản mục chưa có ai tham gia. */
+  splitExpenseEvenly(expenseId: string): void {
+    this.setMembersWithTotals(
+      this.members().map((member) => {
+        const participations = new Map(member.participations);
+        participations.set(expenseId, 1);
+        return { ...member, participations };
+      })
+    );
+    this.markAsChanged();
+  }
+
   /**
    * Hoàn tác chia đều: đưa về 0 các ô của những thành viên chỉ định còn đúng bằng `fromPortion`.
    * Ô đã bị người dùng sửa sang giá trị khác được giữ nguyên.

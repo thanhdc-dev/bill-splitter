@@ -33,12 +33,18 @@
                   <div class="expense-meta">
                     @if (expense.totalPortions > 0) {
                       <span class="expense-meta__participants">Tham gia: {{expense.participants}}</span>
-                      <span class="expense-meta__sep">·</span>
                       <span class="mono-amount expense-meta__per-person">
                         {{expense.perPerson | currency: 'VND': 'symbol' : '1.0-0' : 'vi'}}/{{expense.perUnit}}
                       </span>
                     } @else {
-                      <span class="expense-meta__warning">Chưa có ai tham gia khoản mục này</span>
+                      <span class="expense-meta__warning">Chưa ai tham gia</span>
+                      @if (hasMembers() && isEditable()) {
+                        <button mat-button type="button" class="expense-meta__split"
+                          [attr.aria-label]="'Chia đều cho mọi người, khoản ' + expense.name"
+                          (click)="splitEvenly(expense)">
+                          Chia đều
+                        </button>
+                      }
                     }
                   </div>
                 </td>
