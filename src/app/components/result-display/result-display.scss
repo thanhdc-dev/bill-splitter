@@ -110,11 +110,36 @@
   .member-summary {
     margin-top: 32px;
 
+    /* Tiêu đề + nút (i) giải thích làm tròn + ghi chú mở ngay bên dưới (chiếm cả hàng). */
+    .member-summary__heading {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0 4px;
+      margin-bottom: 16px;
+    }
+
     h3 {
       font-size: 1.125rem;
       font-weight: 600;
       color: var(--text-primary);
-      margin-bottom: 16px;
+      margin: 0;
+    }
+
+    .member-summary__info {
+      /* Vùng chạm ≥44px do mat-icon-button (touch target 48px); icon teal đọc được ở cả hai theme. */
+      color: var(--primary-fg);
+    }
+
+    .member-summary__note {
+      flex-basis: 100%;
+      margin: 4px 0 0;
+      padding: 8px 12px;
+      border-radius: var(--border-radius-sm);
+      background: var(--surface-muted);
+      color: var(--text-primary);
+      font-size: var(--font-size-sm);
+      line-height: 1.5;
     }
 
     .member-amounts {

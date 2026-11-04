@@ -20,6 +20,7 @@ import { ExpenseItem, Member } from '../../models/bill-splitter.model';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { QuantitySelector } from '../quantity-selector/quantity-selector';
 import { EmptyStateComponent } from '../empty-state/empty-state';
+import { roundedToThousand } from '../../shared/helpers';
 
 /** Dưới ngưỡng này bảng ma trận thành viên × khoản mục đổi sang layout card. */
 const MOBILE_BREAKPOINT = '(max-width: 767px)';
@@ -94,6 +95,14 @@ export class MemberTableComponent {
         this.isMobile = matches;
         this.cdr.markForCheck();
       });
+  }
+
+  /**
+   * Số tiền người này phải trả, làm tròn lên đến nghìn: cùng số với bảng tổng và mã QR để hai màn
+   * không lệch nhau (`member.totalAmount` giữ nguyên số thô để lưu và tính lại).
+   */
+  displayAmount(member: Member): number {
+    return roundedToThousand(member.totalAmount);
   }
 
   onSubmit(): void {

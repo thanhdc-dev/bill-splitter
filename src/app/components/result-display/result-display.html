@@ -69,7 +69,28 @@
     }
     @if (hasMembers()) {
       <div class="member-summary">
-        <h3>Tổng tiền mỗi người cần trả:</h3>
+        <div class="member-summary__heading">
+          <h3>Tổng tiền mỗi người cần trả:</h3>
+          @if (roundingNote(); as note) {
+            <!-- Chỉ hiện khi tổng thu thật sự lệch hóa đơn do làm tròn lên đến nghìn. Mở ngay dưới
+                 tiêu đề (không tooltip/popover): tooltip không có trên cảm ứng, popover dễ chồng
+                 lên FAB và snackbar ở mép dưới. -->
+            <button type="button" mat-icon-button class="member-summary__info"
+              aria-label="Vì sao tổng thu lớn hơn hóa đơn?" aria-controls="rounding-note"
+              [attr.aria-expanded]="isRoundingNoteOpen()" (click)="toggleRoundingNote()"
+              (keydown.escape)="isRoundingNoteOpen.set(false)">
+              <mat-icon>info</mat-icon>
+            </button>
+            @if (isRoundingNoteOpen()) {
+              <p id="rounding-note" class="member-summary__note" role="note">
+                Tổng thu <span class="mono-amount">{{note.collected | currency: 'VND': 'symbol' : '1.0-0' : 'vi'}}</span>
+                · Hóa đơn <span class="mono-amount">{{note.billTotal | currency: 'VND': 'symbol' : '1.0-0' : 'vi'}}</span>
+                · Dư <span class="mono-amount">{{note.surplus | currency: 'VND': 'symbol' : '1.0-0' : 'vi'}}</span>
+                do làm tròn lên đến nghìn.
+              </p>
+            }
+          }
+        </div>
         <div class="member-amounts">
           @for (row of memberRows(); track row.member.id) {
             @let member = row.member;

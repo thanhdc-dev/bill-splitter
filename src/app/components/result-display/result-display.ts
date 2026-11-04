@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { CurrencyPipe } from '@angular/common';
@@ -8,7 +8,7 @@ import { Member } from '../../models/bill-splitter.model';
 import { MatIconModule } from '@angular/material/icon';
 import { QrPopupComponent } from '../qr-popup/qr-popup';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { removeVietnameseTones, roundedToThousand } from '../../shared/helpers';
+import { removeVietnameseTones, roundedToThousand, summarizeRounding } from '../../shared/helpers';
 import { MatButtonModule } from '@angular/material/button';
 import { AuthService, QRService } from '../../services';
 import { EmptyStateComponent } from '../empty-state/empty-state';
@@ -123,6 +123,24 @@ export class ResultDisplayComponent {
       displayAmount: roundedToThousand(member.totalAmount),
     }))
   );
+
+  /**
+   * Giải thích vì sao tổng thu lớn hơn hóa đơn. Chỉ khi mọi khoản mục đều có người tham gia: nếu có
+   * khoản chưa ai ăn thì chênh lệch không đến từ làm tròn (đã có cảnh báo riêng ở khoản mục đó).
+   */
+  readonly roundingNote = computed(() => {
+    const rows = this.expenseRows();
+    if (!rows.length || rows.some((row) => row.totalPortions === 0)) return null;
+    return summarizeRounding(
+      this.members().map((member) => member.totalAmount),
+      this.totalAmount()
+    );
+  });
+  readonly isRoundingNoteOpen = signal(false);
+
+  toggleRoundingNote() {
+    this.isRoundingNoteOpen.update((isOpen) => !isOpen);
+  }
 
   readonly isShowBankInfo = computed(() => {
     const info = this.bankInfo();

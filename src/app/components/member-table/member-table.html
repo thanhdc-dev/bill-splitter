@@ -71,7 +71,7 @@
             Đã thanh toán
           </mat-checkbox>
           <span class="member-card__total">
-            {{ member.totalAmount | currency: 'VND': 'symbol' : '1.0-0' : 'vi' }}
+            {{ displayAmount(member) | currency: 'VND': 'symbol' : '1.0-0' : 'vi' }}
           </span>
         </footer>
       </article>
@@ -116,7 +116,7 @@
     <ng-container matColumnDef="totalAmount">
       <th mat-header-cell *matHeaderCellDef scope="col">Tổng tiền</th>
       <td mat-cell *matCellDef="let member">
-        {{member.totalAmount | currency: 'VND': 'symbol' : '1.0-0' : 'vi'}}
+        {{displayAmount(member) | currency: 'VND': 'symbol' : '1.0-0' : 'vi'}}
       </td>
     </ng-container>
 
