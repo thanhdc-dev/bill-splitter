@@ -183,6 +183,8 @@
   }
 
   &__name {
+    flex: 1 1 auto;
+    min-width: 0;
     margin: 0;
     font-size: 1rem;
     font-weight: 600;
@@ -239,8 +241,8 @@
 
   &__footer {
     display: flex;
-    /* wrap: nhãn và tổng tiền đều nowrap, nên khi card quá hẹp (320px, tổng 8-9 chữ số) tổng tiền
-       xuống dòng dưới thay vì bị `overflow: hidden` của card cắt mất. */
+    /* wrap: chỉ còn checkbox "Đã thanh toán" (nowrap); giữ để nhãn không bị `overflow: hidden` của
+       card cắt nếu sau này footer có thêm phần tử. Tổng tiền đã chuyển lên header. */
     flex-wrap: wrap;
     row-gap: 4px;
     align-items: center;
@@ -258,8 +260,6 @@
     font-variant-numeric: tabular-nums;
     color: var(--teal-dark);
     white-space: nowrap;
-    /* Khi footer xuống dòng, tổng tiền vẫn bám phải. */
-    margin-left: auto;
   }
 
   &__footer mat-checkbox {

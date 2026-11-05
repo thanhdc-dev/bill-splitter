@@ -43,6 +43,8 @@
       <article class="member-card">
         <header class="member-card__header">
           <h3 class="member-card__name">{{ member.name }}</h3>
+          <!-- Số tiền ngay cạnh tên: thấy kết quả khi chỉnh suất ở dưới, không phải nhìn xuống chân thẻ. -->
+          <span class="member-card__total">{{ displayAmount(member) | currency: 'VND': 'symbol' : '1.0-0' : 'vi' }}</span>
           <button mat-icon-button class="delete-btn" [attr.aria-label]="'Xoá ' + member.name"
             (click)="removeMember(member.id)">
             <mat-icon>delete</mat-icon>
@@ -73,9 +75,6 @@
             (change)="updateIsPaid(member.id, $event.checked)">
             Đã thanh toán
           </mat-checkbox>
-          <span class="member-card__total">
-            {{ displayAmount(member) | currency: 'VND': 'symbol' : '1.0-0' : 'vi' }}
-          </span>
         </footer>
       </article>
     }

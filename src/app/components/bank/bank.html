@@ -37,7 +37,7 @@
     <div class="right">
       @if(qrCodeUrl) {
       <div class="qr-frame">
-        <img [src]="qrCodeUrl" width="250" height="250" decoding="async" alt="QR Code chuyển khoản" />
+        <app-qr-image [src]="qrCodeUrl" alt="QR Code chuyển khoản" [framed]="true" />
         <span class="qr-caption">Quét để chuyển khoản</span>
       </div>
       }
@@ -83,7 +83,7 @@
     <div class="right">
       @if(qrCodeUrlMomo) {
       <div class="qr-frame">
-        <img [src]="qrCodeUrlMomo" width="250" height="250" decoding="async" alt="QR Code momo" />
+        <app-qr-image [src]="qrCodeUrlMomo" alt="QR Code momo" [framed]="true" />
         <span class="qr-caption">Quét để chuyển khoản</span>
       </div>
       }

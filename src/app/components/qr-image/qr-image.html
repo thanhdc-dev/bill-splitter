@@ -1,0 +1,15 @@
+@if (showError()) {
+  <div class="qr-error" role="alert" [style.width.px]="size" [style.min-height.px]="size">
+    <mat-icon aria-hidden="true">qr_code_2</mat-icon>
+    <p class="qr-error__text">Không tạo được mã QR. Kiểm tra kết nối rồi thử lại.</p>
+    <!-- Khối lỗi và nút giữ nguyên trong lúc thử lại (nút chỉ `aria-disabled`, không `disabled`) để
+         focus bàn phím không rơi về <body> khi bấm "Thử lại". -->
+    <button mat-stroked-button type="button" [attr.aria-disabled]="isRetrying()" (click)="retry()">
+      {{ isRetrying() ? 'Đang thử lại…' : 'Thử lại' }}
+    </button>
+  </div>
+}
+@if (state() !== 'error') {
+  <img class="qr-img" [class.qr-img--framed]="framed" [hidden]="isRetrying()" [src]="url()" [alt]="alt"
+    [attr.width]="size" [attr.height]="size" decoding="async" (load)="onLoad()" (error)="onError()" />
+}

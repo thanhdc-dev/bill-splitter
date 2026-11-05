@@ -53,8 +53,22 @@
         </div>
       </div>
       }
+    </mat-card-content>
+  </mat-card>
 
-      <!-- Thanh toán không còn là tab riêng ở bất kỳ breakpoint nào — luôn hiện ngay dưới. -->
+  <div class="tear-line" aria-hidden="true"></div>
+
+  <app-result-display></app-result-display>
+
+  <!-- Thông tin nhận tiền và ảnh biên lai đặt SAU kết quả (quyết định 2026-11-05): người dùng thấy
+       phần của mình trước, rồi mới nhập ngân hàng để tạo QR. Khối tải ảnh vẫn hiện cho khách (bấm
+       sẽ mở đăng nhập rồi quay lại). -->
+  <mat-card class="receive-card">
+    <mat-card-content>
+      <h2 class="receive-card__title">
+        <mat-icon aria-hidden="true">qr_code_2</mat-icon>
+        Thông tin nhận tiền
+      </h2>
       <div class="payment" id="payment-section">
         <app-payment></app-payment>
       </div>
@@ -64,9 +78,6 @@
     </mat-card-content>
   </mat-card>
 
-  <div class="tear-line" aria-hidden="true"></div>
-
-  <app-result-display></app-result-display>
   <app-bank></app-bank>
   @if (uploadProgress !== null) {
   <div class="upload-progress fixed bottom-7 right-7" role="status" aria-live="polite">

@@ -24,18 +24,13 @@
   margin: 16px 0;
 }
 
+.qr-image-container:has(.qr-error) .qr-caption {
+  display: none;
+}
+
 .qr-caption {
   font-size: 0.8rem;
   color: var(--text-secondary);
-}
-
-.qr-image {
-  max-width: 250px;
-  width: 100%;
-  height: auto;
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  background: white;
 }
 
 .download-button {

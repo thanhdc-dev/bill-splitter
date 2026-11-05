@@ -299,6 +299,19 @@ h1, h2, h3, h4, h5, h6 {
   outline-offset: 3px !important;
 }
 
+/* Tab và công tắc: Material chỉ tô lớp trạng thái 12% khi focus bàn phím (viền focus trong suốt),
+   quá mờ so với nút đã có vòng focus. Tab dùng viền trong (offset âm) để không bị header cắt. */
+.mat-mdc-tab:focus-visible,
+.mdc-tab:focus-visible {
+  outline: 2px solid var(--text-primary) !important;
+  outline-offset: -3px !important;
+}
+
+.mdc-switch:focus-visible {
+  outline: 2px solid var(--text-primary) !important;
+  outline-offset: 2px !important;
+}
+
 /* Brand-consistent text selection color instead of the browser's default blue. */
 ::selection {
   background-color: var(--accent-soft-bg);

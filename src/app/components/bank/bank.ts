@@ -15,19 +15,18 @@ import { AuthService } from '../../services/auth.service';
 import { BillSplitterService } from '../../services/bill-splitter.service';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { BillTabControlService } from '../bill-details/bill-tab-control.service';
 import { QRService } from '../../services';
+import { QrImageComponent } from '../qr-image/qr-image';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   selector: 'app-bank',
-  imports: [MatCardModule, MatButtonModule, MatIconModule],
+  imports: [MatCardModule, MatButtonModule, MatIconModule, QrImageComponent],
   templateUrl: './bank.html',
   styleUrl: './bank.scss',
 })
 export class BankComponent implements OnInit {
   private readonly snackBar = inject(MatSnackBar);
-  private readonly billTabControlService = inject(BillTabControlService);
   private readonly billSplitterService = inject(BillSplitterService);
   private readonly qrService = inject(QRService);
   private readonly authService = inject(AuthService);
@@ -120,9 +119,18 @@ export class BankComponent implements OnInit {
       });
   }
 
+  /**
+   * Nút cài đặt trên thẻ ngân hàng: cuộn tới form nhập thông tin nhận tiền (`#payment-section`, có ở
+   * cả create-bill và bill-details). Thanh toán không còn là tab nên không chuyển tab nữa — trước
+   * đây `changeTab(2)` bị kẹp về tab cuối ("Thành viên") ở mobile chỉ có 2 tab.
+   */
   onSettingClick() {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    this.billTabControlService.changeTab(2); // giả sử tab Setting có index là 1
+    const target = document.getElementById('payment-section');
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   }
 
   isEditable() {

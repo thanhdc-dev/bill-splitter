@@ -66,6 +66,29 @@
     }
   }
 
+  /* Thẻ "Thông tin nhận tiền" nằm dưới kết quả: cách kết quả một khoảng như các thẻ khác và có tiêu
+     đề cùng kiểu với "Khoản mục"/"Thành viên". */
+  .receive-card {
+    margin-top: 24px;
+  }
+
+  .receive-card__title {
+    margin: 0 0 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+
+    mat-icon {
+      color: var(--primary-fg);
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+  }
+
   /* Nhãn tab: icon + chữ ở mọi kích thước (khớp tab Ngân hàng/Momo ở payment.html). Tab chỉ
      render ở dưới 768px nên không cần media query. */
   .mat-tab-label {

@@ -112,3 +112,4 @@ Ghi chép quyết định triển khai theo quy ước tại `AGENTS.md`. File n
 - 2026-11-05 (layout create-bill: số tiền và nút + chung một hàng dưới 600px, chừa chỗ cho FAB cộng banner PWA)
 - 2026-11-05 (adapt create-bill: member-table dùng card khi panel hẹp hơn bảng cần, card co giãn theo container)
 - 2026-11-05 (polish create-bill: resetForm cho form thành viên, DirtyErrorStateMatcher, tên truy cập ô số suất, thống nhất "Xoá")
+- 2026-11-05 (create-bill P2: nhận tiền/ảnh xuống dưới kết quả, tổng tiền lên đầu thẻ thành viên, vòng focus tab/công tắc, app-qr-image có trạng thái lỗi)

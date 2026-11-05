@@ -4,6 +4,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
+import { QrImageComponent } from '../qr-image/qr-image';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -12,7 +13,8 @@ import { MatIconModule } from '@angular/material/icon';
   imports: [
     MatCardModule,
     MatButtonModule,
-    MatIconModule
+    MatIconModule,
+    QrImageComponent,
 ],
   templateUrl: './qr-popup.html',
   styleUrl: './qr-popup.scss',

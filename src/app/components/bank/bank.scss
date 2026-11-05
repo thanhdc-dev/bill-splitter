@@ -75,15 +75,14 @@ h3 {
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius-md);
 
-  img {
-    max-width: 100%;
-    height: auto;
-    border: 1px solid var(--border-color);
-  }
-
   .qr-caption {
     font-size: 0.8rem;
     color: var(--text-secondary);
+  }
+
+  /* Khung lỗi QR đã có lời nhắn riêng; "Quét để chuyển khoản" dưới nó gây hiểu nhầm. */
+  &:has(.qr-error) .qr-caption {
+    display: none;
   }
 }
 
