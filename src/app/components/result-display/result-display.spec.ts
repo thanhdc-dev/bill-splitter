@@ -123,6 +123,43 @@ describe('ResultDisplayComponent - giải thích làm tròn', () => {
     expect(data.subtitle).toBe('ViettelMoney · NGUYEN VAN A · 0123456789');
   });
 
+  it('nút QR chỉ mở một hộp thoại (nhả phím Enter không mở thêm) và hộp thoại có tên truy cập', () => {
+    seed(785000, ['Tèo', 'Tủn', 'Tý']);
+    service.updateBankInfo({
+      bank: 'VTLMONEY', name: 'Viettel Money', short_name: 'ViettelMoney', bin: '970422',
+      accountName: 'NGUYEN VAN A', accountNumber: '0123456789',
+      accountNumberMomo: '', accountNameMomo: '', phoneNumberMomo: '',
+    }, true);
+    fixture.detectChanges();
+    const open = spyOn(fixture.debugElement.injector.get(MatDialog), 'open');
+    const button: HTMLButtonElement = fixture.nativeElement.querySelector(
+      'button[aria-label="Hiện QR ngân hàng"]'
+    );
+
+    button.click();
+    button.dispatchEvent(new KeyboardEvent('keyup', { key: 'Enter' }));
+
+    expect(open).toHaveBeenCalledTimes(1);
+    expect(open.calls.mostRecent().args[1]!.ariaLabel).toContain('Tèo ·');
+  });
+
+  it('nút QR Momo chỉ hiện khi có số tài khoản Momo (QR chỉ dựng từ trường đó)', () => {
+    seed(785000, ['Tèo', 'Tủn', 'Tý']);
+    const momoInfo = (accountNumberMomo: string) => ({
+      bank: '', name: '', short_name: '', bin: '', accountName: '', accountNumber: '',
+      accountNumberMomo, accountNameMomo: 'NGUYEN VAN A', phoneNumberMomo: '0901234567',
+    });
+    const momoButton = () => fixture.nativeElement.querySelector('button[aria-label="Hiện QR Momo"]');
+
+    service.updateBankInfo(momoInfo(''), true);
+    fixture.detectChanges();
+    expect(momoButton()).toBeNull();
+
+    service.updateBankInfo(momoInfo('0901234567'), true);
+    fixture.detectChanges();
+    expect(momoButton()).not.toBeNull();
+  });
+
   it('chia khéo ra đúng nghìn thì không có nút (i)', () => {
     seed(450000, ['Tèo', 'Tủn']);
 

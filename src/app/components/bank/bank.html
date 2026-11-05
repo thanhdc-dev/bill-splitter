@@ -73,8 +73,8 @@
         <span class="value value--account">
           <span class="mono-text account-number">{{ bankInfo.phoneNumberMomo }}</span>
           <button class="copy-btn" [class.copy-btn--copied]="isMomoNumberCopied"
-            (click)="onCopyMomoAccountNumber($event)" title="Sao chép số tài khoản"
-            aria-label="Sao chép số tài khoản">
+            (click)="onCopyMomoAccountNumber($event)" title="Sao chép số điện thoại"
+            aria-label="Sao chép số điện thoại">
             <mat-icon>{{ isMomoNumberCopied ? 'check' : 'content_copy' }}</mat-icon>
           </button>
         </span>
@@ -85,6 +85,15 @@
       <div class="qr-frame">
         <app-qr-image [src]="qrCodeUrlMomo" alt="QR Code momo" [framed]="true" />
         <span class="qr-caption">Quét để chuyển khoản</span>
+      </div>
+      } @else {
+      <!-- Thẻ Momo hiện khi có tên + số điện thoại, nhưng mã QR chỉ dựng từ số tài khoản Momo. -->
+      <div class="qr-missing">
+        <mat-icon aria-hidden="true">qr_code_2</mat-icon>
+        <p>Chưa có mã QR. Điền số tài khoản Momo để tạo mã.</p>
+        @if(isEditable()) {
+        <button mat-stroked-button type="button" (click)="onSettingClick()">Điền số tài khoản</button>
+        }
       </div>
       }
     </div>

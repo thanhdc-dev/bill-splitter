@@ -12,6 +12,14 @@
     border-color: var(--primary-fg);
     box-shadow: 0 0 0 1px var(--primary-fg);
   }
+
+  /* Ô số đang focus (bàn phím, và cả khi chạm vì ô văn bản/số luôn khớp :focus-visible): viền teal 1px
+     của :focus-within khó thấy trên nền giấy, thêm vòng 2px như các nút. Nút ± đã có vòng riêng nên
+     không tính. */
+  &:has(.quantity-input:focus-visible) {
+    outline: 2px solid var(--text-primary);
+    outline-offset: 2px;
+  }
 }
 
 .quantity-btn {

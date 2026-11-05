@@ -163,9 +163,10 @@ export class ResultDisplayComponent {
     return !!(info.accountNumber && info.bin);
   });
 
+  /** Nút QR Momo: cần cả số tài khoản Momo, vì mã QR chỉ dựng từ trường đó (tên + số điện thoại chưa đủ). */
   readonly isShowMomoInfo = computed(() => {
     const info = this.bankInfo();
-    return !!(info.accountNameMomo && info.phoneNumberMomo);
+    return !!(info.accountNameMomo && info.phoneNumberMomo && info.accountNumberMomo);
   });
 
   formatUserAmount(amount: number) {
@@ -193,15 +194,40 @@ export class ResultDisplayComponent {
       this.billSplitterService.name()
     )}-${removeVietnameseTones(member.name)}-qr.png`;
     const bank = this.bankInfo();
+    const title = `${member.name} · ${formatAmount(totalAmountFormatted)}`;
+    this.openQrPopup(`Mã QR chuyển tiền: ${title}`, {
+      // Tiêu đề cho người cầm điện thoại đối chiếu bằng mắt: QR của ai, bao nhiêu, vào đâu.
+      title,
+      subtitle: [bank.short_name, bank.accountName, bank.accountNumber].filter(Boolean).join(' · '),
+      fileName,
+      qrImageUrl,
+      qrImageDownloadUrl,
+    });
+  }
+
+  /**
+   * Mở popup QR. Hộp thoại không dùng mat-dialog-title nên Material không tự gắn tên truy cập: khai
+   * báo `ariaLabel`. `role`, `ariaModal`, `restoreFocus` cũng khai báo từng lần mở vì
+   * `MAT_DIALOG_DEFAULT_OPTIONS` ở app.config.ts chỉ đặt vài khoá (nhiều khả năng thay hẳn mặc định
+   * của Material, đo được: không có role và focus rơi về <body> khi đóng); sửa ở gốc sẽ đổi cả 6
+   * hộp thoại nên chưa làm.
+   */
+  private openQrPopup(
+    ariaLabel: string,
+    data: {
+      title: string;
+      subtitle: string;
+      fileName: string;
+      qrImageUrl: string;
+      qrImageDownloadUrl: string;
+    }
+  ) {
     this.dialog.open(QrPopupComponent, {
-      data: {
-        // Tiêu đề cho người cầm điện thoại đối chiếu bằng mắt: QR của ai, bao nhiêu, vào đâu.
-        title: `${member.name} · ${formatAmount(totalAmountFormatted)}`,
-        subtitle: [bank.short_name, bank.accountName, bank.accountNumber].filter(Boolean).join(' · '),
-        fileName,
-        qrImageUrl,
-        qrImageDownloadUrl,
-      },
+      role: 'dialog',
+      ariaModal: true,
+      restoreFocus: true,
+      ariaLabel,
+      data,
     });
   }
 
@@ -224,17 +250,16 @@ export class ResultDisplayComponent {
       this.billSplitterService.name()
     )}-${removeVietnameseTones(member.name)}-qr-momo.png`;
     const bank = this.bankInfo();
-    this.dialog.open(QrPopupComponent, {
-      data: {
-        title: `${member.name} · ${formatAmount(totalAmountFormatted)}`,
-        // Hiện đúng trường mà QR Momo được dựng từ đó (accountNumberMomo), để đối chiếu với mã quét.
-        subtitle: ['Momo', bank.accountNameMomo, bank.accountNumberMomo || bank.phoneNumberMomo]
-          .filter(Boolean)
-          .join(' · '),
-        fileName,
-        qrImageUrl,
-        qrImageDownloadUrl,
-      },
+    const title = `${member.name} · ${formatAmount(totalAmountFormatted)}`;
+    this.openQrPopup(`Mã QR Momo: ${title}`, {
+      title,
+      // Hiện đúng trường mà QR Momo được dựng từ đó (accountNumberMomo), để đối chiếu với mã quét.
+      subtitle: ['Momo', bank.accountNameMomo, bank.accountNumberMomo || bank.phoneNumberMomo]
+        .filter(Boolean)
+        .join(' · '),
+      fileName,
+      qrImageUrl,
+      qrImageDownloadUrl,
     });
   }
 }

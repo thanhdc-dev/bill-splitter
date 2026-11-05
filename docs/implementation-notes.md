@@ -114,3 +114,4 @@ Ghi chép quyết định triển khai theo quy ước tại `AGENTS.md`. File n
 - 2026-11-05 (polish create-bill: resetForm cho form thành viên, DirtyErrorStateMatcher, tên truy cập ô số suất, thống nhất "Xoá")
 - 2026-11-05 (create-bill P2: nhận tiền/ảnh xuống dưới kết quả, tổng tiền lên đầu thẻ thành viên, vòng focus tab/công tắc, app-qr-image có trạng thái lỗi)
 - 2026-11-05 (create-bill P1 lần 5: popup QR có tên/số tiền/ngân hàng, dấu ≈ và chú thích cho giá mỗi người theo khoản)
+- 2026-11-05 (create-bill lần 6: Enter không mở hai popup QR, popup có role/tên và trả focus, trạng thái chưa có QR cho Momo, vòng focus ô số suất)
