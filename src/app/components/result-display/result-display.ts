@@ -105,7 +105,9 @@ export class ResultDisplayComponent {
         amount: expense.amount,
         participants: names.join(', '),
         totalPortions,
-        perPerson: totalPortions > 0 ? expense.amount / totalPortions : null,
+        // Làm tròn lên đến nghìn như số tiền mỗi người (thẻ thành viên, bảng tổng, QR) để cùng một
+        // quy tắc ở mọi nơi; chỉ để hiển thị, không dùng để tính tiền.
+        perPerson: totalPortions > 0 ? roundedToThousand(expense.amount / totalPortions) : null,
         // Chia theo suất: khi ai đó ăn nửa suất hay nhiều suất, số tiền này là giá MỖI SUẤT, không
         // phải mỗi người, nên không được ghi "/người".
         perUnit: hasPartialPortion ? 'suất' : 'người',

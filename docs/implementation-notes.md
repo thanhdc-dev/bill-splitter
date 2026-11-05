@@ -108,3 +108,4 @@ Ghi chép quyết định triển khai theo quy ước tại `AGENTS.md`. File n
 - 2026-11-04 (result-display: nút "Chia đều" chuyển thành nút chữ cùng dòng, sát phải)
 - 2026-11-04 (bill-auto-save: inject scheduler, spec dùng VirtualTimeScheduler để hết flaky)
 - 2026-11-04 (harden create-bill: làm tròn lên đến nghìn thống nhất ở thẻ thành viên/bảng tổng/QR, nút (i) giải thích chênh lệch)
+- 2026-11-05 (result-display: giá mỗi người/suất ở dòng khoản mục làm tròn lên đến nghìn)

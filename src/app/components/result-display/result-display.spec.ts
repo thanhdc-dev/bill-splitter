@@ -78,6 +78,15 @@ describe('ResultDisplayComponent - giải thích làm tròn', () => {
     expect(note()).toBeNull();
   });
 
+  it('giá mỗi người ở dòng khoản mục cũng làm tròn lên đến nghìn', () => {
+    seed(785000, ['Tèo', 'Tủn', 'Tý']);
+
+    const perPerson = fixture.nativeElement.querySelector('.expense-meta__per-person');
+
+    expect(perPerson.textContent.replace(/\s+/g, ' ')).toContain('262.000');
+    expect(perPerson.textContent).toContain('/người');
+  });
+
   it('chia khéo ra đúng nghìn thì không có nút (i)', () => {
     seed(450000, ['Tèo', 'Tủn']);
 
