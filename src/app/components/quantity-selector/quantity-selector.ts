@@ -44,6 +44,8 @@ export class QuantitySelector {
   @Input() disabled = false;
   @Input() placeholder = '0';
   @Input() compact = false;
+  /** Ngữ cảnh cho screen reader, vd. "Số suất của Tèo cho Lẩu bò" (ô số không có nhãn nhìn thấy). */
+  @Input() label = '';
 
   @Output() valueChange = new EventEmitter<number>();
 

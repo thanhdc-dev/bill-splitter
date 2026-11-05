@@ -4,10 +4,11 @@
     Thành viên
   </h2>
 
-  <form [formGroup]="memberForm" (ngSubmit)="onSubmit()" class="member-panel__add">
+  <form [formGroup]="memberForm" #memberFormDirective="ngForm" (ngSubmit)="onSubmit(memberFormDirective)" class="member-panel__add">
     <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" class="flat-field">
       <mat-label>Tên thành viên</mat-label>
-      <input matInput formControlName="name" placeholder="VD: Tèo, Tý, Tủn" (keydown.enter)="onSubmit()" />
+      <input matInput formControlName="name" aria-label="Tên thành viên" [errorStateMatcher]="errorStateMatcher" placeholder="VD: Tèo, Tý, Tủn"
+        (keydown.enter)="$event.preventDefault(); onSubmit(memberFormDirective)" />
       @if (memberForm.get('name')?.hasError('required')) {
         <mat-error>
           Vui lòng nhập tên thành viên
@@ -42,7 +43,7 @@
       <article class="member-card">
         <header class="member-card__header">
           <h3 class="member-card__name">{{ member.name }}</h3>
-          <button mat-icon-button class="delete-btn" [attr.aria-label]="'Xóa ' + member.name"
+          <button mat-icon-button class="delete-btn" [attr.aria-label]="'Xoá ' + member.name"
             (click)="removeMember(member.id)">
             <mat-icon>delete</mat-icon>
           </button>
@@ -61,7 +62,7 @@
                   </small>
                 </div>
                 <app-quantity-selector [value]="getParticipation(member, expense.id)" [step]="0.5" [min]="0" [max]="99"
-                [compact]="true" (valueChange)="updateParticipation(member.id, expense.id, $event)"></app-quantity-selector>
+                [compact]="true" [label]="'Số suất của ' + member.name + ' cho ' + expense.name" (valueChange)="updateParticipation(member.id, expense.id, $event)"></app-quantity-selector>
               </li>
             }
           </ul>
@@ -100,7 +101,7 @@
         </th>
         <td mat-cell *matCellDef="let member" class="qty-cell">
           <app-quantity-selector [value]="getParticipation(member, expense.id)" [step]="0.5" [min]="0" [max]="99"
-          [compact]="true" (valueChange)="updateParticipation(member.id, expense.id, $event)"></app-quantity-selector>
+          [compact]="true" [label]="'Số suất của ' + member.name + ' cho ' + expense.name" (valueChange)="updateParticipation(member.id, expense.id, $event)"></app-quantity-selector>
         </td>
       </ng-container>
     }
@@ -126,7 +127,7 @@
     <ng-container matColumnDef="actions">
       <th mat-header-cell *matHeaderCellDef scope="col"></th>
       <td mat-cell *matCellDef="let member">
-        <button mat-icon-button class="delete-btn" [attr.aria-label]="'Xóa ' + member.name"
+        <button mat-icon-button class="delete-btn" [attr.aria-label]="'Xoá ' + member.name"
           (click)="removeMember(member.id)">
           <mat-icon>delete</mat-icon>
         </button>

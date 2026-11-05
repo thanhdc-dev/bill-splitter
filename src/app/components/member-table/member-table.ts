@@ -14,6 +14,7 @@ import { BreakpointObserver } from '@angular/cdk/layout';
 import {
   FormBuilder,
   FormGroup,
+  FormGroupDirective,
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
@@ -30,6 +31,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { QuantitySelector } from '../quantity-selector/quantity-selector';
 import { EmptyStateComponent } from '../empty-state/empty-state';
 import { roundedToThousand } from '../../shared/helpers';
+import { DirtyErrorStateMatcher } from '../../shared/forms/dirty-error-state.matcher';
 
 /** Dưới ngưỡng này luôn dùng layout card (một card mỗi thành viên). */
 const MOBILE_BREAKPOINT = '(max-width: 767px)';
@@ -90,6 +92,7 @@ export class MemberTableComponent {
   /** Cột của mat-table, tính lại mỗi khi danh sách khoản mục đổi. */
   displayedColumns: string[] = [];
   isMobile = false;
+  readonly errorStateMatcher = new DirtyErrorStateMatcher();
   /**
    * Card thay cho bảng: ở viewport hẹp (isMobile) hoặc khi panel không đủ rộng cho bảng (layout 2
    * cột từ 768px). Mặc định true tới khi đo được chiều rộng để không bao giờ vẽ bảng bị cắt.
@@ -174,7 +177,7 @@ export class MemberTableComponent {
     return roundedToThousand(member.totalAmount);
   }
 
-  onSubmit(): void {
+  onSubmit(formDirective?: FormGroupDirective): void {
     if (this.memberForm.valid) {
       const { name }: { name: string } = this.memberForm.value;
       // Bỏ chuỗi rỗng ("An," ) và tên trùng nhau trong cùng một lần nhập
@@ -209,7 +212,13 @@ export class MemberTableComponent {
             });
         }
       }
-      this.memberForm.reset();
+      // `reset()` chỉ xoá giá trị, không xoá cờ `submitted` của directive: lỗi "Vui lòng nhập tên"
+      // còn đỏ dưới ô vừa thêm thành công. `resetForm()` xoá cả hai.
+      if (formDirective) {
+        formDirective.resetForm();
+      } else {
+        this.memberForm.reset();
+      }
     }
   }
 

@@ -97,8 +97,8 @@ export class Bills implements OnInit {
         .open(ConfirmDialogComponent, {
           data: {
             title: 'Xác nhận',
-            message: `Bạn có chắc muốn xóa hóa đơn #${billCode}?`,
-            confirmText: 'Xóa',
+            message: `Bạn có chắc muốn xoá hóa đơn #${billCode}?`,
+            confirmText: 'Xoá',
             cancelText: 'Hủy',
           },
         })
@@ -110,11 +110,11 @@ export class Bills implements OnInit {
     try {
       await this.billSplitterService.delete(billCode);
     } catch (err) {
-      console.error('Lỗi khi xóa hóa đơn:', err);
-      this.snackBar.open('Không xóa được hóa đơn. Vui lòng thử lại.', 'Đóng', { duration: 5000 });
+      console.error('Lỗi khi xoá hóa đơn:', err);
+      this.snackBar.open('Không xoá được hóa đơn. Vui lòng thử lại.', 'Đóng', { duration: 5000 });
       return;
     }
-    this.snackBar.open(`Đã xóa hóa đơn #${billCode}`, 'Đóng', { duration: 3000 });
+    this.snackBar.open(`Đã xoá hóa đơn #${billCode}`, 'Đóng', { duration: 3000 });
     await this.loadData();
   }
 }

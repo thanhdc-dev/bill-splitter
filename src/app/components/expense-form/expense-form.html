@@ -7,7 +7,7 @@
   <form [formGroup]="expenseForm" #expenseFormDirective="ngForm" (ngSubmit)="onSubmit(expenseFormDirective)" class="expense-add-row">
     <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" class="flat-field">
       <mat-label>Tên món, dịch vụ...</mat-label>
-      <input matInput formControlName="name" aria-label="Tên khoản mục" (keydown.enter)="onSubmit()" />
+      <input matInput formControlName="name" aria-label="Tên khoản mục" [errorStateMatcher]="errorStateMatcher" (keydown.enter)="$event.preventDefault(); onSubmit(expenseFormDirective)" />
       @if (expenseForm.get('name')?.hasError('required')) {
         <mat-error>
           Vui lòng nhập tên khoản mục
@@ -18,7 +18,7 @@
     <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic" class="flat-field expense-add-row__amount">
       <mat-label>Số tiền</mat-label>
       <input matInput type="text" inputmode="numeric" formControlName="amount"
-        aria-label="Số tiền" appThousandSeparator (keydown.enter)="onSubmit()" />
+        aria-label="Số tiền" [errorStateMatcher]="errorStateMatcher" appThousandSeparator (keydown.enter)="$event.preventDefault(); onSubmit(expenseFormDirective)" />
         @if (expenseForm.get('amount')?.hasError('required')) {
           <mat-error>
             Vui lòng nhập số tiền
@@ -53,7 +53,7 @@
               <span class="expense-row__label">{{ expense.name }}</span>
               <mat-icon class="expense-row__edit" aria-hidden="true">edit</mat-icon>
             </button>
-            <button mat-icon-button class="expense-row__delete" aria-label="Xoá khoản mục" (click)="removeExpense(expense.id)">
+            <button mat-icon-button class="expense-row__delete" [attr.aria-label]="'Xoá khoản mục ' + expense.name" (click)="removeExpense(expense.id)">
               <mat-icon>delete</mat-icon>
             </button>
             <span class="expense-row__meta">

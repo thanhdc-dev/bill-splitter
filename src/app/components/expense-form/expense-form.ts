@@ -18,6 +18,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { EditFieldDialogComponent } from '../edit-field-dialog/edit-field-dialog';
 import { EmptyStateComponent } from '../empty-state/empty-state';
+import { DirtyErrorStateMatcher } from '../../shared/forms/dirty-error-state.matcher';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -43,6 +44,7 @@ export class ExpenseFormComponent {
   private readonly snackBar = inject(MatSnackBar);
 
   expenseForm: FormGroup;
+  readonly errorStateMatcher = new DirtyErrorStateMatcher();
 
   /** Mỗi khoản mục kèm số người tham gia, tính một lần khi expenses/members đổi. */
   readonly expenseRows = computed(() => {
