@@ -82,24 +82,33 @@ export class PaymentComponent implements OnInit {
   }
 
   handleFormChanges() {
-    if (this.bankForm.valid) {
-      const formValue = this.bankForm.value;
-      const bank = BANKS.find(({ code }) => code == formValue.bank);
-      if (bank) {
-        const data: BankInfoItem = {
-          name: bank?.name,
-          bank: bank?.code,
-          short_name: bank?.short_name,
-          bin: bank?.bin,
-          accountName: formValue.accountName,
-          accountNumber: formValue.accountNumber,
-          accountNumberMomo: formValue.accountNumberMomo,
-          accountNameMomo: formValue.accountNameMomo,
-          phoneNumberMomo: formValue.phoneNumberMomo,
-        };
-        this.billSplitterService.updateBankInfo(data);
-      }
-    }
+    if (!this.bankForm.valid) return;
+    const formValue = this.bankForm.value;
+    const bank = BANKS.find(({ code }) => code == formValue.bank);
+    const hasMomo = !!(
+      formValue.accountNameMomo ||
+      formValue.phoneNumberMomo ||
+      formValue.accountNumberMomo
+    );
+    // Momo độc lập với ngân hàng: người chỉ có Momo chưa chọn ngân hàng vẫn phải được lưu (trước đây
+    // chỉ lưu khi có ngân hàng nên dữ liệu Momo bị bỏ qua im lặng, không thẻ và không nút QR).
+    if (!bank && !hasMomo) return;
+    // Bill cũ có mã ngân hàng không còn trong BANKS nhưng `bin`/số tài khoản vẫn hợp lệ: sửa Momo không
+    // được xoá ngân hàng đó, nên giữ nguyên các trường ngân hàng đang lưu khi mã không đổi.
+    const current = this.bankInfo;
+    const keepCurrentBank = !bank && !!current && !!formValue.bank && formValue.bank === current.bank;
+    const data: BankInfoItem = {
+      name: bank?.name ?? (keepCurrentBank ? current.name : ''),
+      bank: bank?.code ?? (keepCurrentBank ? current.bank : ''),
+      short_name: bank?.short_name ?? (keepCurrentBank ? current.short_name : ''),
+      bin: bank?.bin ?? (keepCurrentBank ? current.bin : ''),
+      accountName: formValue.accountName ?? '',
+      accountNumber: formValue.accountNumber ?? '',
+      accountNumberMomo: formValue.accountNumberMomo ?? '',
+      accountNameMomo: formValue.accountNameMomo ?? '',
+      phoneNumberMomo: formValue.phoneNumberMomo ?? '',
+    };
+    this.billSplitterService.updateBankInfo(data);
   }
 
   selectTab(tab: 'bank' | 'momo'): void {
