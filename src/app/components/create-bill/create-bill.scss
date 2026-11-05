@@ -5,8 +5,10 @@
   margin: 0 auto;
   position: relative;
   min-height: 100vh;
-  /* Chừa chỗ cho FAB (56px + bottom 28px + 12px) để không che nội dung cuối trang. */
-  padding-bottom: 6rem;
+  /* Chừa chỗ cho FAB (56px + bottom 28px + 12px) để không che nội dung cuối trang. Cộng thêm chiều
+     cao banner PWA khi có: FAB được nâng lên đúng bằng đó (xem `.buttons`), nên nếu không cộng thì
+     hàng cuối cuộn tới nơi vẫn nằm dưới FAB (đo: tiền của thẻ cuối bị che). */
+  padding-bottom: calc(6rem + var(--pwa-prompt-offset, 0px));
 
   /* Card container for the main inputs */
   >.mat-mdc-card {

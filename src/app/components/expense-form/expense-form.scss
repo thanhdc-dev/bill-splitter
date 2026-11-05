@@ -185,9 +185,11 @@
       flex: 1 1 100%;
     }
 
+    /* Dưới 600px: tên một hàng riêng, số tiền + nút "+" chung một hàng. `flex-basis: 0` thay cho
+       `auto`: Material đặt `width: 100%` cho mat-form-field nên basis `auto` = cả hàng và đẩy nút
+       "+" xuống hàng thứ ba (đo: form cao 160px thay vì 104px). */
     &__amount {
-      flex: 1 1 auto !important;
+      flex: 1 1 0 !important;
     }
-
   }
 }
