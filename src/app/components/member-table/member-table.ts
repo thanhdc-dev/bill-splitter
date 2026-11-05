@@ -1,4 +1,13 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  DestroyRef,
+  ElementRef,
+  NgZone,
+  afterNextRender,
+  inject,
+} from '@angular/core';
 import { CurrencyPipe } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { BreakpointObserver } from '@angular/cdk/layout';
@@ -22,8 +31,30 @@ import { QuantitySelector } from '../quantity-selector/quantity-selector';
 import { EmptyStateComponent } from '../empty-state/empty-state';
 import { roundedToThousand } from '../../shared/helpers';
 
-/** Dưới ngưỡng này bảng ma trận thành viên × khoản mục đổi sang layout card. */
+/** Dưới ngưỡng này luôn dùng layout card (một card mỗi thành viên). */
 const MOBILE_BREAKPOINT = '(max-width: 767px)';
+/**
+ * Bảng ma trận thành viên × khoản mục có min-width 600px và cần thêm ~150px cho mỗi khoản mục
+ * (cột tên 150 + isPaid 64 + tổng 120 + actions 64 = 398px cố định). Panel hẹp hơn mức này thì
+ * bảng phải cuộn ngang và giấu cột "Thanh toán", "Tổng tiền" — dùng card thay vì bảng.
+ */
+const TABLE_MIN_WIDTH = 600;
+const TABLE_FIXED_COLUMNS_WIDTH = 398;
+const TABLE_EXPENSE_COLUMN_WIDTH = 150;
+/** Padding + viền của `.member-panel` (22px × 2 + 2px viền) trừ khỏi chiều rộng host. */
+const PANEL_CHROME_WIDTH = 46;
+
+/**
+ * Card hay bảng: card khi viewport hẹp hoặc khi panel (chiều rộng host chưa đo được = 0) không đủ
+ * rộng cho bảng với `expenseCount` khoản mục.
+ */
+export function shouldUseCards(hostWidth: number, expenseCount: number, isMobile: boolean): boolean {
+  const tableWidth = Math.max(
+    TABLE_MIN_WIDTH,
+    TABLE_FIXED_COLUMNS_WIDTH + expenseCount * TABLE_EXPENSE_COLUMN_WIDTH
+  );
+  return isMobile || hostWidth - PANEL_CHROME_WIDTH < tableWidth;
+}
 const AUTO_SPLIT_STORAGE_KEY = 'bs.autoSplitNewMember';
 
 @Component({
@@ -59,6 +90,15 @@ export class MemberTableComponent {
   /** Cột của mat-table, tính lại mỗi khi danh sách khoản mục đổi. */
   displayedColumns: string[] = [];
   isMobile = false;
+  /**
+   * Card thay cho bảng: ở viewport hẹp (isMobile) hoặc khi panel không đủ rộng cho bảng (layout 2
+   * cột từ 768px). Mặc định true tới khi đo được chiều rộng để không bao giờ vẽ bảng bị cắt.
+   */
+  useCards = true;
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly ngZone = inject(NgZone);
+  private readonly destroyRef = inject(DestroyRef);
+  private hostWidth = 0;
   /** Thành viên mới tự có 1 suất ở mọi khoản mục. Mặc định bật, nhớ theo thiết bị. */
   autoSplit = this.readAutoSplit();
 
@@ -78,6 +118,7 @@ export class MemberTableComponent {
           'totalAmount',
           'actions',
         ];
+        this.updateUseCards();
         this.cdr.markForCheck();
       });
 
@@ -93,8 +134,36 @@ export class MemberTableComponent {
       .pipe(takeUntilDestroyed())
       .subscribe(({ matches }) => {
         this.isMobile = matches;
+        this.updateUseCards();
         this.cdr.markForCheck();
       });
+
+    // Đo chiều rộng của chính panel (không phải viewport): layout 2 cột chia đôi chỗ nên bảng có thể
+    // không đủ rộng ngay cả trên màn hình lớn.
+    afterNextRender(() => {
+      // Observer bắn cả khi chiều CAO đổi (thêm thành viên, đổi số suất): tính ngoài zone và chỉ vào
+      // zone (kích hoạt change detection toàn app) khi kết quả thực sự đổi.
+      const observer = new ResizeObserver(([entry]) => {
+        this.hostWidth = entry.contentRect.width;
+        if (this.computeUseCards() !== this.useCards) {
+          this.ngZone.run(() => this.updateUseCards());
+        }
+      });
+      observer.observe(this.host.nativeElement);
+      this.destroyRef.onDestroy(() => observer.disconnect());
+    });
+  }
+
+  private computeUseCards(): boolean {
+    return shouldUseCards(this.hostWidth, this.expenses.length, this.isMobile);
+  }
+
+  private updateUseCards(): void {
+    const useCards = this.computeUseCards();
+    if (useCards !== this.useCards) {
+      this.useCards = useCards;
+      this.cdr.markForCheck();
+    }
   }
 
   /**

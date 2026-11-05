@@ -110,3 +110,4 @@ Ghi chép quyết định triển khai theo quy ước tại `AGENTS.md`. File n
 - 2026-11-04 (harden create-bill: làm tròn lên đến nghìn thống nhất ở thẻ thành viên/bảng tổng/QR, nút (i) giải thích chênh lệch)
 - 2026-11-05 (result-display: giá mỗi người/suất ở dòng khoản mục làm tròn lên đến nghìn)
 - 2026-11-05 (layout create-bill: số tiền và nút + chung một hàng dưới 600px, chừa chỗ cho FAB cộng banner PWA)
+- 2026-11-05 (adapt create-bill: member-table dùng card khi panel hẹp hơn bảng cần, card co giãn theo container)

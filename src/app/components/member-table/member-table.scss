@@ -168,6 +168,9 @@
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius-md);
   overflow: hidden;
+  /* Card cũng dùng ở panel hẹp (layout 2 cột ~284px ở 768px), nên co giãn theo chính nó chứ không
+     theo viewport — xem @container bên dưới. */
+  container-type: inline-size;
 
   &__header {
     display: flex;
@@ -236,6 +239,10 @@
 
   &__footer {
     display: flex;
+    /* wrap: nhãn và tổng tiền đều nowrap, nên khi card quá hẹp (320px, tổng 8-9 chữ số) tổng tiền
+       xuống dòng dưới thay vì bị `overflow: hidden` của card cắt mất. */
+    flex-wrap: wrap;
+    row-gap: 4px;
     align-items: center;
     justify-content: space-between;
     gap: 12px;
@@ -250,6 +257,31 @@
     font-size: 1.05rem;
     font-variant-numeric: tabular-nums;
     color: var(--teal-dark);
+    white-space: nowrap;
+    /* Khi footer xuống dòng, tổng tiền vẫn bám phải. */
+    margin-left: auto;
+  }
+
+  &__footer mat-checkbox {
+    /* "Đã thanh toán" không được xuống 3 dòng khi card hẹp. */
+    white-space: nowrap;
+  }
+}
+
+/* Card rất hẹp (~284px ở 768px, layout 2 cột): bộ chọn suất 154px làm tên khoản mục chỉ còn ~96px
+   và bị cắt thành "Trán…". Cho tên một dòng riêng, bộ chọn xuống dòng dưới và căn phải. */
+@container (max-width: 330px) {
+  .member-card__expense {
+    flex-wrap: wrap;
+    row-gap: 8px;
+
+    .expense-meta {
+      flex: 1 1 100%;
+    }
+
+    app-quantity-selector {
+      margin-left: auto;
+    }
   }
 }
 

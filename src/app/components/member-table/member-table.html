@@ -34,8 +34,9 @@
     ></app-empty-state>
   }
 
-  <!-- Mobile: bảng ma trận quá rộng để cuộn ngang, đổi sang một card mỗi thành viên -->
-  @else if (isMobile) {
+  <!-- Mobile hoặc panel hẹp hơn bảng cần (layout 2 cột): bảng ma trận phải cuộn ngang và giấu cột
+       "Tổng tiền"/"Thanh toán", nên đổi sang một card mỗi thành viên. Xem `useCards` trong .ts. -->
+  @else if (useCards) {
   <div class="member-cards">
     @for (member of members; track member.id) {
       <article class="member-card">
@@ -67,7 +68,8 @@
         }
 
         <footer class="member-card__footer">
-          <mat-checkbox [checked]="member.isPaid" (change)="updateIsPaid(member.id, $event.checked)">
+          <mat-checkbox [checked]="member.isPaid" [aria-label]="'Đánh dấu ' + member.name + ' đã thanh toán'"
+            (change)="updateIsPaid(member.id, $event.checked)">
             Đã thanh toán
           </mat-checkbox>
           <span class="member-card__total">
@@ -106,7 +108,7 @@
     <ng-container matColumnDef="isPaid">
       <th mat-header-cell *matHeaderCellDef scope="col">Thanh toán</th>
       <td mat-cell *matCellDef="let member">
-        <mat-checkbox [checked]="member.isPaid" [attr.aria-label]="'Đánh dấu ' + member.name + ' đã thanh toán'"
+        <mat-checkbox [checked]="member.isPaid" [aria-label]="'Đánh dấu ' + member.name + ' đã thanh toán'"
           (change)="updateIsPaid(member.id, $event.checked)">
         </mat-checkbox>
       </td>
