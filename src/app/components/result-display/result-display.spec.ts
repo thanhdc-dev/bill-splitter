@@ -4,6 +4,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
+import { MatDialog } from '@angular/material/dialog';
 import { AuthService } from '../../services/auth.service';
 import { BillSplitterService } from '../../services/bill-splitter.service';
 import { ResultDisplayComponent } from './result-display';
@@ -85,6 +86,41 @@ describe('ResultDisplayComponent - giải thích làm tròn', () => {
 
     expect(perPerson.textContent.replace(/\s+/g, ' ')).toContain('262.000');
     expect(perPerson.textContent).toContain('/người');
+  });
+
+  it('giá mỗi người ở dòng khoản mục bị làm tròn thì có dấu ≈ và chú thích dưới bảng', () => {
+    seed(785000, ['Tèo', 'Tủn', 'Tý']);
+
+    const perPerson = fixture.nativeElement.querySelector('.expense-meta__per-person');
+    const note = fixture.nativeElement.querySelector('.receipt-note');
+
+    expect(perPerson.querySelector('[aria-hidden="true"]').textContent).toContain('≈');
+    expect(perPerson.querySelector('.sr-only').textContent).toContain('khoảng');
+    expect(perPerson.textContent).toContain('262.000');
+    expect(note.textContent).toContain('làm tròn lên đến nghìn riêng');
+  });
+
+  it('giá mỗi người đúng nghìn thì không có ≈ và không có chú thích', () => {
+    seed(450000, ['Tèo', 'Tủn', 'Tý']);
+
+    expect(fixture.nativeElement.querySelector('.expense-meta__per-person').textContent).not.toContain('≈');
+    expect(fixture.nativeElement.querySelector('.receipt-note')).toBeNull();
+  });
+
+  it('popup QR có tiêu đề là tên và số tiền, dòng phụ là ngân hàng và chủ tài khoản', () => {
+    seed(785000, ['Tèo', 'Tủn', 'Tý']);
+    service.updateBankInfo({
+      bank: 'VTLMONEY', name: 'Viettel Money', short_name: 'ViettelMoney', bin: '970422',
+      accountName: 'NGUYEN VAN A', accountNumber: '0123456789',
+      accountNumberMomo: '', accountNameMomo: '', phoneNumberMomo: '',
+    }, true);
+    const open = spyOn(fixture.debugElement.injector.get(MatDialog), 'open');
+
+    fixture.componentInstance.showQRPopup(service.members()[0]);
+
+    const data = open.calls.mostRecent().args[1]!.data as { title: string; subtitle: string };
+    expect(data.title.replace(/\s/g, ' ')).toContain('Tèo · 262.000');
+    expect(data.subtitle).toBe('ViettelMoney · NGUYEN VAN A · 0123456789');
   });
 
   it('chia khéo ra đúng nghìn thì không có nút (i)', () => {

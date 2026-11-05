@@ -20,10 +20,13 @@ import { QrImageComponent } from '../qr-image/qr-image';
   styleUrl: './qr-popup.scss',
 })
 export class QrPopupComponent implements OnInit {
-  title = 'QR Code';
+  title = 'Mã QR';
+  subtitle = '';
   private dialogRef = inject<MatDialogRef<QrPopupComponent>>(MatDialogRef);
   data = inject<{
     title: string;
+    /** Dòng phụ dưới tiêu đề: ngân hàng, chủ tài khoản, số tài khoản. */
+    subtitle?: string;
     qrImageUrl: string;
     qrImageDownloadUrl: string;
     fileName: string;
@@ -32,8 +35,9 @@ export class QrPopupComponent implements OnInit {
 
   ngOnInit(): void {
     if (this.data.title) {
-      this.title = this.data.title || 'QR Code';
+      this.title = this.data.title;
     }
+    this.subtitle = this.data.subtitle ?? '';
   }
 
   async downloadQRCode() {

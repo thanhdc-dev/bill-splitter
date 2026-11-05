@@ -107,6 +107,13 @@
     }
   }
 
+  .receipt-note {
+    margin: 8px 4px 0;
+    font-size: var(--font-size-sm);
+    line-height: 1.5;
+    color: var(--text-secondary);
+  }
+
   .member-summary {
     margin-top: 32px;
 

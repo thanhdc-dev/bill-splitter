@@ -46,6 +46,17 @@ mat-card-header {
   padding: 16px 16px 0 16px;
 }
 
+/* Tiêu đề là tên kèm số tiền; chừa chỗ cho nút đóng. Dòng phụ cho phép xuống dòng nếu dài. */
+mat-card-title {
+  padding-right: 40px;
+}
+
+.qr-subtitle {
+  margin-top: 4px;
+  padding-right: 40px;
+  overflow-wrap: anywhere;
+}
+
 .close-button {
   position: absolute;
   top: 8px;

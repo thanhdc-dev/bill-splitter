@@ -8,7 +8,12 @@ import { Member } from '../../models/bill-splitter.model';
 import { MatIconModule } from '@angular/material/icon';
 import { QrPopupComponent } from '../qr-popup/qr-popup';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { removeVietnameseTones, roundedToThousand, summarizeRounding } from '../../shared/helpers';
+import {
+  formatAmount,
+  removeVietnameseTones,
+  roundedToThousand,
+  summarizeRounding,
+} from '../../shared/helpers';
 import { MatButtonModule } from '@angular/material/button';
 import { AuthService, QRService } from '../../services';
 import { EmptyStateComponent } from '../empty-state/empty-state';
@@ -20,6 +25,8 @@ interface IExpenseRowVM {
   participants: string;
   totalPortions: number;
   perPerson: number | null;
+  /** `perPerson` đã làm tròn lên nên khác giá trị thật: hiện "≈" trước số. */
+  perPersonApprox: boolean;
   /** Đơn vị của `perPerson`: "người" khi mọi người đều ăn đúng 1 suất, "suất" khi có suất lẻ. */
   perUnit: 'người' | 'suất';
 }
@@ -99,6 +106,8 @@ export class ResultDisplayComponent {
           quantity === 1 ? member.name : `${member.name} (${quantity.toLocaleString('vi-VN')} suất)`
         );
       }
+      const exactPerPerson = totalPortions > 0 ? expense.amount / totalPortions : null;
+      const perPerson = exactPerPerson === null ? null : roundedToThousand(exactPerPerson);
       return {
         id: expense.id,
         name: expense.name,
@@ -107,13 +116,18 @@ export class ResultDisplayComponent {
         totalPortions,
         // Làm tròn lên đến nghìn như số tiền mỗi người (thẻ thành viên, bảng tổng, QR) để cùng một
         // quy tắc ở mọi nơi; chỉ để hiển thị, không dùng để tính tiền.
-        perPerson: totalPortions > 0 ? roundedToThousand(expense.amount / totalPortions) : null,
+        perPerson,
+        perPersonApprox:
+          perPerson !== null && exactPerPerson !== null && Math.abs(perPerson - exactPerPerson) > 0.5,
         // Chia theo suất: khi ai đó ăn nửa suất hay nhiều suất, số tiền này là giá MỖI SUẤT, không
         // phải mỗi người, nên không được ghi "/người".
         perUnit: hasPartialPortion ? 'suất' : 'người',
       };
     });
   });
+
+  /** Có dòng khoản mục nào hiện giá "≈": cần một dòng chú thích vì cộng lại không khớp tổng. */
+  readonly hasApproxPerPerson = computed(() => this.expenseRows().some((row) => row.perPersonApprox));
 
   readonly totalAmount = computed(() =>
     this.expenses().reduce((total, expense) => total + expense.amount, 0)
@@ -178,8 +192,12 @@ export class ResultDisplayComponent {
     const fileName = `${removeVietnameseTones(
       this.billSplitterService.name()
     )}-${removeVietnameseTones(member.name)}-qr.png`;
+    const bank = this.bankInfo();
     this.dialog.open(QrPopupComponent, {
       data: {
+        // Tiêu đề cho người cầm điện thoại đối chiếu bằng mắt: QR của ai, bao nhiêu, vào đâu.
+        title: `${member.name} · ${formatAmount(totalAmountFormatted)}`,
+        subtitle: [bank.short_name, bank.accountName, bank.accountNumber].filter(Boolean).join(' · '),
         fileName,
         qrImageUrl,
         qrImageDownloadUrl,
@@ -205,8 +223,14 @@ export class ResultDisplayComponent {
     const fileName = `${removeVietnameseTones(
       this.billSplitterService.name()
     )}-${removeVietnameseTones(member.name)}-qr-momo.png`;
+    const bank = this.bankInfo();
     this.dialog.open(QrPopupComponent, {
       data: {
+        title: `${member.name} · ${formatAmount(totalAmountFormatted)}`,
+        // Hiện đúng trường mà QR Momo được dựng từ đó (accountNumberMomo), để đối chiếu với mã quét.
+        subtitle: ['Momo', bank.accountNameMomo, bank.accountNumberMomo || bank.phoneNumberMomo]
+          .filter(Boolean)
+          .join(' · '),
         fileName,
         qrImageUrl,
         qrImageDownloadUrl,

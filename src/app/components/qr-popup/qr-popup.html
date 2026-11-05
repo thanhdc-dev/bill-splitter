@@ -1,6 +1,9 @@
 <mat-card class="qr-popup-card">
   <mat-card-header>
     <mat-card-title>{{ title }}</mat-card-title>
+    @if (subtitle) {
+      <mat-card-subtitle class="qr-subtitle">{{ subtitle }}</mat-card-subtitle>
+    }
     <button
       mat-icon-button
       class="close-button"
@@ -13,7 +16,7 @@
 
   <mat-card-content>
     <div class="qr-image-container">
-      <app-qr-image [src]="data.qrImageUrl" alt="QR Code" [framed]="true" />
+      <app-qr-image [src]="data.qrImageUrl" alt="Mã QR chuyển tiền" [framed]="true" />
       <span class="qr-caption">Quét mã để xem chi tiết</span>
     </div>
   </mat-card-content>
